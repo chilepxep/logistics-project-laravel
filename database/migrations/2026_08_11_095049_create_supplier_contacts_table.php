@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employees', function (Blueprint $table) {
-$table->id();
-    $table->string('ma_nv', 20)->unique();
-    $table->string('ho_ten', 150);
-    $table->string('vai_tro', 100)->nullable();
-        });
+Schema::create('supplier_contacts', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('supplier_id')->constrained('suppliers')->cascadeOnDelete();
+    $table->enum('loai', ['email', 'qq', 'sdt', 'wechat']);
+    $table->string('gia_tri', 150);
+});
     }
 
     /**
@@ -24,6 +24,6 @@ $table->id();
      */
     public function down(): void
     {
-        Schema::dropIfExists('employees');
+        Schema::dropIfExists('supplier_contacts');
     }
 };

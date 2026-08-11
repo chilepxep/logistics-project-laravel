@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employees', function (Blueprint $table) {
+        Schema::create('warehouses', function (Blueprint $table) {
 $table->id();
-    $table->string('ma_nv', 20)->unique();
-    $table->string('ho_ten', 150);
-    $table->string('vai_tro', 100)->nullable();
+    $table->string('ma_kho', 20)->unique();
+    $table->string('ten_kho', 100);
+    $table->enum('loai_kho', ['VN', 'TQ']);
+    $table->string('dia_chi', 255)->nullable();
         });
     }
 
@@ -24,6 +25,6 @@ $table->id();
      */
     public function down(): void
     {
-        Schema::dropIfExists('employees');
+        Schema::dropIfExists('warehouses');
     }
 };

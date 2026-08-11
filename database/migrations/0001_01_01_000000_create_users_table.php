@@ -13,20 +13,36 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            
+            $table->string('ma_tai_khoan', 20)->unique();
+            $table->string('ho_ten', 150);
+            
+            // Core của Laravel (để hệ thống Đăng nhập/Quên mật khẩu hoạt động)
+            $table->string('email', 150)->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('password', 255);
+            
+            $table->string('sdt', 20);
+            $table->date('ngay_sinh')->nullable();
+            $table->enum('gioi_tinh', ['nam', 'nu', 'khac'])->nullable();
+            $table->string('dia_chi', 255)->nullable();
+            $table->string('tinh_thanh', 100)->nullable();
+            $table->enum('loai_van_chuyen_mac_dinh', ['nhanh', 'thuong'])->default('thuong');
+            $table->decimal('so_du', 15, 2)->default(0);
+            
+            // Core của Laravel
+            $table->rememberToken(); // Lưu token khi user tích chọn "Nhớ mật khẩu"
             $table->timestamps();
         });
 
+        // 2. BẢNG RESET PASSWORD
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // 3. BẢNG SESSIONS 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
