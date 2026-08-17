@@ -1,0 +1,58 @@
+/* =========================================
+   CSS KHỐI CÂU HỎI THƯỜNG GẶP (FAQ)
+   ========================================= */
+
+/* 1. Xóa mũi tên xoay mặc định của Bootstrap */
+.custom-faq .accordion-button::after {
+    display: none !important;
+}
+
+/* 2. Giữ màu chữ đen không bị xanh khi mở câu hỏi */
+.custom-faq .accordion-button:not(.collapsed) {
+    background-color: transparent;
+    color: #000;
+    box-shadow: none;
+}
+
+/* 3. Logic chuyển đổi Icon (+) và (-) */
+.custom-faq .accordion-button .icon-minus {
+    display: none; /* Mặc định ẩn dấu trừ */
+}
+
+/* Khi có class .collapsed (nghĩa là đang đóng) -> Hiện dấu cộng, ẩn dấu trừ */
+.custom-faq .accordion-button.collapsed .icon-plus {
+    display: inline-block;
+}
+.custom-faq .accordion-button.collapsed .icon-minus {
+    display: none;
+}
+
+/* Khi KHÔNG có class .collapsed (nghĩa là đang mở) -> Ẩn dấu cộng, hiện dấu trừ */
+.custom-faq .accordion-button:not(.collapsed) .icon-plus {
+    display: none;
+}
+.custom-faq .accordion-button:not(.collapsed) .icon-minus {
+    display: inline-block;
+}
+
+/* 4. Tinh chỉnh khung nền xám của Câu trả lời */
+.custom-faq .accordion-body {
+    background-color: #f8f9fa; /* Nền xám nhạt */
+    color: #555;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+/* 5. Tinh chỉnh màu sắc Phân trang */
+.custom-pagination .page-item.active .page-link {
+    background-color: transparent;
+    color: #333 !important;
+    font-weight: bold;
+    border: none;
+}
+.custom-pagination .page-link:hover {
+    background-color: #f1f1f1;
+}

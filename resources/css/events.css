@@ -1,0 +1,41 @@
+/* =========================================
+   CSS TRANG SỰ KIỆN (EVENTS)
+   ========================================= */
+
+/* Hiệu ứng nổi lên khi hover thẻ sự kiện */
+.event-card {
+    transition: all 0.3s ease;
+    border-radius: 12px; /* Bo góc mềm mại cho thẻ */
+}
+.event-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Hiệu ứng zoom ảnh */
+.event-card .event-img {
+    transition: transform 0.5s ease;
+}
+.event-card:hover .event-img {
+    transform: scale(1.08); /* Phóng to ảnh nhẹ khi đưa chuột vào */
+}
+
+/* Đổi màu tiêu đề khi hover */
+.event-title {
+    transition: color 0.3s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Ép tiêu đề luôn cao tối đa 2 dòng cho đều nhau */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.event-card:hover .event-title {
+    color: #ff6a00 !important;
+}
+
+/* Khối Lịch ngày tháng nổi đè lên ảnh */
+.date-badge {
+    margin-right: 15px;
+    z-index: 2;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}

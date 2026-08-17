@@ -1,0 +1,36 @@
+/* =========================================
+   CSS TRANG TIN TỨC (NEWS)
+   ========================================= */
+
+/* Hiệu ứng zoom ảnh nhẹ khi hover vào thẻ bài viết */
+.news-card {
+    transition: all 0.3s ease;
+}
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.news-card .news-thumbnail {
+    transition: transform 0.5s ease;
+}
+.news-card:hover .news-thumbnail {
+    transform: scale(1.05);
+}
+
+/* Đổi màu tiêu đề khi hover */
+.news-title {
+    transition: color 0.3s ease;
+}
+.news-card:hover .news-title {
+    color: #ff6a00 !important; /* Đổi sang màu cam */
+}
+
+/* Kỹ thuật Line-Clamp: Cắt ngắn văn bản hiển thị */
+.news-excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Chỉ hiển thị tối đa 3 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

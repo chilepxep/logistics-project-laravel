@@ -1,0 +1,49 @@
+.custom-hover-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+/* 1. SỬA LỖI HEADER: Tác động trực tiếp vào thẻ <th> thay vì <tr> */
+.custom-hover-table thead th {
+    background-color: #0b3a68 !important; /* Ép màu xanh đè lên Bootstrap */
+    color: #ffffff !important; /* Ép màu chữ trắng */
+}
+
+/* 2. CĂN GIỮA TOÀN BỘ BẢNG (Text-center & Align-middle) */
+.custom-hover-table th,
+.custom-hover-table td {
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    padding: 14px 16px;
+    text-align: center !important; /* Căn giữa chữ theo chiều ngang */
+    vertical-align: middle !important; /* Căn giữa chữ theo chiều dọc */
+}
+
+/* Các dòng */
+.custom-hover-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Hover vào hàng → cả hàng màu cam */
+/* Lưu ý: Đã gộp thẳng td vào đây để code ngắn gọn và không bị lỗi chớp nháy */
+.custom-hover-table tbody tr:hover td {
+    background-color: #ff6a00 !important;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+/* Bỏ đường dọc ở cột cuối */
+.custom-hover-table th:last-child,
+.custom-hover-table td:last-child {
+    border-right: none;
+}
+
+/* Bỏ đường ngang ở dòng cuối */
+.custom-hover-table tbody tr:last-child td {
+    border-bottom: none;
+}

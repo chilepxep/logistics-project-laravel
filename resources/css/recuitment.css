@@ -1,0 +1,22 @@
+/* =========================================
+   CSS TRANG TUYỂN DỤNG
+   ========================================= */
+
+.job-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent !important;
+}
+
+.job-card:hover {
+    transform: translateX(5px); /* Trượt nhẹ sang phải */
+    border-left-color: #ff6a00 !important; /* Đổi viền trái sang màu cam */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+}
+
+.job-title {
+    transition: color 0.3s ease;
+}
+
+.job-card:hover .job-title {
+    color: #ff6a00 !important;
+}

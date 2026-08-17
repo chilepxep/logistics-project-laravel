@@ -1,11 +1,386 @@
-@import 'tailwindcss';
+.font-12 {
+    font-size: 13px;
+}
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+.nav-link {
+    font-size: 16px;
+    transition: 0.3s;
+    margin: 0 8px;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+.nav-link:hover {
+    color: #ffc107 !important;
+}
+
+.logo {
+    width: 240px;
+    height: auto;
+}
+
+header.sticky-top {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* 1. HIỆU ỨNG CHỈ DÀNH CHO MÀN HÌNH LỚN (>992px)  */
+@media all and (min-width: 992px) {
+    .navbar .nav-item.dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 0;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar .nav-item.dropdown:hover > .dropdown-toggle::after {
+        transform: rotate(180deg);
+        transition: 0.3s;
+    }
+}
+
+.navbar .dropdown-menu .dropdown-item {
+    color: #0b3a68;
+    font-weight: 500;
+}
+
+/* Khi rê chuột hoặc chạm vào trên điện thoại */
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item:focus {
+    background-color: #ffc107;
+    /* Nền vàng */
+    color: #fff;
+    /* Chữ trắng */
+}
+
+/* ===== */
+/* Khung chứa tổng */
+/* Z-index giúp lớp tìm kiếm luôn nằm trên ảnh */
+.hero-banner .content-layer {
+    z-index: 10;
+}
+
+/* Giới hạn độ rộng thanh tìm kiếm */
+.search-box {
+    max-width: 750px;
+}
+
+/* Tắt viền xanh mặc định của form Bootstrap */
+.search-box .form-control:focus,
+.search-box .form-select:focus {
+    box-shadow: none;
+}
+
+/* 1. Thiết lập đường kẻ ngang chạy phía sau các Icon trên PC */
+.step-container .step-line {
+    position: absolute;
+    top: 20px;
+    /* Căn cho đường kẻ đi ngang qua giữa các Icon */
+    left: 10%;
+    width: 80%;
+    height: 0;
+    border-top: 2px dashed #dee2e6;
+    /* Đường đứt nét màu xám nhạt */
+    z-index: 1;
+}
+
+/* 2. Làm icon nổi lên đè lên đường kẻ */
+.step-item .step-icon {
+    position: relative;
+    z-index: 2;
+    background-color: #f8f9fa;
+    /* Bắt buộc trùng màu nền thẻ <section bg-light> */
+    display: inline-block;
+    padding: 0 15px;
+    /* Tạo khoảng trống 2 bên icon để cắt đứt đường kẻ */
+}
+
+/* 3. Tinh chỉnh màu cam cho đồng bộ với HTKK 360 */
+.step-icon i.text-warning {
+    color: #ff6a00 !important;
+}
+
+/* button  toole*/
+.tool-button {
+    border: 1px solid #e9ecef;
+    background-color: #fff;
+    border-radius: 12px;
+
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    min-height: 100px;
+
+    transition: all 0.3s ease;
+}
+
+.tool-button img {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+}
+
+.tool-button span {
+    font-weight: 600;
+    color: #0b3a68;
+}
+
+.tool-button:hover {
+    border-color: #ffc107;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+/* --- HIỆU ỨNG XUẤT HIỆN KHI CUỘN CHUỘT --- */
+
+/* 1. Trạng thái ẩn ban đầu của tất cả các khối cần hiệu ứng */
+.reveal {
+    opacity: 0;
+    transition: all 0.8s ease-out;
+    /* Thời gian chuyển động 0.8 giây */
+}
+
+/* 2. Hiệu ứng bay từ trái qua (dành cho ảnh) */
+.reveal.fade-left {
+    transform: translateX(-80px);
+}
+
+.reveal.fade-right {
+    transform: translateX(80px);
+}
+
+/* 3. Hiệu ứng bay từ dưới lên (dành cho các nút) */
+.reveal.fade-up {
+    transform: translateY(50px);
+}
+
+/* 4. Trạng thái ĐÃ XUẤT HIỆN (JS sẽ tự động gắn class này vào) */
+.reveal.active {
+    opacity: 1;
+    transform: translate(0, 0);
+}
+
+/* 5. Độ trễ (Delay) để các nút xuất hiện so le nhau cho đẹp mắt */
+.delay-1 {
+    transition-delay: 0.1s;
+}
+
+.delay-2 {
+    transition-delay: 0.2s;
+}
+
+.delay-3 {
+    transition-delay: 0.3s;
+}
+
+.delay-4 {
+    transition-delay: 0.4s;
+}
+
+/* =========================================
+   CSS KHỐI DỊCH VỤ (SERVICES)
+   ========================================= */
+
+/* Nền khối chứa tổng (Hơi xám nhẹ để nổi bật các thẻ card màu trắng) */
+.services-section {
+    background-color: #f4f6fa;
+}
+
+/* Định dạng thẻ Dịch vụ */
+.service-card {
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Hiệu ứng khi hover vào thẻ Dịch vụ */
+.service-card:hover {
+    border-color: #ffc107;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-5px); /* Nẩy nhẹ lên */
+}
+
+/* Vòng tròn chứa Icon */
+.service-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(
+        135deg,
+        #e0eafc,
+        #cfdef3
+    ); /* Đổ màu gradient xanh nhạt */
+    color: #0b3a68;
+    transition: all 0.3s ease;
+}
+
+/* Hiệu ứng xoay icon và đổi màu khi hover vào Card */
+.service-card:hover .service-icon {
+    background: linear-gradient(
+        135deg,
+        #ff9966,
+        #ff5e62
+    ); /* Đổ màu gradient cam/đỏ */
+    color: #fff;
+    transform: rotateY(180deg); /* Hiệu ứng lật icon 3D rất hiện đại */
+}
+
+/* =========================================
+   CSS KHỐI BẢNG GIÁ (PRICING)
+   ========================================= */
+
+/* Ô vuông chứa số thứ tự */
+.number-box {
+    width: 32px;
+    height: 32px;
+    background-color: #0b3a68;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px; /* Bo góc nhẹ */
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* Hiệu ứng khi hover vào từng mục bảng giá */
+.pricing-item {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.pricing-item:hover .number-box {
+    background-color: #ff6a00; /* Số đổi sang màu cam khi hover */
+}
+.pricing-item:hover span {
+    color: #ff6a00 !important; /* Chữ cũng đổi màu cam */
+}
+
+/* Hiệu ứng nảy lên dùng chung cho các nút bấm */
+.hover-lift {
+    transition: all 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 106, 0, 0.4);
+}
+
+/* =========================================
+   CSS KHỐI CAM KẾT VÀ THỐNG KÊ
+   ========================================= */
+
+/* 1. Nền xanh dương và ảnh bản đồ làm nền chìm */
+.commitment-section {
+    background-color: #0b3a68; /* Màu xanh chủ đạo */
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay; /* Trộn màu ảnh nền với màu xanh */
+    padding-bottom: 60px; /* Tạo khoảng trống ở dưới để nhường chỗ cho khối thống kê đè lên */
+}
+
+/* 2. Ép ảnh nhân vật dính sát đáy khối xanh */
+.commitment-section .man-img {
+    margin-bottom: -60px; /* Đẩy chân nhân vật lún xuống bằng với phần padding bottom */
+}
+
+/* 3. Kỹ thuật OVERLAP (Xếp lớp đè lên nhau) cho 4 ô thống kê */
+.stats-container {
+    margin-top: -50px; /* Kéo toàn bộ khối thống kê giật ngược lên trên 50px */
+    background-color: #fff; /* Đề phòng lộ viền */
+}
+
+/* 4. Tinh chỉnh chữ cho ô thống kê */
+.stat-box {
+    transition: all 0.3s ease;
+}
+.stat-box:hover {
+    filter: brightness(1.1); /* Sáng lên nhẹ khi hover */
+}
+.stat-text {
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+/* Trên màn hình điện thoại, chữ thống kê nên nhỏ hơn chút */
+@media (max-width: 768px) {
+    .stat-text {
+        font-size: 11px;
+    }
+}
+/* =========================================
+   CSS KHỐI KHUYẾN MÃI & FORM ĐĂNG KÝ
+   ========================================= */
+
+/* Nền của toàn bộ khu vực */
+.promo-register-section {
+    background-color: #f8fbff; /* Nền xanh rất nhạt */
+    /* Nếu bạn có ảnh nền dãy núi mờ, bỏ comment dòng dưới và chèn link: */
+    /* background-image: url('../images/mountain-bg.png'); */
+    background-size: cover;
+    background-position: bottom;
+}
+
+/* Hộp Form đăng ký */
+.register-box {
+    background-color: #2b5c8f; /* Màu xanh dương sáng hơn màu header một chút để nổi bật */
+}
+
+/* Đổi màu viền khi người dùng click vào ô input (Focus) */
+.register-box .form-control:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3) !important; /* Tạo viền sáng màu vàng */
+}
+
+/* =========================================
+   CSS KHỐI ĐỐI TÁC & FOOTER
+   ========================================= */
+
+/* Logo đối tác */
+.partner-logo {
+    max-height: 45px; /* Giới hạn chiều cao để các logo đều nhau */
+    object-fit: contain;
+    filter: grayscale(100%) opacity(60%); /* Mặc định là đen trắng và hơi mờ */
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Hover hiện màu thật */
+.partner-logo:hover {
+    filter: grayscale(0%) opacity(100%);
+    transform: scale(1.1); /* Phóng to nhẹ */
+}
+
+/* Link trong Footer */
+.footer-links li {
+    margin-bottom: 10px;
+}
+.footer-links a {
+    color: #d1d5db;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+.footer-links a:hover {
+    color: #ffc107; /* Đổi màu vàng khi hover */
+    padding-left: 5px; /* Thụt đầu dòng ra một chút */
+}
+
+/* Icon mạng xã hội */
+.social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.social-icon:hover {
+    background-color: #ff6a00;
+    color: #fff;
+    transform: translateY(-3px);
 }
