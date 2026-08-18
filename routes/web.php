@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 Route::get('/index', function () {
     return view('welcome');
@@ -93,3 +94,15 @@ Route::get('/su-kien', function() {
 Route::get('/tuyen-dung', function() {
     return view('recruitment');
 })->name('tuyen-dung');
+
+//khách vãng lai chưa đăng nhập
+Route::middleware('guest')->group(function(){
+    Route::get('/dang-ky', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/dang-ky',[AuthController::class, 'register']);
+
+    Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/dang-nhap',[AuthController::class,'login']);
+});
+
+//đăng xuất
+Route::post('/dang-xuat',[AuthController::class,'logout'])->name('logout')->middleware('auth');

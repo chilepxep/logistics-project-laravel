@@ -384,3 +384,33 @@ header.sticky-top {
     color: #fff;
     transform: translateY(-3px);
 }
+
+.order-btn {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 12px;
+
+    background-color: #ff6a00;
+    color: #fff;
+
+    border-radius: 20px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition: all 0.3s ease;
+}
+
+.order-btn:hover {
+    background-color: #e85d00;
+    color: #fff;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 4px 10px rgba(255, 106, 0, 0.3);
+}
+
+.order-btn i {
+    font-size: 14px;
+}
