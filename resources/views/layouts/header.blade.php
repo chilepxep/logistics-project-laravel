@@ -35,7 +35,7 @@
 
 
                             <!-- Danh sách đơn hàng -->
-                            <a href="#" class="order-btn text-decoration-none">
+                            <a href="{{ route('dashboard') }}" class="order-btn text-decoration-none">
 
                                 <i class="bi bi-journal-bookmark-fill me-1"></i>
                                 Danh sách đơn hàng

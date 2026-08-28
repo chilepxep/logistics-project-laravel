@@ -1,0 +1,446 @@
+/* Màu nền chủ đạo của hệ thống */
+:root {
+    --dash-primary: #123e71;
+    --dash-secondary: #0d2f57;
+}
+
+.dashboard-body {
+    background-color: #f4f6f9;
+    height: 100vh;
+    overflow: hidden; /* Khóa cuộn trang tổng, chỉ cuộn ở phần giữa */
+}
+
+/* Thanh điều hướng Top */
+.top-navbar {
+    background-color: var(--dash-primary);
+    height: 60px;
+}
+
+/* Khối Wrapper bọc phần dưới */
+.main-wrapper {
+    height: calc(100vh - 60px);
+}
+
+/* Sidebar Trái */
+.left-sidebar {
+    background-color: var(--dash-primary);
+    width: 100px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* Cố định sidebar trên màn hình, bỏ hoàn toàn overflow để menu con bay ra thoải mái */
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Ẩn thanh cuộn (scrollbar) của sidebar để giao diện mượt mà hơn */
+.left-sidebar::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.sidebar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 10px 0; /* Giảm khoảng cách trên/dưới từ 15px xuống 10px */
+    transition: all 0.3s ease;
+}
+.sidebar-nav .nav-link i {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid #ff6a00;
+}
+
+/* Khu vực nội dung giữa */
+.center-content {
+    overflow-y: auto; /* Cho phép cuộn dọc */
+    padding: 30px;
+}
+
+/* Sidebar Phải */
+.right-sidebar {
+    background-color: var(--dash-secondary);
+    width: 280px;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+/* Thẻ chức năng (Feature Cards) */
+.feature-card {
+    transition: all 0.3s ease;
+}
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1) !important;
+    border-bottom: 3px solid #ff6a00 !important;
+}
+
+/* Vòng tròn chứa Icon trong Thẻ */
+.icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+.feature-card:hover .icon-wrapper {
+    transform: scale(1.1);
+}
+
+.top-navbar {
+    min-height: 64px;
+}
+
+.logo {
+    width: 150px;
+    max-height: 50px;
+    object-fit: contain;
+}
+
+/* Icon */
+.nav-icon {
+    transition: all 0.2s ease;
+}
+
+.nav-icon:hover {
+    color: #ff6a00 !important;
+}
+
+/* Badge */
+.nav-icon .badge {
+    font-size: 9px;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Avatar */
+.user-menu img {
+    object-fit: cover;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    min-width: 180px;
+}
+
+.dropdown-item {
+    padding: 9px 15px;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f3f6;
+    color: #ff6a00;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 991.98px) {
+    .top-navbar {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .navbar-toggler {
+        padding: 2px 5px;
+    }
+
+    .user-menu {
+        margin-top: 15px;
+        padding: 15px 5px;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+
+        /* Cho các item xuống hàng */
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .user-menu .balance {
+        width: 100%;
+        margin-right: 0 !important;
+    }
+
+    .user-menu .nav-icon {
+        margin-right: 15px !important;
+    }
+
+    .user-menu .dropdown {
+        margin-left: auto;
+    }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 575.98px) {
+    .top-navbar {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .logo {
+        width: 120px;
+        max-width: 120px;
+    }
+
+    .user-menu {
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .user-menu .balance {
+        font-size: 13px;
+    }
+
+    .user-menu .balance strong {
+        font-size: 14px !important;
+    }
+
+    .user-menu .nav-icon {
+        margin-right: 0 !important;
+    }
+
+    .user-menu .dropdown {
+        margin-left: 0;
+    }
+
+    .user-menu .dropdown img {
+        width: 34px;
+        height: 34px;
+    }
+
+    .dropdown-menu {
+        font-size: 14px;
+    }
+}
+
+/* =========================
+   VERY SMALL MOBILE
+========================= */
+
+@media (max-width: 380px) {
+    .logo {
+        width: 105px;
+    }
+
+    .user-menu {
+        gap: 10px;
+    }
+
+    .user-menu .balance {
+        font-size: 12px;
+    }
+
+    .user-menu .balance strong {
+        font-size: 13px !important;
+    }
+}
+
+/* =========================================
+   CSS MENU CON (SUB-MENU POP-OUT) SIDEBAR
+   ========================================= */
+
+/* 1. Thiết lập phần tử Cha làm gốc tọa độ */
+.sidebar-nav .nav-item {
+    position: relative; /* Đặt làm gốc để menu con định vị theo */
+}
+
+/* 2. Thiết kế khối Menu con (Ẩn mặc định) */
+.sidebar-nav .submenu {
+    position: absolute;
+    top: 0;
+    left: 100%; /* Ép khối này văng sát ra mép phải của Sidebar (100% chiều rộng của thẻ li) */
+    width: 220px;
+    background-color: var(--dash-secondary); /* Dùng cùng màu nền xanh đậm */
+    border-radius: 0 8px 8px 0; /* Chỉ bo góc bên phải cho liền mạch */
+    padding: 10px 0;
+    text-align: left;
+
+    /* Hiệu ứng ẩn và chuẩn bị trượt */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-15px); /* Kéo lùi lại 15px để tạo đà */
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+/* 3. Hiệu ứng MỞ RỘNG (Khi Hover vào thẻ li cha) */
+.sidebar-nav .nav-item:hover .submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0); /* Trượt nhẹ ra đúng vị trí chuẩn */
+}
+
+/* 4. Tinh chỉnh chữ và hover bên trong Menu con */
+.sidebar-nav .submenu li a {
+    display: block;
+    padding: 12px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav .submenu li a:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Nền sáng lên nhẹ */
+    color: #ff6a00; /* Chữ đổi màu cam */
+    padding-left: 25px; /* Chữ thụt nhẹ vào trong tạo cảm giác tương tác */
+}
+/* ====TẠO ĐƠN HÀNG======= */
+/* =========================================
+   CSS TRANG TẠO ĐƠN HÀNG (USER)
+   ========================================= */
+
+/* Ép các ô input trong bảng phải thật vuông vức, viền xám nhạt */
+.form-table input,
+.form-table textarea {
+    border: 1px solid #ced4da;
+    border-radius: 2px !important;
+}
+
+/* Loại bỏ viền đen/xanh khi focus vào input trong bảng */
+.form-table input:focus,
+.form-table textarea:focus {
+    box-shadow: none;
+    border-color: #80bdff;
+}
+
+/* Đảm bảo ô textarea không bị kéo dãn làm vỡ bố cục bảng */
+.form-table textarea {
+    resize: none;
+}
+
+/* Khối Summary Box nổi bật bên phải */
+.summary-box {
+    position: sticky;
+    top: 20px; /* Ghim lại cách mép trên 20px khi cuộn chuột */
+    border: 1px solid #e0e0e0 !important;
+}
+
+/* Tinh chỉnh các dòng kẻ gạch đứt trong Summary Box */
+.summary-box .border-bottom {
+    border-bottom: 1px dashed #e0e0e0 !important;
+}
+
+/* chuông thông báo */
+/* Kích thước và hiệu ứng cho Dropdown Thông báo */
+.notif-dropdown {
+    width: 450px; /* Độ rộng của bảng thông báo */
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden; /* Bo tròn các góc mượt mà */
+    margin-top: 10px !important;
+}
+
+/* Tạo mũi tên nhỏ nhô lên chỉ vào icon chuông */
+.notif-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 15px; /* Điều chỉnh cho khớp với vị trí chuông */
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #fff;
+}
+
+/* Khu vực Sidebar bên trái (Chứa các icon) */
+.notif-sidebar {
+    width: 70px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #eaeaea;
+}
+
+.notif-sidebar .nav-link {
+    border-radius: 0;
+    color: #6c757d;
+    padding: 15px 0;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid #eaeaea;
+    transition: all 0.2s ease;
+}
+
+.notif-sidebar .nav-link i {
+    font-size: 22px;
+}
+
+/* Trạng thái khi chọn (Active) hoặc Hover */
+.notif-sidebar .nav-link:hover {
+    background-color: #e9ecef;
+}
+.notif-sidebar .nav-link.active {
+    background-color: #0d6efd; /* Màu xanh nước biển */
+    color: #fff;
+}
+
+/* Huy hiệu đếm số (Badge) trên icon */
+.notif-sidebar .badge-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    padding: 3px 5px;
+    border: 2px solid #fff; /* Viền trắng tách biệt với nền */
+}
+
+/* Khu vực Nội dung bên phải */
+.notif-content {
+    height: 350px; /* Chiều cao cố định để cuộn */
+    overflow-y: auto;
+    background-color: #fff;
+}
+
+/* Tùy chỉnh thanh cuộn cho mỏng và đẹp */
+.notif-content::-webkit-scrollbar {
+    width: 5px;
+}
+.notif-content::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+/* Style cho từng dòng thông báo */
+.notif-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    color: #333;
+    transition: background 0.2s;
+}
+.notif-item:hover {
+    background-color: #f8f9fa;
+}
+.notif-item.unread {
+    background-color: #f0f7ff; /* Nền xanh nhạt cho thông báo chưa đọc */
+}
+.notif-item.unread .notif-text {
+    font-weight: 600;
+    color: #000;
+}
+.notif-text {
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+.notif-time {
+    font-size: 12px;
+    color: #888;
+}
