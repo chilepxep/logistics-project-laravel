@@ -49,102 +49,146 @@ class OrderListController extends Controller
             abort(403, 'Bạn không có quyền sửa đơn hàng này!');
         }
 
-        // Tùy chọn: Thường chỉ cho phép sửa khi đơn ở trạng thái 'Chờ báo giá'
-        if ($order->trang_thai !== 'cho_bao_gia') {
+        
+        if ($order->trang_thai !== 'cho_xu_ly') {
             return redirect()->route('dashboard')->withErrors('Chỉ được sửa đơn hàng đang chờ báo giá.');
         }
 
-        // Lấy danh sách kho VN để render ra select box
-        $warehouses = Warehouse::all(); // (Hoặc lấy kho VN: where('loai_kho', 'VN')->get())
 
-        return view('user.order-edit', compact('order', 'warehouses'));
+        // Load danh sách Quốc gia 
+    $countries = \App\Models\Country::all();
+    //  danh sách Nhà cung cấp thuộc Quốc gia mà đơn hàng đang lưu
+    $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
+        // Lấy danh sách kho VN để render ra select box
+        $warehouses = Warehouse::all();
+
+        return view('user.order-edit', compact('order', 'countries','warehouses', 'currentSuppliers'));
     }
 
     // 2. Hàm xử lý Cập nhật dữ liệu
     public function update(Request $request, $id)
-    {
-        $order = Order::findOrFail($id);
+{
+    $order = Order::findOrFail($id);
 
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        // Validate cơ bản
-        $request->validate([
-            'tru_so_nhan_hang_id' => 'required',
-            'items'               => 'required|array|min:1',
-        ], [
-            'items.required' => 'Đơn hàng phải có ít nhất 1 sản phẩm.'
-        ]);
-
-        try {
-            DB::transaction(function () use ($request, $order) {
-                // 1. Cập nhật thông tin chung của Đơn hàng
-                $order->update([
-                    'tru_so_nhan_hang_id' => $request->tru_so_nhan_hang_id,
-                    'yeu_cau_toc_do'      => $request->yeu_cau_toc_do ?? 'thuong',
-                ]);
-
-                // 2. Xử lý danh sách Items
-                // Lấy mảng ID của các item HIỆN TẠI trong database
-                $existingItemIds = $order->items->pluck('id')->toArray();
-                $submittedItemIds = []; // Mảng chứa ID của các item được submit lên từ form
-
-                foreach ($request->items as $index => $itemData) {
-                    
-                    // Logic xử lý ảnh: Nếu có upload file mới thì lưu file, không thì giữ link cũ
-                    $hinhAnhUrl = $itemData['hinh_anh_cu'] ?? null;
-                    if ($request->hasFile("items.{$index}.hinh_anh_file")) {
-                        $file = $request->file("items.{$index}.hinh_anh_file");
-                        $path = $file->store('uploads/orders', 'public');
-                        $hinhAnhUrl = '/storage/' . $path;
-                    }
-
-                    if (!empty($itemData['id'])) {
-                        // Trường hợp 2.1: Item đã tồn tại -> CẬP NHẬT
-                        $orderItem = OrderItem::find($itemData['id']);
-                        if ($orderItem && $orderItem->order_id == $order->id) {
-                            $orderItem->update([
-                                'link_san_pham' => $itemData['link_san_pham'] ?? null,
-                                'ten_san_pham'  => $itemData['ten_san_pham'],
-                                'thuoc_tinh'    => $itemData['thuoc_tinh'] ?? null,
-                                'so_luong'      => $itemData['so_luong'],
-                                'don_gia_te'    => $itemData['don_gia_te'] ?? 0,
-                                'ghi_chu'       => $itemData['ghi_chu'] ?? null,
-                                'hinh_anh_url'  => $hinhAnhUrl,
-                            ]);
-                            $submittedItemIds[] = $orderItem->id;
-                        }
-                    } else {
-                        // Trường hợp 2.2: Item không có ID -> THÊM MỚI (Do bấm nút Thêm dòng)
-                        $newItem = OrderItem::create([
-                            'order_id'      => $order->id,
-                            'link_san_pham' => $itemData['link_san_pham'] ?? null,
-                            'ten_san_pham'  => $itemData['ten_san_pham'],
-                            'thuoc_tinh'    => $itemData['thuoc_tinh'] ?? null,
-                            'so_luong'      => $itemData['so_luong'],
-                            'don_gia_te'    => $itemData['don_gia_te'] ?? 0,
-                            'ghi_chu'       => $itemData['ghi_chu'] ?? null,
-                            'hinh_anh_url'  => $hinhAnhUrl,
-                        ]);
-                        $submittedItemIds[] = $newItem->id;
-                    }
-                }
-
-                // Trường hợp 2.3: XÓA các Item không còn trong form
-                // Lọc ra các ID có trong DB nhưng không được submit lên (tức là người dùng đã bấm Xóa dòng)
-                $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
-                if (count($itemsToDelete) > 0) {
-                    OrderItem::whereIn('id', $itemsToDelete)->delete();
-                }
-            });
-
-            return redirect()->route('order.show', $order->id)->with('success', 'Cập nhật đơn hàng thành công!');
-
-        } catch (\Exception $e) {
-            return back()->withErrors('Lỗi hệ thống: ' . $e->getMessage())->withInput();
-        }
+    if ($order->user_id !== Auth::id()) {
+        abort(403);
     }
+
+    // 1. Validate mở rộng (Thêm Quốc gia & NCC)
+    $request->validate([
+        'country_id'          => 'required|exists:countries,id',
+        'supplier_id'         => 'required|exists:suppliers,id',
+        'tru_so_nhan_hang_id' => 'required',
+        'items'               => 'required|array|min:1',
+        'items.*.ten_san_pham'=> 'required|string',
+        'items.*.so_luong'    => 'required|integer|min:1',
+        'items.*.don_gia'     => 'required|numeric|min:0', // Sửa don_gia_te thành don_gia
+    ], [
+        'items.required' => 'Đơn hàng phải có ít nhất 1 sản phẩm.'
+    ]);
+
+    try {
+        DB::transaction(function () use ($request, $order) {
+            
+            // 2. TÍNH TOÁN LẠI TỔNG TIỀN VNĐ
+            $tongTienNgoaiTe = 0;
+            $tongSoLuong = 0;
+
+            foreach($request->items as $itemData) {
+               $tongTienNgoaiTe += ($itemData['don_gia'] * $itemData['so_luong']);
+               $tongSoLuong += $itemData['so_luong'];
+            }
+
+            // Lấy Tỉ giá của Quốc gia mới (hoặc giữ nguyên nếu không đổi)
+            $country = \App\Models\Country::findOrFail($request->country_id);
+            $tiGia = 3500; // Mặc định là Tệ (CNY)
+            if ($country->tien_te == 'JPY') $tiGia = 170;
+            if ($country->tien_te == 'AUD') $tiGia = 16500;
+            if ($country->tien_te == 'EUR') $tiGia = 27000;
+
+            // Tính các loại tiền (VNĐ)
+            $tienHangVnd = $tongTienNgoaiTe * $tiGia;
+            $phiMuaHoVnd = $tienHangVnd * 0.01; // Phí mua hộ 1%
+            
+            // Xử lý Phí dịch vụ (Dựa vào Extra Requirements cũ đang có trong DB)
+            $phiDichVuVnd = 0;
+            $extraReqs = $order->extraRequirements->pluck('loai_yeu_cau')->toArray();
+            if (in_array('kiem_hang', $extraReqs)) {
+                $phiDichVuVnd += ($tongSoLuong * 1000); 
+            }
+            if (in_array('dong_go', $extraReqs)) {
+                $phiDichVuVnd += ($tongSoLuong * 5000); 
+            }
+
+            $tongTienThanhToan = $tienHangVnd + $phiMuaHoVnd + $phiDichVuVnd;
+
+            // 3. Cập nhật thông tin chung của Đơn hàng (Cập nhật cả Tiền và Quốc gia)
+            $order->update([
+                'country_id'          => $request->country_id,
+                'supplier_id'         => $request->supplier_id,
+                'tru_so_nhan_hang_id' => $request->tru_so_nhan_hang_id,
+                'yeu_cau_toc_do'      => $request->yeu_cau_toc_do ?? 'thuong',
+                'tong_tien'           => $tongTienThanhToan, // Lưu lại tổng tiền VNĐ mới
+            ]);
+
+            // 4. Xử lý danh sách Items
+            $existingItemIds = $order->items->pluck('id')->toArray();
+            $submittedItemIds = []; 
+
+            foreach ($request->items as $index => $itemData) {
+                
+                $hinhAnhUrl = $itemData['hinh_anh_cu'] ?? null;
+                if ($request->hasFile("items.{$index}.hinh_anh_file")) {
+                    $file = $request->file("items.{$index}.hinh_anh_file");
+                    $path = $file->store('uploads/orders', 'public');
+                    $hinhAnhUrl = '/storage/' . $path;
+                }
+
+                if (!empty($itemData['id'])) {
+                    // Cập nhật Item cũ
+                    $orderItem = OrderItem::find($itemData['id']);
+                    if ($orderItem && $orderItem->order_id == $order->id) {
+                        $orderItem->update([
+                            'link_san_pham'      => $itemData['link_san_pham'] ?? null,
+                            'ten_san_pham'       => $itemData['ten_san_pham'],
+                            'mau_sac_kich_thuoc' => $itemData['thuoc_tinh'] ?? null,
+                            'so_luong'           => $itemData['so_luong'],
+                            'don_gia'            => $itemData['don_gia'], // Đổi tên cột
+                            'ghi_chu_khac'       => $itemData['ghi_chu'] ?? null,
+                            'hinh_anh_url'       => $hinhAnhUrl,
+                        ]);
+                        $submittedItemIds[] = $orderItem->id;
+                    }
+                } else {
+                    // Thêm mới Item
+                    $newItem = OrderItem::create([
+                        'order_id'           => $order->id,
+                        'stt'                => $order->items->count() + count($submittedItemIds) + 1,
+                        'link_san_pham'      => $itemData['link_san_pham'] ?? null,
+                        'ten_san_pham'       => $itemData['ten_san_pham'],
+                        'mau_sac_kich_thuoc' => $itemData['thuoc_tinh'] ?? null,
+                        'so_luong'           => $itemData['so_luong'],
+                        'don_gia'            => $itemData['don_gia'], // Đổi tên cột
+                        'ghi_chu_khac'       => $itemData['ghi_chu'] ?? null,
+                        'hinh_anh_url'       => $hinhAnhUrl,
+                    ]);
+                    $submittedItemIds[] = $newItem->id;
+                }
+            }
+
+            // Xóa Item thừa
+            $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
+            if (count($itemsToDelete) > 0) {
+                OrderItem::whereIn('id', $itemsToDelete)->delete();
+            }
+        });
+
+        return redirect()->route('order.show', $order->id)->with('success', 'Cập nhật đơn hàng thành công!');
+
+    } catch (\Exception $e) {
+        return back()->withErrors('Lỗi hệ thống: ' . $e->getMessage())->withInput();
+    }
+}
 
     // 3. Hàm xử lý Xóa đơn hàng
     public function destroy($id)
@@ -156,9 +200,9 @@ class OrderListController extends Controller
             abort(403, 'Bạn không có quyền xóa đơn hàng này!');
         }
 
-        //Chỉ cho phép xóa khi đơn hàng đang ở trạng thái 'Chờ báo giá'
-        if ($order->trang_thai !== 'cho_bao_gia') {
-            return back()->withErrors('Bạn chỉ có thể xóa đơn hàng đang ở trạng thái Chờ báo giá.');
+    
+        if ($order->trang_thai !== 'cho_xu_ly') {
+            return back()->withErrors('Bạn chỉ có thể xóa đơn hàng đang ở trạng thái Chờ xử lý.');
         }
 
         try {

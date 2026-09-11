@@ -28,15 +28,62 @@
         </div>
         @endif
 
-        <!-- THÔNG TIN KHO -->
-        <div class="card shadow-sm mb-4 border-0">
-            <div class="card-header fw-bold text-uppercase text-white" style="background-color: #198754;">
-                Kho nhận hàng Trung Quốc
+        <!-- KHỐI CHỌN TUYẾN VẬN CHUYỂN -->
+        <div class="row bg-white shadow-sm p-3 rounded border mb-4">
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-airplane-engines"></i> 1. Tuyến Vận Chuyển</h6>
+
+            <div class="col-12 mb-3">
+                <div class="btn-group w-100 shadow-sm" role="group" id="btnGroupDirection">
+                    <input type="radio" class="btn-check" name="chieu_van_chuyen" id="chieu_ve_vn" value="ve_vn"
+                        {{ $order->chieu_van_chuyen == 've_vn' ? 'checked' : '' }} autocomplete="off">
+                    <label class="btn btn-outline-primary fw-bold" for="chieu_ve_vn">Quốc Tế <i
+                            class="bi bi-arrow-right px-2"></i> Việt Nam</label>
+
+                    <input type="radio" class="btn-check" name="chieu_van_chuyen" id="chieu_di_qt" value="di_qt"
+                        {{ $order->chieu_van_chuyen == 'di_qt' ? 'checked' : '' }} autocomplete="off">
+                    <label class="btn btn-outline-primary fw-bold" for="chieu_di_qt">Việt Nam <i
+                            class="bi bi-arrow-right px-2"></i> Quốc Tế</label>
+                </div>
             </div>
-            <div class="card-body">
-                <select name="tru_so_nhan_hang_id" class="form-select w-50">
+
+            <!-- KHU VỰC 1: KHO NƯỚC NGOÀI -->
+            <div class="col-md-6 mb-3" id="boxQuocTe">
+                <label class="form-label fw-bold"><span class="badge bg-warning text-dark me-1" id="lblQuocTe">TỪ</span>
+                    Kho Quốc Tế <span class="text-danger">*</span></label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <select name="country_id" id="countrySelect" class="form-select border-warning" required>
+                            <option value="">-- Chọn Quốc gia --</option>
+                            @foreach($countries as $country)
+                            <option value="{{ $country->id }}"
+                                {{ $order->country_id == $country->id ? 'selected' : '' }}>
+                                {{ $country->ten_quoc_gia }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <!-- Tải thẳng danh sách nhà cung cấp của quốc gia hiện tại -->
+                        <select name="supplier_id" id="supplierSelect" class="form-select border-warning" required>
+                            <option value="">-- Chọn Kho --</option>
+                            @foreach($currentSuppliers as $sup)
+                            <option value="{{ $sup->id }}" {{ $order->supplier_id == $sup->id ? 'selected' : '' }}>
+                                {{ $sup->ten_ncc }} ({{ $sup->thanh_pho ?? 'Chưa rõ' }})
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KHU VỰC 2: KHO VIỆT NAM -->
+            <div class="col-md-6 mb-3" id="boxVietNam">
+                <label class="form-label fw-bold"><span class="badge bg-success me-1" id="lblVietNam">ĐẾN</span> Kho
+                    Việt Nam <span class="text-danger">*</span></label>
+                <select name="tru_so_nhan_hang_id" class="form-select border-success" required>
+                    <option value="">-- Chọn Kho Nội Địa --</option>
                     @foreach($warehouses as $kho)
-                    <option value="{{ $kho->id }}" {{ $order->kho_nhan_tq_id == $kho->id ? 'selected' : '' }}>
+                    <option value="{{ $kho->id }}" {{ $order->kho_vn_id == $kho->id ? 'selected' : '' }}>
                         {{ $kho->ten_kho }}
                     </option>
                     @endforeach
@@ -110,10 +157,6 @@
                                         value="{{ $item->ten_san_pham }}" class="form-control form-control-sm mb-2"
                                         placeholder="Tên SP (*)" required>
                                     <div class="d-flex gap-2 mb-2">
-                                        <select name="packages[{{ $index }}][tq_vn]" class="form-select form-select-sm">
-                                            <option value="TQ-VN" {{ $item->tq_vn == 'TQ-VN' ? 'selected' : '' }}>TQ -
-                                                VN</option>
-                                        </select>
                                         <select name="packages[{{ $index }}][loai_danh_muc]"
                                             class="form-select form-select-sm">
                                             <option value="">- Danh mục -</option>
@@ -267,6 +310,63 @@ document.addEventListener('DOMContentLoaded', function() {
         const deleteBtn = e.target.closest('.btn-delete-row');
         if (deleteBtn) {
             deleteBtn.closest('tr').remove();
+        }
+    });
+
+
+    // 1. LOGIC HOÁN ĐỔI CHIỀU VẬN CHUYỂN
+    const radioVeVn = document.getElementById('chieu_ve_vn');
+    const radioDiQt = document.getElementById('chieu_di_qt');
+    const lblQuocTe = document.getElementById('lblQuocTe');
+    const lblVietNam = document.getElementById('lblVietNam');
+
+    function updateDirectionLabels() {
+        if (radioVeVn.checked) {
+            // Nước ngoài gửi về VN
+            lblQuocTe.textContent = "TỪ";
+            lblQuocTe.className = "badge bg-warning text-dark me-1";
+            lblVietNam.textContent = "ĐẾN";
+            lblVietNam.className = "badge bg-success me-1";
+        } else {
+            // VN gửi đi nước ngoài
+            lblVietNam.textContent = "TỪ";
+            lblVietNam.className = "badge bg-warning text-dark me-1";
+            lblQuocTe.textContent = "ĐẾN";
+            lblQuocTe.className = "badge bg-success me-1";
+        }
+    }
+
+    radioVeVn.addEventListener('change', updateDirectionLabels);
+    radioDiQt.addEventListener('change', updateDirectionLabels);
+
+
+    // 2. LOGIC TẢI DANH SÁCH KHO QUỐC TẾ (AJAX)
+    const countrySelect = document.getElementById('countrySelect');
+    const supplierSelect = document.getElementById('supplierSelect');
+
+    countrySelect.addEventListener('change', function() {
+        const countryId = this.value;
+        supplierSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+        supplierSelect.disabled = true;
+
+        if (countryId) {
+            fetch(`/api/suppliers-by-country/${countryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    supplierSelect.innerHTML = '<option value="">-- Chọn Kho --</option>';
+                    if (data.length > 0) {
+                        data.forEach(sup => {
+                            supplierSelect.insertAdjacentHTML('beforeend',
+                                `<option value="${sup.id}">${sup.ten_ncc} (${sup.thanh_pho})</option>`
+                            );
+                        });
+                        supplierSelect.disabled = false;
+                    } else {
+                        supplierSelect.innerHTML = '<option value="">Hết kho</option>';
+                    }
+                });
+        } else {
+            supplierSelect.innerHTML = '<option value="">-- Chọn Kho --</option>';
         }
     });
 });

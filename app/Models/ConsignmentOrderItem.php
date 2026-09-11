@@ -17,7 +17,6 @@ class ConsignmentOrderItem extends Model
         'ten_san_pham',
         'so_kien_hang',
         'hang_van_chuyen',
-        'tq_vn',
         'loai_danh_muc',
         'so_luong',
         'gia_tri_hang_hoa',

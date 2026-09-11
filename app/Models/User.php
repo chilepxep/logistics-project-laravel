@@ -30,6 +30,7 @@ class User extends Authenticatable
         'tinh_thanh',
         'loai_van_chuyen_mac_dinh',
         'so_du',
+        'is_locked',
     ];
 
     /**
@@ -55,5 +56,22 @@ class User extends Authenticatable
             'so_du' => 'decimal:2',
             'ngay_sinh' => 'date',
         ];
+    }
+
+
+    public function orders() {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
+    public function consignmentOrders() {
+        return $this->hasMany(ConsignmentOrder::class, 'user_id');
+    }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class, 'user_id');
+    }
+
+    public function withdrawals() {
+        return $this->hasMany(Withdrawal::class, 'user_id');
     }
 }

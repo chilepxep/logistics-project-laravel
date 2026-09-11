@@ -12,46 +12,61 @@ use App\Models\Warehouse;
 
 class ConsignmentController extends Controller
 {
+
+public function create()
+    {
+        // Lấy danh sách kho VN 
+        $warehouses = Warehouse::all();
+        //lấy danh sách quốc gia
+        $countries = \App\Models\Country::all();
+        return view('user.create-consignment', compact('countries','warehouses'));
+    }
+    
     public function store(Request $request)
     {
-        // 1. Kiểm tra dữ liệu đầu vào (Validation)
-       $request->validate([
-            'tru_so_nhan_hang_id'       => 'required|integer',
-            'packages'                  => 'required|array|min:1',
-            'packages.*.ma_van_don'     => 'required|string',
-            'packages.*.ten_san_pham'   => 'required|string',
-            'packages.*.so_kien_hang'   => 'required|integer|min:1',
-            'packages.*.hang_van_chuyen'=> 'required|string',
-            'packages.*.so_luong'       => 'required|integer|min:1',
+        // 1. Kiểm tra dữ liệu đầu vào
+        $request->validate([
+            'chieu_van_chuyen'           => 'required|in:ve_vn,di_qt',
+            'country_id'                 => 'required|exists:countries,id',
+            'supplier_id'                => 'required|exists:suppliers,id',
+            'tru_so_nhan_hang_id'        => 'required|integer', 
+            'packages'                   => 'required|array|min:1',
+            'packages.*.ma_van_don'      => 'required|string',
+            'packages.*.ten_san_pham'    => 'required|string',
+            'packages.*.so_kien_hang'    => 'required|integer|min:1',
+            'packages.*.hang_van_chuyen' => 'required|string',
+            'packages.*.so_luong'        => 'required|integer|min:1',
             'packages.*.gia_tri_hang_hoa'=> 'required|numeric|min:0',
-            'packages.*.loai_danh_muc'  => 'required|string',
-            'packages.*.tq_vn'          => 'required|string',
-            'packages.*.link_san_pham'  => 'nullable|string', 
-            'packages.*.mo_ta_chi_tiet' => 'nullable|string', 
-            'packages.*.ghi_chu'        => 'nullable|string'  
+            'packages.*.loai_danh_muc'   => 'nullable|string',
+            'packages.*.link_san_pham'   => 'nullable|string', 
+            'packages.*.mo_ta_chi_tiet'  => 'nullable|string', 
+            'packages.*.ghi_chu'         => 'nullable|string'  
         ]);
 
         try {
             DB::transaction(function () use ($request) {
                 
-                // 1. Tạo đơn hàng (Bảng Cha)
-                // Lấy yêu cầu tốc độ từ kiện hàng đầu tiên (nếu có), mặc định là 'thuong'
-                $tocDo = $request->packages[1]['yeu_cau_toc_do'] ?? 'thuong'; 
+                // Lấy yêu cầu tốc độ từ kiện đầu tiên
+                $tocDo = $request->packages[0]['yeu_cau_toc_do'] ?? 'thuong'; 
 
+                // 2. Tạo đơn hàng (Bảng Cha)
                 $order = ConsignmentOrder::create([
                     'ma_don_ky_gui'    => 'KG' . time() . rand(10, 99),
                     'user_id'          => Auth::id(),
+                    'chieu_van_chuyen' => $request->chieu_van_chuyen,
+                    'country_id'       => $request->country_id,  
+                    'supplier_id'      => $request->supplier_id,
+                    'kho_vn_id'        => $request->tru_so_nhan_hang_id, // Lưu chuẩn vào cột kho_vn_id
                     'ngay_tao_yeu_cau' => now()->toDateString(),
-                    'kho_nhan_tq_id'   => $request->tru_so_nhan_hang_id,
                     'so_kien'          => count($request->packages),
                     'yeu_cau_toc_do'   => $tocDo,
                     'trang_thai'       => 'cho_xu_ly'
                 ]);
 
-                $hasDongGo = false; // Biến cờ kiểm tra xem có kiện nào yêu cầu đóng gỗ không
-
-                // 2. Lưu chi tiết từng kiện hàng
+                $hasDongGo = false; 
                 $stt = 1;
+
+                // 3. Lưu chi tiết từng kiện hàng
                 foreach ($request->packages as $index => $pkg) {
                     $hinhAnhUrl = null;
 
@@ -69,23 +84,19 @@ class ConsignmentController extends Controller
                         'ten_san_pham'         => $pkg['ten_san_pham'],
                         'so_kien_hang'         => $pkg['so_kien_hang'],
                         'hang_van_chuyen'      => $pkg['hang_van_chuyen'],
-                        
-                    
-                        'tq_vn'                => $pkg['tq_vn'] ?? 'TQ-VN',
                         'loai_danh_muc'        => $pkg['loai_danh_muc'] ?? null,
                         'so_luong'             => $pkg['so_luong'],
                         'gia_tri_hang_hoa'     => $pkg['gia_tri_hang_hoa'], 
                         'link_san_pham'        => $pkg['link_san_pham'] ?? null,
-                        
                         'ghi_chu'              => $pkg['ghi_chu'] ?? null,
                     ]);
-                    // Kiểm tra nếu khách hàng tick Đóng gỗ ở kiện này
+                    
                     if (isset($pkg['dong_go'])) {
                         $hasDongGo = true;
                     }
                 }
 
-                // 3. Lưu Dịch vụ gia tăng (Bảng Extra Requirements)
+                // 4. Lưu Dịch vụ gia tăng (Bảng Extra Requirements)
                 if ($hasDongGo) {
                     ConsignmentExtraRequirement::create([
                         'consignment_order_id' => $order->id,
@@ -93,7 +104,7 @@ class ConsignmentController extends Controller
                     ]);
                 }
             });
-
+            
             return back()->with('success', 'Tạo đơn ký gửi thành công!');
 
         } catch (\Exception $e) {
@@ -106,7 +117,7 @@ class ConsignmentController extends Controller
         $userId = Auth::id();
 
         // Lấy danh sách ký gửi kèm thông tin kho, sắp xếp mới nhất lên đầu
-        $consignmentOrders = ConsignmentOrder::with('khoNhan')
+        $consignmentOrders = ConsignmentOrder::with('KhoVn')
                                              ->where('user_id', $userId)
                                              ->orderBy('created_at', 'desc')
                                              ->get();
@@ -117,7 +128,7 @@ class ConsignmentController extends Controller
     public function show($id)
     {
         // Lấy đơn ký gửi kèm theo kho nhận, các kiện hàng và yêu cầu gia tăng
-        $order = ConsignmentOrder::with(['khoNhan', 'items', 'extraRequirements'])->findOrFail($id);
+        $order = ConsignmentOrder::with(['KhoVn', 'items', 'extraRequirements'])->findOrFail($id);
 
         // Bảo mật: Chỉ chủ nhân của đơn mới được xem
         if ($order->user_id !== Auth::id()) {
@@ -131,7 +142,8 @@ class ConsignmentController extends Controller
     public function edit($id)
     {
         $order = ConsignmentOrder::with(['items', 'extraRequirements'])->findOrFail($id);
-
+    $countries = \App\Models\Country::all();
+    $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
         if ($order->user_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền sửa đơn hàng này!');
         }
@@ -142,117 +154,121 @@ class ConsignmentController extends Controller
         }
 
         // Lấy danh sách kho để hiển thị ra Select box
-        $warehouses = Warehouse::all(); // Hoặc Warehouse::where('loai_kho', 'TQ')->get() nếu bạn có phân loại
+        $warehouses = Warehouse::all();
 
-        return view('user.consignment-edit', compact('order', 'warehouses'));
+        return view('user.consignment-edit', compact('order', 'countries', 'warehouses', 'currentSuppliers'));
     }
 
     // 2. Logic cập nhật dữ liệu
-    public function update(Request $request, $id)
-    {
-        $order = ConsignmentOrder::findOrFail($id);
+public function update(Request $request, $id)
+{
+    $order = ConsignmentOrder::findOrFail($id);
 
-        if ($order->user_id !== Auth::id()) abort(403);
+    if ($order->user_id !== Auth::id()) abort(403);
 
-        $request->validate([
-            'tru_so_nhan_hang_id'       => 'required|integer',
-            'packages'                  => 'required|array|min:1',
-            'packages.*.ma_van_don'     => 'required|string',
-            'packages.*.ten_san_pham'   => 'required|string',
-            'packages.*.so_kien_hang'   => 'required|integer|min:1',
-            'packages.*.hang_van_chuyen'=> 'required|string',
-            'packages.*.so_luong'       => 'required|integer|min:1',
-            'packages.*.gia_tri_hang_hoa'=> 'required|numeric|min:0',
-            'packages.*.loai_danh_muc'  => 'required|string',
-            'packages.*.tq_vn'          => 'required|string',
-            'packages.*.link_san_pham'  => 'nullable|string',
-            'packages.*.ghi_chu'        => 'nullable|string'
-        ]);
+    $request->validate([
+        'chieu_van_chuyen'          => 'required|in:ve_vn,di_qt',
+        'country_id'                => 'required|exists:countries,id',
+        'supplier_id'               => 'required|exists:suppliers,id',
+        'tru_so_nhan_hang_id'       => 'required|integer',
+        'packages'                  => 'required|array|min:1',
+        'packages.*.ma_van_don'     => 'required|string',
+        'packages.*.ten_san_pham'   => 'required|string',
+        'packages.*.so_kien_hang'   => 'required|integer|min:1',
+        'packages.*.hang_van_chuyen'=> 'required|string',
+        'packages.*.so_luong'       => 'required|integer|min:1',
+        'packages.*.gia_tri_hang_hoa'=> 'required|numeric|min:0',
+        'packages.*.loai_danh_muc'  => 'nullable|string',
+        'packages.*.link_san_pham'  => 'nullable|string',
+        'packages.*.ghi_chu'        => 'nullable|string'
+    ]);
 
-        try {
-            DB::transaction(function () use ($request, $order) {
+    try {
+        DB::transaction(function () use ($request, $order) {
+            
+            // 2. Cập nhật bảng cha 
+            $tocDo = $request->packages[array_key_first($request->packages)]['yeu_cau_toc_do'] ?? 'thuong';
+            $order->update([
+                'chieu_van_chuyen' => $request->chieu_van_chuyen,
+                'country_id'       => $request->country_id,  
+                'supplier_id'      => $request->supplier_id,
+                'kho_vn_id'        => $request->tru_so_nhan_hang_id,
+                'so_kien'          => count($request->packages),
+                'yeu_cau_toc_do'   => $tocDo,
+            ]);
+
+            // 3. Cập nhật các kiện hàng (Thêm/Sửa/Xóa)
+            $existingItemIds = $order->items->pluck('id')->toArray();
+            $submittedItemIds = [];
+            $hasDongGo = false;
+            $hasKiemHang = false;
+
+            $stt = 1;
+            foreach ($request->packages as $index => $pkg) {
+                $hinhAnhUrl = $pkg['hinh_anh_cu'] ?? null;
+                if ($request->hasFile("packages.{$index}.hinh_anh_file")) {
+                    $file = $request->file("packages.{$index}.hinh_anh_file");
+                    $path = $file->store('uploads/consignments', 'public');
+                    $hinhAnhUrl = '/storage/' . $path;
+                }
+
                 
-                // 1. Cập nhật bảng cha
-                $tocDo = $request->packages[array_key_first($request->packages)]['yeu_cau_toc_do'] ?? 'thuong';
-                $order->update([
-                    'kho_nhan_tq_id' => $request->tru_so_nhan_hang_id,
-                    'so_kien'        => count($request->packages),
-                    'yeu_cau_toc_do' => $tocDo,
-                ]);
+                $dataItem = [
+                    'stt'                  => $stt++,
+                    'hinh_anh_url'         => $hinhAnhUrl,
+                    'ma_van_don'           => $pkg['ma_van_don'],
+                    'ten_san_pham'         => $pkg['ten_san_pham'],
+                    'so_kien_hang'         => $pkg['so_kien_hang'],
+                    'hang_van_chuyen'      => $pkg['hang_van_chuyen'],
+                    'loai_danh_muc'        => $pkg['loai_danh_muc'] ?? null,
+                    'so_luong'             => $pkg['so_luong'],
+                    'gia_tri_hang_hoa'     => $pkg['gia_tri_hang_hoa'], 
+                    'link_san_pham'        => $pkg['link_san_pham'] ?? null,
+                    'ghi_chu'              => $pkg['ghi_chu'] ?? null,
+                ];
 
-                // 2. Cập nhật các kiện hàng (Thêm/Sửa/Xóa)
-                $existingItemIds = $order->items->pluck('id')->toArray();
-                $submittedItemIds = [];
-                $hasDongGo = false;
-                $hasKiemHang = false;
-
-                $stt = 1;
-                foreach ($request->packages as $index => $pkg) {
-                    $hinhAnhUrl = $pkg['hinh_anh_cu'] ?? null;
-                    if ($request->hasFile("packages.{$index}.hinh_anh_file")) {
-                        $file = $request->file("packages.{$index}.hinh_anh_file");
-                        $path = $file->store('uploads/consignments', 'public');
-                        $hinhAnhUrl = '/storage/' . $path;
+                if (!empty($pkg['id'])) {
+                    // Sửa kiện hàng cũ
+                    $orderItem = ConsignmentOrderItem::find($pkg['id']);
+                    if ($orderItem && $orderItem->consignment_order_id == $order->id) {
+                        $orderItem->update($dataItem);
+                        $submittedItemIds[] = $orderItem->id;
                     }
-
-                    $dataItem = [
-                        'stt'                  => $stt++,
-                        'hinh_anh_url'         => $hinhAnhUrl,
-                        'ma_van_don'           => $pkg['ma_van_don'],
-                        'ten_san_pham'         => $pkg['ten_san_pham'],
-                        'so_kien_hang'         => $pkg['so_kien_hang'],
-                        'hang_van_chuyen'      => $pkg['hang_van_chuyen'],
-                        'tq_vn'                => $pkg['tq_vn'] ?? 'TQ-VN',
-                        'loai_danh_muc'        => $pkg['loai_danh_muc'] ?? null,
-                        'so_luong'             => $pkg['so_luong'],
-                        'gia_tri_hang_hoa'     => $pkg['gia_tri_hang_hoa'], 
-                        'link_san_pham'        => $pkg['link_san_pham'] ?? null,
-                        'ghi_chu'              => $pkg['ghi_chu'] ?? null,
-                    ];
-
-                    if (!empty($pkg['id'])) {
-                        // Sửa kiện hàng cũ
-                        $orderItem = ConsignmentOrderItem::find($pkg['id']);
-                        if ($orderItem && $orderItem->consignment_order_id == $order->id) {
-                            $orderItem->update($dataItem);
-                            $submittedItemIds[] = $orderItem->id;
-                        }
-                    } else {
-                        // Thêm kiện hàng mới
-                        $dataItem['consignment_order_id'] = $order->id;
-                        $newItem = ConsignmentOrderItem::create($dataItem);
-                        $submittedItemIds[] = $newItem->id;
-                    }
-
-                    // Bắt sự kiện Dịch vụ gia tăng
-                    if (isset($pkg['dong_go'])) $hasDongGo = true;
-                    if (isset($pkg['kiem_hang'])) $hasKiemHang = true;
+                } else {
+                    // Thêm kiện hàng mới
+                    $dataItem['consignment_order_id'] = $order->id;
+                    $newItem = ConsignmentOrderItem::create($dataItem);
+                    $submittedItemIds[] = $newItem->id;
                 }
 
-                // Xóa các kiện hàng không còn tồn tại trên form
-                $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
-                if (count($itemsToDelete) > 0) {
-                    ConsignmentOrderItem::whereIn('id', $itemsToDelete)->delete();
-                }
+                // Bắt sự kiện Dịch vụ gia tăng
+                if (isset($pkg['dong_go'])) $hasDongGo = true;
+                if (isset($pkg['kiem_hang'])) $hasKiemHang = true;
+            }
 
-                // 3. Cập nhật Dịch vụ gia tăng
-                // Xóa toàn bộ yêu cầu cũ của đơn này và tạo lại cho gọn nhẹ
-                ConsignmentExtraRequirement::where('consignment_order_id', $order->id)->delete();
-                
-                if ($hasDongGo) {
-                    ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'dong_go']);
-                }
-                if ($hasKiemHang) {
-                    ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'kiem_hang']);
-                }
-            });
+            // Xóa các kiện hàng bị loại bỏ khỏi giao diện
+            $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
+            if (count($itemsToDelete) > 0) {
+                ConsignmentOrderItem::whereIn('id', $itemsToDelete)->delete();
+            }
+            
+            // 4. Xóa và cập nhật lại Dịch vụ gia tăng
+            ConsignmentExtraRequirement::where('consignment_order_id', $order->id)->delete();
+            
+            if ($hasDongGo) {
+                ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'dong_go']);
+            }
+            if ($hasKiemHang) {
+                ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'kiem_hang']);
+            }
+        });
 
-            return redirect()->route('consignment.show', $order->id)->with('success', 'Cập nhật đơn ký gửi thành công!');
+        return redirect()->route('consignment.show', $order->id)->with('success', 'Cập nhật đơn ký gửi thành công!');
 
-        } catch (\Exception $e) {
-            return back()->withErrors('Lỗi hệ thống: ' . $e->getMessage())->withInput();
-        }
+    } catch (\Exception $e) {
+        return back()->withErrors('Lỗi hệ thống: ' . $e->getMessage())->withInput();
     }
+}
 
     public function destroy($id)
     {

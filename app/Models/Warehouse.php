@@ -24,6 +24,6 @@ class Warehouse extends Model
     //  Quan hệ ngược lại: 1 Kho có nhiều Đơn ký gửi
     public function consignmentOrders()
     {
-        return $this->hasMany(ConsignmentOrder::class, 'kho_nhan_tq_id');
+        return $this->hasMany(ConsignmentOrder::class,  'kho_vn_id');
     }
 }

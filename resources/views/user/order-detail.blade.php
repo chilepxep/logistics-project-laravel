@@ -48,6 +48,7 @@
         </div>
     </div>
 
+
     <!-- Thông tin chung của đơn hàng -->
     <div class="card shadow-sm mb-4 border-0">
         <div class="card-header bg-light fw-bold text-uppercase">
@@ -89,7 +90,7 @@
                             <th style="width: 25%;">Tên sản phẩm</th>
                             <th style="width: 15%;">Thuộc tính (Màu, Size)</th>
                             <th style="width: 10%;">Số lượng</th>
-                            <th style="width: 15%;">Đơn giá (¥)</th>
+                            <th style="width: 15%;">Đơn giá ({{ $order->country->tien_te ?? '¥' }})</th>
                             <th style="width: 20%;">Ghi chú</th>
                         </tr>
                     </thead>
@@ -102,12 +103,11 @@
                                 <img src="{{ $item->hinh_anh_url }}" alt="sp"
                                     style="width: 60px; height: 60px; object-fit: cover;" class="border rounded">
                                 @else
-                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded"
+                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded mx-auto"
                                     style="width: 60px; height: 60px;">No IMG</div>
                                 @endif
                             </td>
                             <td>
-                                <!-- Tuỳ vào tên cột trong DB của bạn mà sửa lại cho đúng nhé -->
                                 <a href="{{ $item->link_san_pham ?? '#' }}" target="_blank"
                                     class="text-decoration-none fw-semibold">
                                     {{ $item->ten_san_pham ?? 'Chưa cập nhật' }}
@@ -115,8 +115,12 @@
                             </td>
                             <td class="text-center">{{ $item->mau_sac_kich_thuoc ?? '--' }}</td>
                             <td class="text-center fw-bold">{{ $item->so_luong }}</td>
-                            <td class="text-center text-danger fw-semibold">{{ number_format($item->don_gia, 2) }} ¥
+
+                            <!-- Hiển thị giá và ký hiệu tiền tệ động -->
+                            <td class="text-center text-danger fw-semibold">
+                                {{ number_format($item->don_gia, 2) }} {{ $order->country->tien_te ?? '¥' }}
                             </td>
+
                             <td>{{ $item->ghi_chu_khac ?? '' }}</td>
                         </tr>
                         @empty

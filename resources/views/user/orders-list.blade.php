@@ -104,13 +104,15 @@
                         </td>
 
                         <td class="text-center">
-                            @if($order->trang_thai == 'cho_bao_gia')
-                            <span class="badge bg-warning text-dark px-2 py-1">Chờ báo giá</span>
-                            @elseif($order->trang_thai == 'can_xac_nhan_lai')
-                            <span class="badge bg-info text-dark px-2 py-1">Cần xác nhận lại</span>
-                            @elseif($order->trang_thai == 'da_hoan_thanh')
-                            <span class="badge bg-success px-2 py-1">Đã hoàn thành</span>
-                            @else
+                            @if($order->trang_thai == 'cho_xu_ly')
+                            <span class="badge bg-warning text-dark px-2 py-1">Chờ xử lý</span>
+                            @elseif($order->trang_thai == 'dang_xu_ly')
+                            <span class="badge bg-primary px-2 py-1">Đang xử lý</span>
+                            @elseif($order->trang_thai == 'can_lien_he_lai')
+                            <span class="badge bg-info text-dark px-2 py-1">Cần liên hệ lại</span>
+                            @elseif($order->trang_thai == 'hoan_thanh')
+                            <span class="badge bg-success px-2 py-1">Hoàn thành</span>
+                            @elseif($order->trang_thai == 'da_huy')
                             <span class="badge bg-secondary px-2 py-1">Đã hủy</span>
                             @endif
                         </td>
@@ -123,13 +125,16 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
 
-                                <!-- Nút Sửa -->
+
+                                @if($order->trang_thai == 'cho_xu_ly')
                                 <a href="{{ route('order.edit', $order->id) }}" class="btn btn-sm btn-warning text-dark"
                                     title="Chỉnh sửa">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
+                                @endif
 
                                 <!-- Nút Xóa -->
+                                @if($order->trang_thai == 'cho_xu_ly')
                                 <form action="{{ route('order.destroy', $order->id) }}" method="POST" class="d-inline"
                                     onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn mua hộ mã #{{ $order->ma_don_hang }} này không? Hành động này không thể hoàn tác!');">
                                     @csrf
@@ -138,6 +143,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -20,4 +20,14 @@ class Complaint extends Model
     {
         return $this->belongsTo(Package::class);
     }
+
+public function nhanVienDatHang()
+{
+    return $this->belongsTo(Employee::class, 'nhan_vien_dat_hang_id');
+}
+
+public function nhanVienXuLy()
+{
+    return $this->belongsTo(Employee::class, 'nhan_vien_xu_ly_id');
+}
 }

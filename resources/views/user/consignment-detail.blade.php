@@ -51,14 +51,32 @@
             <i class="bi bi-info-circle me-1"></i> Thông tin chung
         </div>
         <div class="card-body row font-14">
+
             <div class="col-md-4 mb-3">
                 <span class="text-muted d-block mb-1">Ngày tạo yêu cầu:</span>
                 <span class="fw-semibold">{{ date('d/m/Y', strtotime($order->ngay_tao_yeu_cau)) }}</span>
             </div>
+
+            <!-- HIỂN THỊ LỘ TRÌNH VẬN CHUYỂN -->
             <div class="col-md-4 mb-3">
-                <span class="text-muted d-block mb-1">Kho nhận hàng (Trung Quốc):</span>
-                <span class="fw-semibold">{{ $order->khoNhan->ten_kho ?? 'N/A' }}</span>
+                <span class="text-muted d-block mb-1">Lộ trình vận chuyển:</span>
+                @if($order->chieu_van_chuyen == 've_vn')
+                <div class="fw-bold">
+                    <span class="text-danger">{{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                        ({{ $order->country->ten_quoc_gia ?? '' }})</span>
+                    <i class="bi bi-arrow-right mx-1"></i>
+                    <span class="text-success">{{ $order->khoVn->ten_kho ?? 'Kho Việt Nam' }}</span>
+                </div>
+                @else
+                <div class="fw-bold">
+                    <span class="text-success">{{ $order->khoVn->ten_kho ?? 'Kho Việt Nam' }}</span>
+                    <i class="bi bi-arrow-right mx-1"></i>
+                    <span class="text-danger">{{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                        ({{ $order->country->ten_quoc_gia ?? '' }})</span>
+                </div>
+                @endif
             </div>
+
             <div class="col-md-4 mb-3">
                 <span class="text-muted d-block mb-1">Yêu cầu tốc độ:</span>
                 <span class="fw-bold text-danger">{{ $order->yeu_cau_toc_do == 'nhanh' ? 'Nhanh' : 'Thường' }}</span>
@@ -68,6 +86,7 @@
                 <span class="text-muted d-block mb-1">Tổng số kiện hàng:</span>
                 <span class="fw-bold fs-5">{{ $order->so_kien }}</span> kiện
             </div>
+
             <div class="col-md-8 mb-2">
                 <span class="text-muted d-block mb-1">Dịch vụ gia tăng yêu cầu:</span>
                 @if($order->extraRequirements->count() > 0)
@@ -102,10 +121,10 @@
                             <th style="width: 5%;">STT</th>
                             <th style="width: 10%;">Hình ảnh</th>
                             <th style="width: 15%;">Mã vận đơn / Hãng VC</th>
-                            <th style="width: 20%;">Tên sản phẩm</th>
-                            <th style="width: 10%;">Phân loại</th>
+                            <th style="width: 25%;">Tên sản phẩm</th>
+                            <th style="width: 10%;">Danh mục</th>
                             <th style="width: 10%;">SL / Kiện</th>
-                            <th style="width: 15%;">Giá trị (VNĐ)</th>
+                            <th style="width: 10%;">Giá trị (VNĐ)</th>
                             <th style="width: 15%;">Ghi chú</th>
                         </tr>
                     </thead>
@@ -137,8 +156,7 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <div class="mb-1">{{ $item->loai_danh_muc ?? '--' }}</div>
-                                <span class="badge bg-light text-dark border">{{ $item->tq_vn ?? 'TQ-VN' }}</span>
+                                <span class="badge bg-light text-dark border">{{ $item->loai_danh_muc ?? '--' }}</span>
                             </td>
                             <td class="text-center">
                                 <div>SL: <span class="fw-bold">{{ $item->so_luong }}</span></div>

@@ -72,6 +72,34 @@
         @endif
         <!-- KẾT THÚC THÊM -->
 
+
+        <div class="row bg-white shadow-sm p-3 rounded border mb-4">
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-globe-asia-australia"></i> 1. Vị trí Nguồn hàng</h6>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Quốc gia mua hàng <span class="text-danger">*</span></label>
+                <select name="country_id" id="countrySelect" class="form-select border-primary" required>
+                    <option value="" data-currency="¥">-- Chọn Quốc gia --</option>
+                    @foreach($countries as $country)
+                    <option value="{{ $country->id }}" data-currency="{{ $country->tien_te }}"
+                        {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                        {{ $country->ten_quoc_gia }} ({{ $country->tien_te }})
+                    </option>
+                    @endforeach
+                </select>
+                @error('country_id') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Kho xuất phát / Nhà cung cấp <span
+                        class="text-danger">*</span></label>
+                <select name="supplier_id" id="supplierSelect" class="form-select border-primary" required disabled>
+                    <option value="">-- Vui lòng chọn Quốc gia trước --</option>
+                </select>
+                @error('supplier_id') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+        </div>
+
         <!-- FORM NHẬP SẢN PHẨM -->
         <div class="table-responsive mb-2">
             <table class="table table-bordered align-middle form-table mb-0">
@@ -80,7 +108,7 @@
                         <th style="width: 4%;">STT</th>
                         <th style="width: 12%;">Hình ảnh</th>
                         <th style="width: 35%;">Thuộc tính</th>
-                        <th style="width: 10%;">Đơn giá (¥)</th>
+                        <th style="width: 10%;">Đơn giá (<span class="currency-symbol">¥</span>)</th>
                         <th style="width: 10%;">Số lượng</th>
                         <th style="width: 20%;">Ghi chú khác</th>
                         <th style="width: 9%;">Thành tiền</th>
@@ -96,7 +124,7 @@
                                 <i class="bi bi-image text-muted fs-4"></i>
                             </div>
 
-                            <!-- 1. BẮT BUỘC PHẢI CÓ DÒNG NÀY: Thẻ input file bị ẩn -->
+
                             <input type="file" name="products[0][hinh_anh_file]" class="d-none" accept="image/*">
 
                             <!-- 2. Thẻ nhập link ảnh -->
@@ -241,25 +269,28 @@
             <div class="col-12 col-lg-4">
                 <div class="border bg-white shadow-sm font-14 p-3 summary-box">
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Tổng tiền đặt hàng:</span>
-                        <span class="text-danger fw-bold">0 đ</span>
+                        <span class="text-muted">Tổng tiền đặt hàng (<span class="currency-symbol">¥</span>):</span>
+                        <span class="text-danger fw-bold" id="sumOrderAmountFc">0</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 border-bottom border-light pb-2">
-                        <span class="text-muted">Phí đặt hàng <i class="bi bi-question-circle text-primary"></i>:</span>
-                        <span class="text-danger fw-bold">0 đ</span>
+                        <span class="text-muted">Tỉ giá quy đổi:</span>
+                        <span class="text-primary fw-bold" id="exchangeRate">1 = 0 đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tiền hàng (VNĐ):</span>
+                        <span class="text-danger fw-bold" id="sumOrderAmountVnd">0 đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Phí đặt hàng (VD: 1%):</span>
+                        <span class="text-danger fw-bold" id="sumOrderFee">0 đ</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 border-bottom border-light pb-2">
-                        <span class="text-muted">Phí kiểm đếm <i class="bi bi-question-circle text-primary"></i>:</span>
-                        <span class="text-danger fw-bold">0 đ</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3 border-bottom border-light pb-2">
-                        <span class="text-muted">Phí đóng kiện <i
-                                class="bi bi-question-circle text-primary"></i>:</span>
-                        <span class="text-danger fw-bold">0 đ</span>
+                        <span class="text-muted">Phí dịch vụ (Kiểm/Đóng):</span>
+                        <span class="text-danger fw-bold" id="sumExtraFee">0 đ</span>
                     </div>
                     <div class="d-flex justify-content-between mt-2 pt-2 border-top">
-                        <span class="text-dark fw-bold">Tổng tiền/chưa có phí ship TQ:</span>
-                        <span class="text-danger fw-bold fs-6">0 đ</span>
+                        <span class="text-dark fw-bold">Tổng tiền (Chưa ship TQ-VN):</span>
+                        <span class="text-danger fw-bold fs-6" id="sumGrandTotal">0 đ</span>
                     </div>
                 </div>
             </div>
@@ -358,6 +389,155 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updateRowNumbers();
+
+    //======XỬ LÝ QUỐC GIA VÀ CÁC KHO =======
+    const countrySelect = document.getElementById('countrySelect');
+    const supplierSelect = document.getElementById('supplierSelect');
+
+    // Lấy ID nhà cung cấp cũ (nếu có lỗi validation xảy ra)
+    const oldSupplierId = "{{ old('supplier_id') }}";
+
+    // Hàm gọi API lấy danh sách Nhà cung cấp
+    function fetchSuppliers(countryId, selectedSupplierId = null) {
+        supplierSelect.innerHTML = '<option value="">-- Đang tải dữ liệu... --</option>';
+        supplierSelect.disabled = true;
+
+        fetch(`/api/suppliers-by-country/${countryId}`)
+            .then(response => response.json())
+            .then(data => {
+                supplierSelect.innerHTML = '<option value="">-- Chọn Kho / Nhà cung cấp --</option>';
+
+                if (data.length > 0) {
+                    data.forEach(sup => {
+                        // Kiểm tra xem có trùng với lựa chọn cũ không
+                        let isSelected = (selectedSupplierId == sup.id) ? 'selected' : '';
+                        let text = `${sup.ten_ncc} (${sup.thanh_pho || 'Chưa rõ vị trí'})`;
+
+                        supplierSelect.insertAdjacentHTML('beforeend',
+                            `<option value="${sup.id}" ${isSelected}>${text}</option>`);
+                    });
+                    supplierSelect.disabled = false; // Mở khóa ô chọn
+                } else {
+                    supplierSelect.innerHTML = '<option value="">Không có kho nào ở quốc gia này</option>';
+                }
+            })
+            .catch(error => {
+                console.error("Lỗi tải dữ liệu:", error);
+                supplierSelect.innerHTML = '<option value="">Lỗi kết nối máy chủ</option>';
+            });
+    }
+
+    // 1. CHẠY KHI VỪA VÀO TRANG (Xử lý trường hợp Form bị lỗi và Load lại)
+    if (countrySelect.value) {
+        fetchSuppliers(countrySelect.value, oldSupplierId);
+    }
+
+    // 2. CHẠY KHI NGƯỜI DÙNG THAY ĐỔI QUỐC GIA
+    countrySelect.addEventListener('change', function() {
+        if (this.value) {
+            fetchSuppliers(this.value);
+        } else {
+            supplierSelect.innerHTML = '<option value="">-- Vui lòng chọn Quốc gia trước --</option>';
+            supplierSelect.disabled = true;
+        }
+    });
+
+
+    //====XỬ LÝ TÍNH TIỀN
+    const TIGIA = {
+        'CNY': 3500, // 1 Tệ = 3500 VNĐ
+        'JPY': 170, // 1 Yên = 170 VNĐ
+        'AUD': 16500,
+        'EUR': 27000,
+        '¥': 3500 // Mặc định
+    };
+    const PHI_DAT_HANG_PERCENT = 0.01; // Phí mua hộ 1%
+    const PHI_KIEM_DEM_PER_ITEM = 1000; // 1000đ / 1 sản phẩm
+    const PHI_DONG_GO_PER_ITEM = 5000; // 5000đ / 1 sản phẩm
+
+    function calculateTotal() {
+        let totalQty = 0;
+        let totalAmountFC = 0; // FC = Foreign Currency (Tiền ngoại tệ)
+
+        // 1. Tính tổng số lượng và tổng tiền hàng ngoại tệ từ bảng
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const price = parseFloat(row.querySelector('input[name*="[don_gia]"]').value) || 0;
+            const qty = parseInt(row.querySelector('input[name*="[so_luong]"]').value) || 0;
+
+            const rowTotal = price * qty;
+            totalQty += qty;
+            totalAmountFC += rowTotal;
+
+            // Cập nhật số tiền ở từng dòng
+            const currentCurrency = document.querySelector('.currency-symbol').textContent;
+            row.querySelector('.text-danger.fw-bold').innerHTML =
+                `${rowTotal.toLocaleString()} <span class="currency-symbol">${currentCurrency}</span>`;
+        });
+
+        // 2. Lấy đơn vị tiền tệ và Tỉ giá hiện tại
+        const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+        const currencyCode = selectedOption ? selectedOption.getAttribute('data-currency') : '¥';
+        const currentExchangeRate = TIGIA[currencyCode] || 1;
+
+        // 3. Quy đổi tiền hàng ra VNĐ
+        const totalAmountVND = totalAmountFC * currentExchangeRate;
+
+        // 4. Tính phí dịch vụ (Dựa vào Checkbox)
+        const isKiemHang = document.getElementById('yc_kiem_hang').checked;
+        const isDongGo = document.getElementById('yc_dong_go').checked;
+
+        let extraFeeVND = 0;
+        if (isKiemHang) extraFeeVND += totalQty * PHI_KIEM_DEM_PER_ITEM;
+        if (isDongGo) extraFeeVND += totalQty * PHI_DONG_GO_PER_ITEM;
+
+        // 5. Tính phí mua hộ (Ví dụ 1% tiền hàng)
+        const orderFeeVND = totalAmountVND * PHI_DAT_HANG_PERCENT;
+
+        // 6. Tính Tổng thanh toán
+        const grandTotal = totalAmountVND + extraFeeVND + orderFeeVND;
+
+        // 7. Hiển thị ra giao diện
+        document.getElementById('sumOrderAmountFc').textContent = totalAmountFC.toLocaleString();
+        document.getElementById('exchangeRate').textContent = `1 = ${currentExchangeRate.toLocaleString()} đ`;
+        document.getElementById('sumOrderAmountVnd').textContent = `${totalAmountVND.toLocaleString()} đ`;
+        document.getElementById('sumOrderFee').textContent = `${orderFeeVND.toLocaleString()} đ`;
+        document.getElementById('sumExtraFee').textContent = `${extraFeeVND.toLocaleString()} đ`;
+        document.getElementById('sumGrandTotal').textContent = `${grandTotal.toLocaleString()} đ`;
+    }
+
+    // --- LẮNG NGHE SỰ KIỆN ĐỂ TÍNH TOÁN NGAY LẬP TỨC ---
+
+    // Lắng nghe khi gõ giá và số lượng trong bảng
+    tbody.addEventListener('input', function(e) {
+        if (e.target.name.includes('[don_gia]') || e.target.name.includes('[so_luong]')) {
+            calculateTotal();
+        }
+    });
+
+    // Lắng nghe khi xóa hoặc thêm dòng
+    tbody.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-delete-row')) {
+            setTimeout(calculateTotal, 50); // Chờ xoá xong mới tính
+        }
+    });
+    btnAddProduct.addEventListener('click', function() {
+        setTimeout(calculateTotal, 50);
+    });
+
+    // Lắng nghe khi tick chọn dịch vụ gia tăng
+    document.getElementById('yc_kiem_hang').addEventListener('change', calculateTotal);
+    document.getElementById('yc_dong_go').addEventListener('change', calculateTotal);
+
+    // Lắng nghe khi đổi quốc gia (Đổi kí hiệu tiền tệ và Tỉ giá)
+    countrySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const currencyCode = selectedOption ? selectedOption.getAttribute('data-currency') : '¥';
+
+        // Đổi toàn bộ kí hiệu tiền trên màn hình
+        document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = currencyCode);
+        calculateTotal(); // Tính lại theo tỉ giá mới
+    });
 });
 </script>
 

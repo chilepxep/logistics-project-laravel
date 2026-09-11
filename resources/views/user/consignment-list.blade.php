@@ -76,9 +76,9 @@
                         <th style="width: 5%;">STT</th>
                         <th style="width: 15%;">Mã Đơn Hàng</th>
                         <th style="width: 12%;">Ngày Yêu Cầu</th>
-                        <th style="width: 18%;">Kho Nhận (TQ)</th>
-                        <th style="width: 10%;">Tốc Độ</th>
-                        <th style="width: 10%;">Số Kiện</th>
+                        <th style="width: 25%;">Lộ Trình Vận Chuyển</th>
+                        <th style="width: 8%;">Tốc Độ</th>
+                        <th style="width: 5%;">Kiện</th>
                         <th style="width: 15%;">Trạng Thái</th>
                         <th style="width: 15%;">Thao Tác</th>
                     </tr>
@@ -90,7 +90,37 @@
                         <td class="text-center fw-bold text-success">{{ $order->ma_don_ky_gui }}</td>
                         <td class="text-center">{{ date('d/m/Y', strtotime($order->ngay_tao_yeu_cau)) }}</td>
 
-                        <td class="text-center">{{ $order->khoNhan->ten_kho ?? 'N/A' }}</td>
+                        <td class="text-center align-middle">
+                            @if($order->chieu_van_chuyen == 've_vn')
+                            <!-- Chiều: Quốc Tế về Việt Nam -->
+                            <div class="d-flex flex-column align-items-center font-12">
+                                <span class="text-danger fw-bold text-truncate" style="max-width: 180px;"
+                                    title="{{ $order->supplier->ten_ncc ?? 'N/A' }}">
+                                    {{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                    ({{ $order->country->ten_quoc_gia ?? '' }})
+                                </span>
+                                <i class="bi bi-arrow-down-short text-muted fs-5 lh-1"></i>
+                                <span class="text-success fw-bold text-truncate" style="max-width: 180px;"
+                                    title="{{ $order->khoVn->ten_kho ?? 'N/A' }}">
+                                    {{ $order->khoVn->ten_kho ?? 'Kho Việt Nam' }}
+                                </span>
+                            </div>
+                            @else
+                            <!-- Chiều: Việt Nam xuất đi Quốc Tế -->
+                            <div class="d-flex flex-column align-items-center font-12">
+                                <span class="text-success fw-bold text-truncate" style="max-width: 180px;"
+                                    title="{{ $order->khoVn->ten_kho ?? 'N/A' }}">
+                                    {{ $order->khoVn->ten_kho ?? 'Kho Việt Nam' }}
+                                </span>
+                                <i class="bi bi-arrow-down-short text-muted fs-5 lh-1"></i>
+                                <span class="text-danger fw-bold text-truncate" style="max-width: 180px;"
+                                    title="{{ $order->supplier->ten_ncc ?? 'N/A' }}">
+                                    {{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                    ({{ $order->country->ten_quoc_gia ?? '' }})
+                                </span>
+                            </div>
+                            @endif
+                        </td>
 
                         <td class="text-center">
                             @if($order->yeu_cau_toc_do == 'nhanh')
@@ -105,16 +135,19 @@
                         <td class="text-center">
                             @if($order->trang_thai == 'cho_xu_ly')
                             <span class="badge bg-warning text-dark px-2 py-1">Chờ xử lý</span>
-                            @elseif($order->trang_thai == 'da_xu_ly')
-                            <span class="badge bg-info text-dark px-2 py-1">Đã xử lý</span>
+                            @elseif($order->trang_thai == 'dang_xu_ly')
+                            <span class="badge bg-primary px-2 py-1">Đang xử lý</span>
+                            @elseif($order->trang_thai == 'can_lien_he_lai')
+                            <span class="badge bg-info text-dark px-2 py-1">Cần liên hệ lại</span>
                             @elseif($order->trang_thai == 'hoan_thanh')
                             <span class="badge bg-success px-2 py-1">Hoàn thành</span>
+                            @elseif($order->trang_thai == 'da_huy')
+                            <span class="badge bg-secondary px-2 py-1">Đã hủy</span>
                             @endif
                         </td>
-
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
-                                <!-- Nút Xem chi tiết (Chờ gắn route) -->
+                                <!-- Nút Xem chi tiết -->
                                 <a href="{{ route('consignment.show', $order->id) }}"
                                     class="btn btn-sm btn-info text-white" title="Xem chi tiết">
                                     <i class="bi bi-eye"></i>
@@ -122,13 +155,17 @@
 
 
 
-                                <!-- Nút Sửa (Chờ gắn route) -->
+                                <!-- Nút Sửa -->
+
+                                @if($order->trang_thai == 'cho_xu_ly')
                                 <a href="{{ route('consignment.edit', $order->id) }}"
                                     class="btn btn-sm btn-warning text-dark" title="Chỉnh sửa">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
+                                @endif
 
                                 <!-- Nút Xóa -->
+                                @if($order->trang_thai == 'cho_xu_ly')
                                 <form action="{{ route('consignment.destroy', $order->id) }}" method="POST"
                                     class="d-inline"
                                     onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn ký gửi mã #{{ $order->ma_don_ky_gui }} này không? Hành động này không thể hoàn tác!');">
@@ -138,6 +175,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
