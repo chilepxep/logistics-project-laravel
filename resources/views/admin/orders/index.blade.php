@@ -32,7 +32,10 @@
                         <th>Tốc Độ</th>
                         <th>Tổng Tiền</th>
                         <th>Trạng Thái</th>
+                        <th>Kho hiện tại</th>
+                        <th>Đích đến</th>
                         <th>Thao Tác</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -49,6 +52,25 @@
                         <td>
                             <span class="badge bg-secondary">{{ $order->trang_thai }}</span>
                         </td>
+                        <td>
+                            @if($order->trang_thai === 'Đang luân chuyển')
+                            <span class="text-warning fw-bold">
+                                <i class="bi bi-truck"></i> Đang tới:
+                                {{ $order->khoHienTai->ten_kho ?? 'Trạm tiếp theo' }}
+                            </span>
+                            @else
+                            <span class="text-success fw-bold">
+                                <i class="bi bi-geo-alt-fill"></i> Đang ở:
+                                {{ $order->khoHienTai->ten_kho ?? 'Chưa nhập kho' }}
+                            </span>
+                            @endif
+                        </td>
+
+                        <!-- Cột 2: Đích đến cuối cùng -->
+                        <td>
+                            {{ $order->warehouse->ten_kho ?? 'Chưa xác định' }}
+                        </td>
+
                         <td class="d-flex gap-1">
                             <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-outline-info"
                                 title="Xem">

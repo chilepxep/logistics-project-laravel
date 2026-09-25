@@ -9,20 +9,40 @@ use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 use App\Models\ConsignmentOrderItem; 
 use App\Models\ConsignmentExtraRequirement; 
+use Illuminate\Support\Facades\Auth;
+use App\Models\Package;
+use App\Models\PackageTracking;
 
 class ConsignmentOrderController extends Controller
 {
     // 1. Danh sách đơn
     public function index(Request $request)
     {
-    
-        $query = ConsignmentOrder::query()->with('user');
+       
+        $query = ConsignmentOrder::query()->with(['user', 'khoVn', 'khoHienTai']);
 
+       
+        $employee = Auth::user();
+
+        
+        if ($employee->vai_tro === 'nhan_vien') {
+            // Nhân viên chỉ thấy đơn hàng khi gói hàng ĐANG Ở KHO CỦA HỌ
+            $query->where('kho_hien_tai_id', $employee->warehouse_id);
+            
+        } elseif ($employee->vai_tro !== 'admin') {
+            // Bảo mật: Nếu tài khoản bị lỗi vai trò  thì không cho xem gì
+            $query->where('id', 0);
+        }
+       
+
+       
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
+        
         $orders = $query->orderByDesc('created_at')->paginate(15);
+        
         return view('admin.consignment_orders.index', compact('orders'));
     }
 
@@ -48,13 +68,20 @@ class ConsignmentOrderController extends Controller
 public function update(Request $request, $id)
 {
     $order = ConsignmentOrder::findOrFail($id);
+    $employee = Auth::user();
+
+   // Phân quyền
+    if ($employee->vai_tro === 'nhan_vien' && $order->kho_hien_tai_id !== $employee->warehouse_id) {
+        abort(403, 'Từ chối truy cập: Bạn không có quyền cập nhật đơn hàng không nằm trong kho của bạn!');
+    }
 
     // 1. Validate dữ liệu đa quốc gia
     $request->validate([
         'chieu_van_chuyen'          => 'required|in:ve_vn,di_qt',
         'country_id'                => 'required|exists:countries,id',
         'supplier_id'               => 'required|exists:suppliers,id',
-        'tru_so_nhan_hang_id'       => 'required|integer', // Kho VN
+        'tru_so_nhan_hang_id'       => 'required|integer', 
+        'kho_hien_tai_id'           => 'nullable|exists:warehouses,id',
         'trang_thai'                => 'required|string',
         'packages'                  => 'required|array|min:1',
         'packages.*.ma_van_don'     => 'required|string',
@@ -66,40 +93,73 @@ public function update(Request $request, $id)
         'packages.*.loai_danh_muc'  => 'nullable|string',
     ]);
 
-    // 2. LOGIC NẾU ADMIN DUYỆT ĐƠN KÝ GỬI -> Tự động đẩy vào bảng Package
-    if ($request->trang_thai == 'dang_xu_ly') {
-        
-        $daCoKienHang = \App\Models\Package::where('consignment_order_id', $order->id)->exists();
-        
-        if (!$daCoKienHang) {
-            $items = \App\Models\ConsignmentOrderItem::where('consignment_order_id', $order->id)->get();
-            
-            foreach ($items as $item) {
-                // Xác định Kho chờ xử lý dựa theo chiều vận chuyển
-                // Nếu khách gửi về VN -> Hàng chờ xử lý ở Kho Quốc Tế
-                // Nếu khách gửi đi Quốc Tế -> Hàng chờ xử lý ở Kho VN
-                $truSoChoId = ($request->chieu_van_chuyen == 've_vn') 
-                              ? $request->supplier_id 
-                              : $request->tru_so_nhan_hang_id;
-
-                \App\Models\Package::create([
-                    'ma_van_don'           => $item->ma_van_don, 
-                    'ma_don_kien_hang'     => 'PKG' . time() . rand(100, 999),
-                    'order_id'             => null,
-                    'consignment_order_id' => $order->id,
-                    'tinh_trang'           => 'cho_xu_ly',
-                    'loai_hang'            => $item->loai_danh_muc,
-                    'tru_so_id'            => $truSoChoId, // Gán đúng kho đang giữ hàng
-                    'tong_kg'              => null, 
-                ]);
-            }
-        }
-    }
-
     try {
         DB::transaction(function () use ($request, $order) {
             
-            // 3. Cập nhật bảng cha (Lưu đủ thông tin Tuyến vận chuyển)
+            $khoCuCuaDon = $order->getOriginal('kho_hien_tai_id');
+            $khoMoiCuaDon = $request->kho_hien_tai_id ?? $order->kho_hien_tai_id;
+            $tenKhoMoi = Warehouse::find($khoMoiCuaDon)->ten_kho ?? 'Kho không xác định';
+
+            // ==========================================
+            // 2. LOGIC TẠO KIỆN HÀNG & TRACKING GỐC
+            // ==========================================
+            if ($request->trang_thai == 'dang_xu_ly') {
+                $daCoKienHang = Package::where('consignment_order_id', $order->id)->exists();
+                
+                if (!$daCoKienHang) {
+                    $items = ConsignmentOrderItem::where('consignment_order_id', $order->id)->get();
+                    
+                    foreach ($items as $item) {
+                        $newPkg = Package::create([
+                            'ma_van_don'           => $item->ma_van_don, 
+                            'ma_don_kien_hang'     => 'PKG' . time() . rand(100, 999),
+                            'order_id'             => null,
+                            'consignment_order_id' => $order->id,
+                            'tinh_trang'           => 'cho_xu_ly',
+                            'loai_hang'            => $item->loai_danh_muc,
+                            'tru_so_id'            => $khoMoiCuaDon, // Gán ngay kho mới nhất
+                            'tong_kg'              => null, 
+                        ]);
+
+                        // Tự động sinh Tracking gốc để khách hàng thấy kiện đã được nhập kho
+                        PackageTracking::create([
+                            'package_id'   => $newPkg->id,
+                            'warehouse_id' => $khoMoiCuaDon,
+                            'employee_id'  => Auth::id(),
+                            'title'        => 'Khởi tạo kiện hàng',
+                            'description'  => "Kiện hàng được duyệt và nhập vào: " . $tenKhoMoi,
+                        ]);
+                    }
+                }
+            }
+
+            // ==========================================
+            // 3. LOGIC TRACKING KHI THAY ĐỔI KHO BÃI
+            // ==========================================
+            if ($khoCuCuaDon != $khoMoiCuaDon) {
+                // Lấy tất cả kiện hàng (nếu có)
+                $packages = Package::where('consignment_order_id', $order->id)->get(); 
+
+                foreach ($packages as $pkg) {
+                    // Cần kiểm tra: Nếu kiện này vừa được tạo ở bước 2 thì bỏ qua không tạo Tracking "Luân chuyển" nữa để tránh trùng lặp.
+                    if ($pkg->tru_so_id != $khoMoiCuaDon) {
+                        
+                        $pkg->update(['tru_so_id' => $khoMoiCuaDon]);
+
+                        PackageTracking::create([
+                            'package_id'   => $pkg->id,
+                            'warehouse_id' => $khoMoiCuaDon,
+                            'employee_id'  => Auth::id(),
+                            'title'        => 'Luân chuyển theo Đơn hàng',
+                            'description'  => "Kiện hàng được tự động cập nhật vị trí theo đơn cha tới: " . $tenKhoMoi,
+                        ]);
+                    }
+                }
+            }
+
+            // ==========================================
+            // 4. CẬP NHẬT THÔNG TIN ĐƠN HÀNG (BẢNG CHA)
+            // ==========================================
             $tocDo = $request->packages[array_key_first($request->packages)]['yeu_cau_toc_do'] ?? $request->yeu_cau_toc_do ?? 'thuong';
             
             $order->update([
@@ -107,6 +167,7 @@ public function update(Request $request, $id)
                 'country_id'       => $request->country_id,
                 'supplier_id'      => $request->supplier_id,
                 'kho_vn_id'        => $request->tru_so_nhan_hang_id,
+                'kho_hien_tai_id'  => $khoMoiCuaDon,
                 'so_kien'          => count($request->packages),
                 'yeu_cau_toc_do'   => $tocDo,
                 'trang_thai'       => $request->trang_thai,
@@ -115,7 +176,9 @@ public function update(Request $request, $id)
                 'ngay_nhan_hang'   => $request->ngay_nhan_hang,
             ]);
 
-            // 4. Cập nhật các kiện hàng (Thêm/Sửa/Xóa)
+            // ==========================================
+            // 5. CẬP NHẬT CÁC SẢN PHẨM (ITEMS)
+            // ==========================================
             $existingItemIds = $order->items->pluck('id')->toArray();
             $submittedItemIds = [];
             $hasDongGo = false;
@@ -124,7 +187,6 @@ public function update(Request $request, $id)
             $stt = 1;
             foreach ($request->packages as $index => $pkg) {
                 
-                // Xử lý ảnh
                 $hinhAnhUrl = $pkg['hinh_anh_cu'] ?? null;
                 if ($request->hasFile("packages.{$index}.hinh_anh_file")) {
                     $file = $request->file("packages.{$index}.hinh_anh_file");
@@ -132,7 +194,6 @@ public function update(Request $request, $id)
                     $hinhAnhUrl = '/storage/' . $path;
                 }
 
-                // Dữ liệu kiện hàng (Đã xóa tq_vn)
                 $dataItem = [
                     'stt'                  => $stt++,
                     'hinh_anh_url'         => $hinhAnhUrl,
@@ -163,21 +224,14 @@ public function update(Request $request, $id)
                 if (isset($pkg['kiem_hang'])) $hasKiemHang = true;
             }
 
-            // Xóa kiện cũ
             $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
             if (count($itemsToDelete) > 0) {
                 ConsignmentOrderItem::whereIn('id', $itemsToDelete)->delete();
             }
 
-            // 5. Cập nhật Dịch vụ gia tăng
             ConsignmentExtraRequirement::where('consignment_order_id', $order->id)->delete();
-            
-            if ($hasDongGo) {
-                ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'dong_go']);
-            }
-            if ($hasKiemHang) {
-                ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'kiem_hang']);
-            }
+            if ($hasDongGo) ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'dong_go']);
+            if ($hasKiemHang) ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'kiem_hang']);
         });
 
         return redirect()->route('admin.consignment_orders.show', $order->id)->with('success', 'Cập nhật đơn ký gửi thành công!');

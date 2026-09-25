@@ -46,6 +46,24 @@
                         </span>
                     </li>
 
+                    <li class="list-group-item d-flex px-0">
+                        <span class="text-muted me-3">Vị trí hiện tại:</span>
+                        <div class="col-md-3">
+
+                            @if($order->kho_hien_tai_id && $order->khoHienTai)
+                            <!-- NẾU ĐANG Ở TRONG KHO: Hiển thị màu xanh lá kèm icon định vị -->
+                            <span class="badge bg-success text-white px-1 py-1">
+                                <i class="bi bi-geo-alt-fill me-1"></i> {{ $order->khoHienTai->ten_kho }}
+                            </span>
+                            @else
+                            <!-- NẾU CHƯA NHẬP KHO: Hiển thị màu xám -->
+                            <span class="badge bg-secondary text-white px-1 py-1">
+                                <i class="bi bi-truck me-1"></i> Chưa nhập kho
+                            </span>
+                            @endif
+                        </div>
+                    </li>
+
                     <!-- DỊCH VỤ GIA TĂNG -->
                     <li class="list-group-item px-0">
                         <span class="text-muted d-block mb-1">Dịch vụ yêu cầu:</span>

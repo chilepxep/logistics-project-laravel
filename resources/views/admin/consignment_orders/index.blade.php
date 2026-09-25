@@ -28,6 +28,7 @@
                         <th>Tốc Độ</th>
                         <th>Số Kiện</th>
                         <th>Trạng Thái</th>
+                        <th>Kho hiện tại</th>
                         <th>Thao Tác</th>
                     </tr>
                 </thead>
@@ -43,6 +44,22 @@
                         </td>
                         <td class="fw-bold">{{ $order->so_kien }}</td>
                         <td><span class="badge bg-secondary">{{ $order->trang_thai }}</span></td>
+                        <td>
+                            @if($order->trang_thai === 'Đang luân chuyển')
+                            <span class="text-warning fw-bold">
+                                <i class="bi bi-truck"></i> Đang tới:
+                                {{ $order->khoHienTai->ten_kho ?? 'Trạm tiếp theo' }}
+                            </span>
+                            @else
+                            <span class="text-success fw-bold">
+                                <i class="bi bi-geo-alt-fill"></i> Đang ở:
+                                {{ $order->khoHienTai->ten_kho ?? 'Chưa nhập kho' }}
+                            </span>
+                            @endif
+                        </td>
+
+
+
                         <td class="d-flex gap-1">
                             <a href="{{ route('admin.consignment_orders.show', $order->id) }}"
                                 class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>

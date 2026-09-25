@@ -44,15 +44,71 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label font-14 fw-semibold">Kho nhận (Việt Nam) <span
-                            class="text-danger">*</span></label>
+                    <label class="form-label font-14 fw-semibold">
+                        Kho nhận (Việt Nam) <span class="text-danger">*</span>
+                    </label>
+
+                    @if(auth()->user()->vai_tro === 'admin')
+                    <!-- NẾU LÀ ADMIN: Cho phép chọn và sửa  -->
                     <select name="tru_so_nhan_hang_id" class="form-select border-success" required>
+                        <option value="">-- Chọn kho đích --</option>
                         @foreach($warehouses as $kho)
+                        @if(str_starts_with($kho->ma_kho, 'VN-'))
                         <option value="{{ $kho->id }}" {{ $order->tru_so_nhan_hang_id == $kho->id ? 'selected' : '' }}>
+                            {{ $kho->ten_kho }}
+                        </option>
+                        @endif
+                        @endforeach
+                    </select>
+                    @else
+                    <!-- NẾU LÀ NHÂN VIÊN: Khóa ô select để chỉ được xem -->
+                    <select class="form-select border-success bg-light" disabled>
+                        @foreach($warehouses as $kho)
+                        @if(str_starts_with($kho->ma_kho, 'VN-'))
+                        <option value="{{ $kho->id }}" {{ $order->tru_so_nhan_hang_id == $kho->id ? 'selected' : '' }}>
+                            {{ $kho->ten_kho }}
+                        </option>
+                        @endif
+                        @endforeach
+                    </select>
+
+                    <input type="hidden" name="tru_so_nhan_hang_id" value="{{ $order->tru_so_nhan_hang_id }}">
+                    @endif
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label font-14 fw-semibold">
+                        Vị trí kho hiện tại <span class="text-danger">*</span>
+                    </label>
+
+                    @if($order->trang_thai === 'dang_xu_ly')
+                    <!-- NẾU ĐƠN ĐANG XỬ LÝ: Cho phép nhân viên chọn trạm dừng -->
+                    <select name="kho_hien_tai_id" class="form-select border-info" required>
+                        <option value="">-- Chọn trạm dừng --</option>
+                        @foreach($warehouses as $kho)
+                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
                             {{ $kho->ten_kho }}
                         </option>
                         @endforeach
                     </select>
+                    @else
+                    <!-- CÁC TRẠNG THÁI KHÁC: Khóa ô select lại -->
+                    <select class="form-select border-info bg-light" disabled>
+                        <option value="">-- Chọn trạm dừng --</option>
+                        @foreach($warehouses as $kho)
+                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
+                            {{ $kho->ten_kho }}
+                        </option>
+                        @endforeach
+                    </select>
+
+                    <!-- THẺ ẨN SỐNG CÒN: Gửi giá trị cũ lên server để vượt qua điều kiện required -->
+                    <input type="hidden" name="kho_hien_tai_id" value="{{ $order->kho_hien_tai_id }}">
+
+                    <small class="text-danger fst-italic mt-1 d-block">
+                        <i class="bi bi-lock-fill"></i> Chỉ được chuyển kho khi đơn Đang xử lý.
+                    </small>
+                    @endif
                 </div>
 
                 <div class="col-md-3">

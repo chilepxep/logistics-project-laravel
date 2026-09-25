@@ -131,7 +131,10 @@
                 <select name="tru_so_nhan_hang_id" class="form-select border-success" required>
                     <option value="">-- Chọn Kho Nội Địa --</option>
                     @foreach($warehouses as $kho)
-                    <option value="{{ $kho->id }}">{{ $kho->ten_kho }}</option>
+                    @if(str_starts_with($kho->ma_kho, 'VN-'))
+                    <option value="{{ $kho->id }}">{{ $kho->ten_kho }}
+                    </option>
+                    @endif
                     @endforeach
                 </select>
             </div>
@@ -424,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         data.forEach(sup => {
                             supplierSelect.insertAdjacentHTML('beforeend',
                                 `<option value="${sup.id}">${sup.ten_ncc} (${sup.thanh_pho})</option>`
-                                );
+                            );
                         });
                         supplierSelect.disabled = false;
                     } else {

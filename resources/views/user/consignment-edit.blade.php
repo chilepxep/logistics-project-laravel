@@ -83,9 +83,11 @@
                 <select name="tru_so_nhan_hang_id" class="form-select border-success" required>
                     <option value="">-- Chọn Kho Nội Địa --</option>
                     @foreach($warehouses as $kho)
+                    @if(str_starts_with($kho->ma_kho, 'VN-'))
                     <option value="{{ $kho->id }}" {{ $order->kho_vn_id == $kho->id ? 'selected' : '' }}>
                         {{ $kho->ten_kho }}
                     </option>
+                    @endif
                     @endforeach
                 </select>
             </div>

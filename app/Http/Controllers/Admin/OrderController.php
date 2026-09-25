@@ -7,20 +7,37 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Warehouse; // Đảm bảo bạn đã có model này hoặc đổi tên cho khớp
+use App\Models\Warehouse;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    // Lấy danh sách đơn hàng (Đã làm ở bước trước)
+    // Lấy danh sách đơn hàng
     public function index(Request $request)
     {
-        $query = Order::query()->with('user'); // Load thêm thông tin khách hàng
+        // 1. Khởi tạo query và load thông tin khách hàng
+        $query = Order::query()->with(['user', 'supplier', 'warehouse', 'khoHienTai']);
 
+        // 2. Lấy thông tin nhân viên đang đăng nhập
+        $employee = Auth::user();
+
+        // 3. Phân quyền lọc dữ liệu theo Trụ sở 
+       if ($employee->vai_tro === 'nhan_vien') {
+    $query->where('kho_hien_tai_id', $employee->warehouse_id);
+            
+        } elseif ($employee->vai_tro !== 'admin') {
+            // Chặn các tài khoản không hợp lệ
+            $query->where('id', 0); 
+        }
+
+        // 4. Lọc theo trạng thái từ request
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
+        // 5. Thực thi query, sắp xếp và phân trang
         $orders = $query->orderByDesc('created_at')->paginate(15);
+        
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -52,12 +69,20 @@ class OrderController extends Controller
 public function update(Request $request, $id)
 {
     $order = Order::findOrFail($id);
+    $employee = Auth::user();
+
+    
+
+    if ($employee->vai_tro === 'nhan_vien' && $order->kho_hien_tai_id !== $employee->warehouse_id) {
+        abort(403, 'Từ chối truy cập: Bạn không có quyền cập nhật đơn hàng không nằm trong kho của bạn!');
+    }
 
     // 1. Validate 
     $request->validate([
         'country_id'          => 'required|exists:countries,id',
         'supplier_id'         => 'required|exists:suppliers,id',
         'tru_so_nhan_hang_id' => 'required',
+        'kho_hien_tai_id'     => 'nullable',
         'trang_thai'          => 'required',
         'items'               => 'required|array|min:1',
         'items.*.ten_san_pham'=> 'required|string',
@@ -73,37 +98,78 @@ public function update(Request $request, $id)
     try {
         DB::transaction(function () use ($request, $order) {
             
+            
+            $khoCuCuaDon = $order->kho_hien_tai_id; 
+            $khoMoiCuaDon = $request->kho_hien_tai_id ?? $order->kho_hien_tai_id;
+            $tenKhoMoi = \App\Models\Warehouse::find($khoMoiCuaDon)->ten_kho ?? 'Kho không xác định';
+
             // 2. Cập nhật thông tin chung của Đơn hàng 
             $order->update([
                 'country_id'          => $request->country_id,
                 'supplier_id'         => $request->supplier_id,
                 'tru_so_nhan_hang_id' => $request->tru_so_nhan_hang_id,
+                'kho_hien_tai_id'     => $khoMoiCuaDon, // Dùng luôn biến đã khởi tạo ở trên
                 'yeu_cau_toc_do'      => $request->yeu_cau_toc_do ?? 'thuong',
                 'trang_thai'          => $request->trang_thai,
                 'tong_tien'           => $request->tong_tien ?? $order->tong_tien,
             ]);
 
-            // 3. Logic tự động tạo kiện hàng
-            $trangThaiMoi = $request->trang_thai; 
-            if ($trangThaiMoi == 'dang_xu_ly') {
+            
+            if ($request->trang_thai == 'dang_xu_ly') {
                 $daCoKienHang = \App\Models\Package::where('order_id', $order->id)->exists();
                 
                 if (!$daCoKienHang) {
-                    \App\Models\Package::create([
+                    $newPkg = \App\Models\Package::create([
                         'ma_van_don'             => 'CHUA_CAP_NHAT', 
                         'ma_don_kien_hang'       => 'PKG' . time() . rand(100, 999), 
                         'order_id'               => $order->id,
                         'consignment_order_id'   => null,
                         'tinh_trang'             => 'da_dat_hang', 
                         'loai_hang'              => 'Hàng mua hộ',
-                        'tru_so_id'              => $request->tru_so_nhan_hang_id, // Lấy ID mới nhất từ request
+                        'tru_so_id'              => $khoMoiCuaDon, // Nằm ở kho xuất phát
                         'phi_van_chuyen_noi_dia' => 0,
                         'thanh_tien'             => 0
+                    ]);
+
+                    // Sinh Tracking gốc khi vừa tạo kiện
+                    \App\Models\PackageTracking::create([
+                        'package_id'   => $newPkg->id,
+                        'warehouse_id' => $khoMoiCuaDon,
+                        'employee_id'  => Auth::id(),
+                        'title'        => 'Khởi tạo kiện hàng',
+                        'description'  => "Kiện hàng mua hộ được khởi tạo và nhập vào: " . $tenKhoMoi,
                     ]);
                 }
             }
 
-            // 4. Xử lý danh sách Sản phẩm (Items)
+           
+            if ($khoCuCuaDon != $khoMoiCuaDon) {
+                
+                $packages = \App\Models\Package::where('order_id', $order->id)->get(); 
+
+                foreach ($packages as $pkg) {
+                    
+                    // Kiểm tra chống trùng lặp: Chỉ tạo tracking luân chuyển nếu kiện hàng thực sự bị đổi kho
+                    if ($pkg->tru_so_id != $khoMoiCuaDon) {
+                        
+                        // 4.1 Cập nhật vị trí kiện hàng
+                        $pkg->update(['tru_so_id' => $khoMoiCuaDon]);
+
+                        // 4.2 Ghi lịch sử hành trình
+                        \App\Models\PackageTracking::create([
+                            'package_id'   => $pkg->id,
+                            'warehouse_id' => $khoMoiCuaDon,
+                            'employee_id'  => Auth::id(),
+                            'title'        => 'Luân chuyển theo Đơn hàng',
+                            'description'  => "Kiện hàng được tự động cập nhật vị trí theo đơn cha tới: " . $tenKhoMoi,
+                        ]);
+                    }
+                }
+            }
+
+            // ========================================================
+            // 5. XỬ LÝ DANH SÁCH SẢN PHẨM (ITEMS)
+            // ========================================================
             $existingItemIds = $order->items->pluck('id')->toArray();
             $submittedItemIds = []; 
 
@@ -118,8 +184,7 @@ public function update(Request $request, $id)
                 }
 
                 if (!empty($itemData['id'])) {
-                    // CẬP NHẬT sản phẩm cũ
-                    $orderItem = OrderItem::find($itemData['id']);
+                    $orderItem = \App\Models\OrderItem::find($itemData['id']);
                     if ($orderItem && $orderItem->order_id == $order->id) {
                         $orderItem->update([
                             'link_san_pham'      => $itemData['link_san_pham'] ?? null,
@@ -133,8 +198,7 @@ public function update(Request $request, $id)
                         $submittedItemIds[] = $orderItem->id;
                     }
                 } else {
-                    // THÊM MỚI sản phẩm
-                    $newItem = OrderItem::create([
+                    $newItem = \App\Models\OrderItem::create([
                         'order_id'           => $order->id,
                         'stt'                => $index + 1, 
                         'link_san_pham'      => $itemData['link_san_pham'] ?? null,
@@ -149,10 +213,10 @@ public function update(Request $request, $id)
                 }
             }
 
-            // 5. XÓA các Sản phẩm không còn tồn tại trên form
+            // Xóa các Item không tồn tại trên form
             $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
             if (count($itemsToDelete) > 0) {
-                OrderItem::whereIn('id', $itemsToDelete)->delete();
+                \App\Models\OrderItem::whereIn('id', $itemsToDelete)->delete();
             }
         });
 

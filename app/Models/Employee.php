@@ -14,7 +14,9 @@ class Employee extends Authenticatable
         'ho_ten', 
         'email', 
         'password', 
-        'vai_tro'
+        'vai_tro',
+        'warehouse_id', 
+    'is_approved'   
     ];
 
     protected $hidden = [

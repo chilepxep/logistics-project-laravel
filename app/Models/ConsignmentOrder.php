@@ -21,6 +21,7 @@ class ConsignmentOrder extends Model
         'dia_chi_tra_hang',
         'so_kien',
         'trang_thai',
+        'kho_hien_tai_id'
     ];
 
     public function user()
@@ -52,5 +53,10 @@ public function country()
 public function supplier()
 {
     return $this->belongsTo(Supplier::class, 'supplier_id');
+}
+
+public function khoHienTai()
+{
+    return $this->belongsTo(Warehouse::class, 'kho_hien_tai_id');
 }
 }

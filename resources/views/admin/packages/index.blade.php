@@ -23,6 +23,19 @@
                     </option>
                 </select>
             </div>
+            <div class="col-md-3 d-flex align-items-center">
+                @if(auth()->user()->vai_tro === 'nhan_vien')
+                <div class="form-check form-switch pt-1">
+                    <input class="form-check-input shadow-none" type="checkbox" role="switch" id="switchKho"
+                        name="kho_cua_toi" value="1" {{ request()->has('kho_cua_toi') ? 'checked' : '' }}
+                        onchange="this.form.submit()" style="transform: scale(1.3); cursor: pointer;">
+                    <label class="form-check-label ms-2 fw-semibold text-success" for="switchKho"
+                        style="cursor: pointer; padding-top: 2px;">
+                        <i class="bi bi-box-seam me-1"></i> Chỉ hiện kho của tôi
+                    </label>
+                </div>
+                @endif
+            </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Lọc</button>
             </div>
@@ -65,8 +78,29 @@
                                 class="badge bg-info text-dark">{{ $pkg->trang_thai_hien_thi ?? $pkg->tinh_trang }}</span>
                         </td>
                         <td>
-                            <a href="{{ route('admin.packages.edit', $pkg->id) }}"
-                                class="btn btn-sm btn-warning fw-bold"><i class="bi bi-pencil-square"></i> Cập nhật</a>
+                            <a href="{{ route('admin.packages.show', $pkg->id) }}" class="btn btn-sm btn-outline-info"
+                                title="Xem">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            @if(auth()->user()->vai_tro === 'admin' || (auth()->user()->vai_tro === 'nhan_vien' &&
+                            $pkg->tru_so_id == auth()->user()->warehouse_id))
+
+
+                            <a href="{{ route('admin.packages.edit', $pkg->id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square"></i> Sửa
+                            </a>
+
+                            @else
+
+                            <!-- Khóa nút nếu là kiện hàng của kho khác -->
+                            <button class="btn btn-sm btn-secondary" disabled
+                                title="Kiện hàng này không nằm trong kho của bạn">
+                                <i class="bi bi-lock-fill"></i> Sửa
+                            </button>
+
+                            @endif
+
                         </td>
                     </tr>
                     @empty

@@ -15,19 +15,20 @@ return Application::configure(basePath: dirname(__DIR__))
 
     
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-        $middleware->redirectGuestsTo(fn (Request $request) => 
-            $request->is('admin') || $request->is('admin/*') 
-                ? route('admin.login') 
-                : route('login') // Thay 'login' bằng tên route đăng nhập của user nếu khác
-        );
+    //
+    $middleware->redirectGuestsTo(fn (Request $request) => 
+        $request->is('admin') || $request->is('admin/*') 
+            ? route('admin.login') 
+            : route('login') // Thay 'login' bằng tên route đăng nhập của user nếu khác
+    );
 
-        $middleware->alias([
-            'role' => \App\Http\Middleware\CheckEmployeeRole::class,
-        ]);
+    $middleware->alias([
+        'role'     => \App\Http\Middleware\CheckEmployeeRole::class,
+        'approved' => \App\Http\Middleware\CheckApprovedEmployee::class,
+    ]);
+})
 
-
-    })
+  
 
     
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -69,6 +69,16 @@
         </a>
     </div>
 
+    <!-- Item 3 -->
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-info-subtle text-success mx-auto mb-3">
+                <i class="bi bi-journal-text fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">QUẢN LÝ ĐƠN HÀNG KÝ GỬI</h6>
+        </a>
+    </div>
+
     <!-- Item 4 -->
     <div class="col">
         <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
@@ -82,10 +92,56 @@
     <!-- Item 5 -->
     <div class="col">
         <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
-            <div class="icon-wrapper bg-danger-subtle text-danger mx-auto mb-3">
-                <i class="bi bi-box-arrow-right fs-2"></i>
+            <div class="icon-wrapper bg-info-subtle text-info mx-auto mb-3">
+                <i class="bi bi-truck fs-2"></i>
             </div>
             <h6 class="text-dark fw-bold font-14 mb-0">GIAO HÀNG</h6>
+        </a>
+    </div>
+
+
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-primary-subtle text-primary mx-auto mb-3">
+                <i class="bi bi-people fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">TÀI KHOẢN KHÁCH HÀNG</h6>
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-danger-subtle text-danger mx-auto mb-3">
+                <i class="bi bi-chat-left-dots fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">KHIẾU NẠI</h6>
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-success-subtle text-success mx-auto mb-3">
+                <i class="bi bi-person-vcard fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">THÔNG TIN CÁ NHÂN</h6>
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-warning-subtle text-warning mx-auto mb-3">
+                <i class="bi bi-buildings fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">NHÀ CUNG CẤP</h6>
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+            <div class="icon-wrapper bg-secondary-subtle text-secondary mx-auto mb-3">
+                <i class="bi bi-gear fs-2"></i>
+            </div>
+            <h6 class="text-dark fw-bold font-14 mb-0">CÀI ĐẶT</h6>
         </a>
     </div>
     @endsection

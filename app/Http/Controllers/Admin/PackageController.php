@@ -8,29 +8,43 @@ use App\Models\Package;
 use App\Models\Order;
 use App\Models\ConsignmentOrder;
 use App\Models\Warehouse;
+use App\Models\PackageTracking;
+use Illuminate\Support\Facades\Auth;
 
 class PackageController extends Controller
 {
     // 1. Danh sách kiện hàng
     public function index(Request $request)
-    {
-        $query = Package::with(['warehouse', 'order', 'consignmentOrder']);
+{
+    $user = Auth::user();
+    $query = Package::with(['warehouse', 'order', 'consignmentOrder']);
 
-        // Tìm kiếm theo mã vận đơn hoặc mã kiện
-        if ($request->filled('keyword')) {
-            $kw = $request->keyword;
-            $query->where('ma_van_don', 'like', "%{$kw}%")
-                  ->orWhere('ma_don_kien_hang', 'like', "%{$kw}%");
-        }
-
-        // Lọc theo trạng thái
-        if ($request->filled('tinh_trang')) {
-            $query->where('tinh_trang', $request->tinh_trang);
-        }
-
-        $packages = $query->orderByDesc('created_at')->paginate(20);
-        return view('admin.packages.index', compact('packages'));
+    //Lọc các kiện hàng đang nằm tại kho của nhân viên (Có quyền sửa)
+    if ($request->has('kho_cua_toi') && $user->vai_tro === 'nhan_vien') {
+        $query->where('tru_so_id', $user->warehouse_id);
     }
+
+    //Tìm kiếm theo mã vận đơn hoặc mã kiện
+    if ($request->filled('keyword')) {
+        $kw = $request->keyword;
+        $query->where(function($q) use ($kw) {
+            $q->where('ma_van_don', 'like', "%{$kw}%")
+              ->orWhere('ma_don_kien_hang', 'like', "%{$kw}%");
+        });
+    }
+
+    //Lọc theo trạng thái
+    if ($request->filled('tinh_trang')) {
+        $query->where('tinh_trang', $request->tinh_trang);
+    }
+
+    $packages = $query->orderByDesc('created_at')->paginate(20);
+    
+    
+    $packages->appends($request->all());
+
+    return view('admin.packages.index', compact('packages'));
+}
 
     // 2. Chi tiết kiện hàng
     public function show($id)
@@ -39,10 +53,14 @@ class PackageController extends Controller
         return view('admin.packages.show', compact('package'));
     }
 
-    // 3. Form cập nhật thông tin kho (Cân nặng, kích thước, trạng thái)
+    //Form cập nhật thông tin kho
     public function edit($id)
     {
         $package = Package::findOrFail($id);
+        $user = Auth::user();
+        if ($user->vai_tro === 'nhan_vien' && $package->tru_so_id != $user->warehouse_id) {
+        abort(403, 'Từ chối truy cập: Bạn chỉ được phép sửa các kiện hàng đang nằm tại kho của mình!');
+    }
         $warehouses = Warehouse::all();
         return view('admin.packages.edit', compact('package', 'warehouses'));
     }
@@ -51,6 +69,14 @@ class PackageController extends Controller
     public function update(Request $request, $id)
     {
         $package = Package::findOrFail($id);
+        $user = Auth::user();
+
+        if ($user->vai_tro === 'nhan_vien' && $package->tru_so_id != $user->warehouse_id) {
+        abort(403, 'Hành vi bị chặn: Bạn không có quyền cập nhật kiện hàng này!');
+    }
+
+        //Lưu lại vị trí cũ để so sánh xem có thực sự chuyển kho hay không
+    $khoCu = $package->tru_so_id;
 
         $request->validate([
             'tinh_trang' => 'required|string',
@@ -73,8 +99,31 @@ class PackageController extends Controller
             'thanh_tien'             => $request->thanh_tien ?? 0,
             'ghi_chu'                => $request->ghi_chu,
         ]);
-        //LOGIC KÍCH HOẠT TỰ ĐỘNG ĐÓNG ĐƠN KHI KIỆN HOÀN THÀNH
-   
+
+        // LOGIC TRACKING KHI THAY ĐỔI KHO BÃI
+    if ($khoCu != $request->tru_so_id) {
+        
+        $tenKhoMoi = \App\Models\Warehouse::find($request->tru_so_id)->ten_kho ?? 'Kho không xác định';
+
+        // 1. Ghi lại lịch sử Tracking cho kiện hàng này
+        PackageTracking::create([
+            'package_id'   => $package->id,
+            'warehouse_id' => $request->tru_so_id,
+            'employee_id'  => Auth::id(),
+            'title'        => 'Đến trạm trung chuyển',
+            'description'  => "Kiện hàng đã được nhân viên cập nhật vị trí tới: " . $tenKhoMoi,
+        ]);
+
+        // 2. Đồng bộ vị trí CẬP NHẬT NGƯỢC LÊN Đơn hàng Order / ConsignmentOrder
+        if ($package->order_id) {
+            Order::where('id', $package->order_id)->update(['kho_hien_tai_id' => $request->tru_so_id]);
+        }
+        if ($package->consignment_order_id) {
+            ConsignmentOrder::where('id', $package->consignment_order_id)->update(['kho_hien_tai_id' => $request->tru_so_id]);
+        }
+    }
+
+        //LOGIC KÍCH HOẠT TỰ ĐỘNG ĐÓNG ĐƠN KHI KIỆN HOÀN THÀN
         if ($request->tinh_trang == 'hoan_thanh') {
             
             // Nếu là kiện của Đơn mua hộ

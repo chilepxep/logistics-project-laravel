@@ -43,6 +43,13 @@ class Package extends Model
         return $this->belongsTo(Order::class, 'order_id');
     }
 
+    public function trackings()
+{
+    // 1 Kiện hàng sẽ có Nhiều dòng Lịch sử (Tracking)
+    // Sắp xếp mặc định: Mới nhất lên đầu
+    return $this->hasMany(PackageTracking::class, 'package_id')->latest();
+}
+
     /**
      * Quan hệ với bảng Đơn ký gửi (ConsignmentOrder)
      */
