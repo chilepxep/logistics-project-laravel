@@ -58,10 +58,90 @@
 }
 </style>
 
+@php
+// Khởi tạo cờ kiểm tra
+$daDenKhoCuoi = false;
+
+// So sánh Vị trí hiện tại của kiện hàng với Kho đích của Đơn hàng cha
+if ($package->order_id && $package->tru_so_id == $package->order->tru_so_nhan_hang_id) {
+$daDenKhoCuoi = true;
+} elseif ($package->consignment_order_id && $package->tru_so_id == $package->consignmentOrder->kho_vn_id) {
+$daDenKhoCuoi = true;
+}
+@endphp
+
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 fw-bold">Thông tin chi tiết kiện hàng</h6>
         <div>
+
+            @if($daDenKhoCuoi)
+            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalDelivery">
+                <i class="bi bi-truck"></i> Điều phối Giao hàng nội địa
+            </button>
+
+            <!-- Modal Chọn Đơn vị vận chuyển -->
+            <div class="modal fade" id="modalDelivery" tabindex="-1">
+                <div class="modal-dialog">
+                    <form action="{{ route('admin.deliveries.store') }}" method="POST" class="modal-content">
+                        @csrf
+                        <input type="hidden" name="package_id" value="{{ $package->id }}">
+
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">Tạo mã giao hàng nội địa</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Đơn vị vận chuyển</label>
+                                <select name="phuong_thuc_van_chuyen" class="form-select border-success" required>
+                                    <option value="viettel_post">Viettel Post</option>
+                                    <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
+                                    <option value="ghn">Giao Hàng Nhanh (GHN)</option>
+                                    <option value="nhan_vien_giao">Nhân viên kho tự giao</option>
+                                    <option value="khach_den_lay">Khách đến kho nhận</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mã vận đơn nội địa (Nếu có)</label>
+                                <input type="text" name="ma_van_don" class="form-control"
+                                    placeholder="VD: VTP123456789">
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Mã vùng nội địa</label>
+                                    <input type="text" name="ma_vung_noi_dia" class="form-control"
+                                        placeholder="VD: HCM-01">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Thanh toán</label>
+                                    <select name="phuong_thuc_thanh_toan" class="form-select">
+                                        <option value="nguoi_nhan_tra">Người nhận trả cước (COD)</option>
+                                        <option value="da_thanh_toan">Shop đã trả cước</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Thông tin người nhận (SĐT, Địa chỉ)</label>
+                                <textarea name="thong_tin_giao_hang" class="form-control" rows="2" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Xác nhận điều phối</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @else
+            <div class="alert alert-warning px-3 py-2">
+                <i class="bi bi-info-circle"></i> Kiện hàng chưa về đến kho cuối cùng, chưa thể điều phối giao hàng.
+            </div>
+            @endif
 
             @if(auth()->user()->vai_tro === 'admin' || (auth()->user()->vai_tro === 'nhan_vien' &&
             $package->tru_so_id == auth()->user()->warehouse_id))

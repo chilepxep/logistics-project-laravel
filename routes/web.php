@@ -303,6 +303,18 @@ Route::prefix('admin')->group(function () {
         Route::put('/nha-cung-cap/{id}', [App\Http\Controllers\Admin\SupplierController::class, 'update'])->name('admin.suppliers.update')->middleware('throttle:30,1');
         Route::delete('/nha-cung-cap/{id}', [App\Http\Controllers\Admin\SupplierController::class, 'destroy'])->name('admin.suppliers.destroy');
 
+
+        // Quản lý giao hàng
+        // Route::post('/deliveries', [App\Http\Controllers\Admin\DeliveryController::class, 'store'])->name('admin.deliveries.store');
+
+        // Quản lý Module Giao Hàng Nội Địa
+        Route::get('/deliveries', [App\Http\Controllers\Admin\DeliveryController::class, 'index'])->name('admin.deliveries.index');
+        Route::post('/deliveries', [App\Http\Controllers\Admin\DeliveryController::class, 'store'])->name('admin.deliveries.store');
+        Route::get('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'show'])->name('admin.deliveries.show');
+        Route::put('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'update'])->name('admin.deliveries.update');
+        Route::delete('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'destroy'])->name('admin.deliveries.destroy');
+
+
         // ==========================================
         // 3. CÁC ROUTE CHỈ DÀNH CHO ADMIN QUẢN TRỊ
         // ==========================================

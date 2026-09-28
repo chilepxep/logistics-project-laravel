@@ -152,8 +152,8 @@
                         <td class="text-center">
                             @switch($delivery->trang_thai)
                             @case('cho_xu_ly') <span class="badge bg-secondary">Chờ xử lý</span> @break
-                            @case('dang_xu_ly') <span class="badge bg-warning text-dark">Đang giao</span> @break
-                            @case('da_hoan_thanh') <span class="badge bg-success">Đã giao</span> @break
+                            @case('dang_giao') <span class="badge bg-warning text-dark">Đang giao</span> @break
+                            @case('thanh_cong') <span class="badge bg-success">Đã giao</span> @break
                             @case('da_huy') <span class="badge bg-danger">Đã hủy</span> @break
                             @endswitch
                         </td>

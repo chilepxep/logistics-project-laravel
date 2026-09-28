@@ -142,6 +142,12 @@
                         <i class="bi bi-person-workspace"></i> Nhà cung cấp
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.deliveries.index') }}">
+                        <i class="bi bi-truck"></i> Giao hàng
+                    </a>
+                </li>
                 <!-- MENU CHỈ DÀNH CHO ADMIN -->
                 @if(Auth::guard('employee')->user()->vai_tro === 'admin')
                 <li class="nav-item mt-3">

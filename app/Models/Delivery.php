@@ -8,7 +8,7 @@ class Delivery extends Model
 {
     public $timestamps = false;
     protected $fillable = [
-        'package_id', 'ngay_tao', 'thong_tin_giao_hang', 'ma_buu_dien',
+        'package_id', 'ngay_tao', 'ngay_giao_xong', 'thong_tin_giao_hang', 'ma_buu_dien', 'ma_vung_noi_dia',
         'ma_van_don', 'ghi_chu', 'trang_thai', 'phuong_thuc_van_chuyen', 'phuong_thuc_thanh_toan'
     ];
 

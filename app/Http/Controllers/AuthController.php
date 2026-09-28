@@ -51,7 +51,7 @@ class AuthController extends Controller
         ]);
         // Đăng nhập ngay sau khi đăng ký
         Auth::login($user);
-        return redirect('/index')->with('success', 'Đăng ký tài khoản thành công! Mã tài khoản của bạn là: ' . $maTaiKhoan);
+        return redirect('/')->with('success', 'Đăng ký tài khoản thành công! Mã tài khoản của bạn là: ' . $maTaiKhoan);
     }
 
     // 3. Hiển thị form Đăng nhập
@@ -75,7 +75,7 @@ class AuthController extends Controller
 
         if(Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect()->intended('/index')->with('success','Đăng nhập thành công!');
+            return redirect()->intended('/')->with('success','Đăng nhập thành công!');
         }
 
         return back()->withErrors([
@@ -89,7 +89,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/index')->with('success', 'Bạn đã đăng xuất thành công.');
+        return redirect('/')->with('success', 'Bạn đã đăng xuất thành công.');
     }
 
 }

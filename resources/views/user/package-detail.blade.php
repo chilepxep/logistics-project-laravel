@@ -4,6 +4,60 @@
 
 @section('content')
 
+<style>
+/* Đường kẻ dọc nền */
+.tracking-timeline {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+}
+
+.tracking-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    width: 2px;
+    background-color: #dee2e6;
+    /* Màu xám nhạt */
+}
+
+/* Từng mốc thời gian */
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+/* Dấu chấm tròn (Dot) */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: -2rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    /* Màu xanh lam */
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #dee2e6;
+    z-index: 2;
+}
+
+/* Highlight điểm mới nhất (Dòng đầu tiên) */
+.timeline-item:first-child::before {
+    background-color: #198754;
+    /* Màu xanh lá (Success) */
+    box-shadow: 0 0 0 2px #198754;
+}
+
+.timeline-item:first-child .tracking-title {
+    color: #198754 !important;
+}
+</style>
+
 <div
     class="top-banner mb-4 p-4 rounded-4 shadow-sm bg-white d-flex flex-wrap align-items-center justify-content-between">
     <!-- Hotline -->
@@ -123,6 +177,12 @@
                                 <td class="text-muted">Ghi chú của khách:</td>
                                 <td>{{ $package->ghi_chu ?? '--' }}</td>
                             </tr>
+
+                            <tr>
+                                <td class="text-muted">Vị trí hiện tại (Kho)</td>
+                                <td class="fw-bold text-success">{{ $package->warehouse->ten_kho ?? 'Chưa xác định' }}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -213,6 +273,65 @@
                     </div>
                     @endif
                 </div>
+            </div>
+        </div>
+
+        <div class="card mt-4 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-2 text-primary"></i> Lịch sử hành trình
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <!-- Kiểm tra xem kiện hàng đã có lịch sử chưa -->
+                @if($package->trackings && $package->trackings->count() > 0)
+                <div class="tracking-timeline">
+
+                    <!-- Vòng lặp in danh sách Tracking (đã được sort mới nhất lên đầu trong Model) -->
+                    @foreach($package->trackings as $tracking)
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold tracking-title text-dark">
+                                {{ $tracking->title }}
+                            </h6>
+                            <span class="text-muted font-13" style="font-size: 13px;">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                {{ $tracking->created_at->format('d/m/Y - H:i') }}
+                            </span>
+                        </div>
+
+                        <p class="mb-2 text-muted" style="font-size: 14px;">
+                            {{ $tracking->description }}
+                        </p>
+
+                        <!-- Hiển thị người cập nhật và vị trí kho -->
+                        <div class="mt-1" style="font-size: 12px;">
+                            @if($tracking->warehouse)
+                            <span class="badge bg-light text-dark border me-2 py-1 px-2">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                                {{ $tracking->warehouse->ten_kho }}
+                            </span>
+                            @endif
+
+                            @if($tracking->employee)
+                            <span class="badge bg-light text-muted border py-1 px-2">
+                                <i class="bi bi-person-fill me-1"></i>
+                                {{ $tracking->employee->ho_ten }}
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+
+                </div>
+                @else
+                <!-- Nếu chưa có dữ liệu -->
+                <div class="alert alert-secondary text-center border-0 py-4">
+                    <i class="bi bi-box-seam fs-3 text-muted d-block mb-2"></i>
+                    Chưa có dữ liệu lịch sử hành trình cho kiện hàng này.
+                </div>
+                @endif
             </div>
         </div>
     </div>

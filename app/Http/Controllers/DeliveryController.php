@@ -43,31 +43,35 @@ class DeliveryController extends Controller
     }
 
     public function completed(\Illuminate\Http\Request $request)
-    {
-        $userId = Auth::id();
+{
+    $userId = Auth::id();
 
-        // Khởi tạo truy vấn, BẮT BUỘC lọc trạng thái 'da_hoan_thanh'
-        $query = Delivery::with('package')
-            ->where('trang_thai', 'da_hoan_thanh')
-            ->whereHas('package', function ($packageQuery) use ($userId) {
-                $packageQuery->whereHas('order', function ($orderQuery) use ($userId) {
+    // Khởi tạo truy vấn, BẮT BUỘC lọc trạng thái 'thanh_cong'
+    $query = Delivery::with('package')
+        ->where('trang_thai', 'thanh_cong') // Đã sửa thành thanh_cong
+        ->whereHas('package', function ($packageQuery) use ($userId) {
+            // Gom nhóm điều kiện OR để đảm bảo SQL chạy đúng logic
+            $packageQuery->where(function ($q) use ($userId) {
+                $q->whereHas('order', function ($orderQuery) use ($userId) {
                     $orderQuery->where('user_id', $userId);
                 })->orWhereHas('consignmentOrder', function ($consignmentQuery) use ($userId) {
                     $consignmentQuery->where('user_id', $userId);
                 });
             });
+        });
 
-        // Chỉ giữ lại 2 bộ lọc phụ (Bỏ lọc trạng thái vì mặc định là đã giao)
-        if ($request->filled('phuong_thuc_van_chuyen')) {
-            $query->where('phuong_thuc_van_chuyen', $request->phuong_thuc_van_chuyen);
-        }
-
-        if ($request->filled('phuong_thuc_thanh_toan')) {
-            $query->where('phuong_thuc_thanh_toan', $request->phuong_thuc_thanh_toan);
-        }
-
-        $deliveries = $query->orderBy('ngay_tao', 'desc')->get();
-
-        return view('user.delivery-completed', compact('deliveries'));
+    // Chỉ giữ lại 2 bộ lọc phụ (Bỏ lọc trạng thái vì mặc định là đã giao thành công)
+    if ($request->filled('phuong_thuc_van_chuyen')) {
+        $query->where('phuong_thuc_van_chuyen', $request->phuong_thuc_van_chuyen);
     }
+
+    if ($request->filled('phuong_thuc_thanh_toan')) {
+        $query->where('phuong_thuc_thanh_toan', $request->phuong_thuc_thanh_toan);
     }
+
+    $deliveries = $query->orderBy('ngay_tao', 'desc')->get();
+
+    return view('user.delivery-completed', compact('deliveries'));
+}
+
+}

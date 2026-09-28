@@ -122,6 +122,115 @@
                     class="fw-bold text-success">{{ $order->ngay_nhan_hang ? date('d/m/Y', strtotime($order->ngay_nhan_hang)) : 'Chưa nhận' }}</span>
             </div>
 
+            <!-- 2. CHI TIẾT CÁC KIỆN HÀNG -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-uppercase"><i class="bi bi-box-seam"></i> Danh sách kiện hàng</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-hover">
+                            <thead class="table-light font-14">
+                                <tr>
+                                    <th>Mã vận đơn / Ảnh</th>
+                                    <th>Tên SP & Thông tin</th>
+                                    <th>Phân loại / SL</th>
+                                    <th>Dịch vụ thêm</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packagesContainer">
+                                @php
+                                $extraReqs = \App\Models\ConsignmentExtraRequirement::where('consignment_order_id',
+                                $order->id)->pluck('loai_yeu_cau')->toArray();
+                                $hasDongGo = in_array('dong_go', $extraReqs);
+                                $hasKiemHang = in_array('kiem_hang', $extraReqs);
+                                @endphp
+
+                                @if($order->items && $order->items->count() > 0)
+                                @foreach($order->items as $index => $item)
+                                <tr class="package-row">
+                                    <!-- Mã vận đơn / Ảnh -->
+                                    <td>
+                                        <div class="fw-bold text-primary mb-2">{{ $item->ma_van_don ?: 'Chưa có mã' }}
+                                        </div>
+                                        @if($item->hinh_anh_url)
+                                        <img src="{{ asset($item->hinh_anh_url) }}" class="rounded shadow-sm"
+                                            style="width:50px;height:50px;object-fit:cover; border: 1px solid #ddd;">
+                                        @else
+                                        <span class="badge bg-secondary font-12">Không có ảnh</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- Tên SP & Thông tin -->
+                                    <td>
+                                        <div class="fw-bold text-dark mb-1">{{ $item->ten_san_pham }}</div>
+                                        <div class="font-13 text-muted mb-1">
+                                            <i class="bi bi-truck"></i> Hãng VC:
+                                            <strong>{{ $item->hang_van_chuyen ?: 'N/A' }}</strong>
+                                        </div>
+                                        @if($item->link_san_pham)
+                                        <a href="{{ $item->link_san_pham }}" target="_blank"
+                                            class="font-13 text-info text-decoration-none">
+                                            <i class="bi bi-link-45deg"></i> Link sản phẩm
+                                        </a>
+                                        @endif
+                                    </td>
+
+                                    <!-- Phân loại / Số lượng -->
+                                    <td>
+                                        <div class="font-13 mb-1">Danh mục: <span
+                                                class="fw-semibold">{{ $item->loai_danh_muc ?: 'Không phân loại' }}</span>
+                                        </div>
+                                        <div class="font-13 mb-1">
+                                            Số lượng: <span class="badge bg-info text-dark">{{ $item->so_luong }}</span>
+                                            |
+                                            Số kiện: <span class="badge bg-secondary">{{ $item->so_kien_hang }}</span>
+                                        </div>
+                                        <div class="text-danger fw-bold font-14 mt-2">
+                                            <i class="bi bi-tag-fill"></i>
+                                            {{ number_format($item->gia_tri_hang_hoa, 0, ',', '.') }} VNĐ
+                                        </div>
+                                    </td>
+
+                                    <!-- Dịch vụ thêm & Ghi chú -->
+                                    <td>
+                                        <div class="form-check font-14 mb-1">
+                                            <input class="form-check-input" type="checkbox" disabled
+                                                {{ $hasKiemHang ? 'checked' : '' }}>
+                                            <label
+                                                class="form-check-label {{ $hasKiemHang ? 'fw-bold text-dark' : 'text-muted' }}">Kiểm
+                                                hàng</label>
+                                        </div>
+                                        <div class="form-check font-14 mb-2">
+                                            <input class="form-check-input" type="checkbox" disabled
+                                                {{ $hasDongGo ? 'checked' : '' }}>
+                                            <label
+                                                class="form-check-label {{ $hasDongGo ? 'fw-bold text-dark' : 'text-muted' }}">Đóng
+                                                gỗ</label>
+                                        </div>
+
+                                        @if($item->ghi_chu)
+                                        <div class="font-13 text-muted fst-italic p-2 bg-light rounded border">
+                                            <strong>Ghi chú:</strong> {{ $item->ghi_chu }}
+                                        </div>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @else
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i> Đơn hàng này chưa có kiện hàng chi
+                                        tiết nào.
+                                    </td>
+                                </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
