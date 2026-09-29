@@ -19,6 +19,7 @@
                         <th>Họ tên</th>
                         <th>Email</th>
                         <th>Vai trò</th>
+                        <th>Thuộc Kho</th>
                         <th>Ngày tạo</th>
                         <th>Thao tác</th>
                     </tr>
@@ -35,6 +36,9 @@
                             @else
                             <span class="badge bg-info"><i class="bi bi-person"></i> Nhân viên</span>
                             @endif
+                        </td>
+                        <td class="fw-bold text-success">
+                            {{ $emp->warehouse?->ten_kho ?? 'Chưa phân kho' }}
                         </td>
                         <td>{{ $emp->created_at->format('d/m/Y') }}</td>
                         <td class="d-flex gap-1">

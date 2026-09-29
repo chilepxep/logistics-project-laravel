@@ -7,18 +7,20 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Warehouse;
 
 class EmployeeController extends Controller
 {
    public function index()
     {
-        $employees = Employee::orderByDesc('created_at')->paginate(15);
+        $employees = Employee::with('warehouse')->orderByDesc('created_at')->paginate(15);
         return view('admin.employees.index', compact('employees'));
     }
 
     public function create()
     {
-        return view('admin.employees.create');
+        $warehouses = Warehouse::all();
+        return view('admin.employees.create', compact('warehouses'));
     }
 
     public function store(Request $request)
@@ -28,7 +30,9 @@ class EmployeeController extends Controller
             'ho_ten'   => 'required|string|max:255',
             'email'    => 'required|email|unique:employees,email',
             'password' => 'required|min:6',
-            'vai_tro'  => 'required'
+            'vai_tro'  => 'required',
+            'warehouse_id' => 'nullable|integer',
+            'is_approved'  => 'nullable'
         ]);
 
         Employee::create([
@@ -37,6 +41,8 @@ class EmployeeController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password), // Mã hoá mật khẩu
             'vai_tro'  => $request->vai_tro,
+            'warehouse_id' => $request->warehouse_id,
+            'is_approved'  => $request->boolean('is_approved'),
         ]);
 
         return redirect()->route('admin.employees.index')->with('success', 'Thêm nhân viên thành công!');
@@ -45,7 +51,8 @@ class EmployeeController extends Controller
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
-        return view('admin.employees.edit', compact('employee'));
+        $warehouses = Warehouse::all();
+        return view('admin.employees.edit', compact('employee', 'warehouses'));
     }
 
     public function update(Request $request, $id)
@@ -56,8 +63,10 @@ class EmployeeController extends Controller
             'ma_nv'    => 'required|unique:employees,ma_nv,' . $id,
             'ho_ten'   => 'required|string|max:255',
             'email'    => 'required|email|unique:employees,email,' . $id,
-            'password' => 'nullable|min:6', // Cho phép rỗng (nếu không đổi pass)
-            'vai_tro'  => 'required'
+            'password' => 'nullable|min:6', 
+            'vai_tro'  => 'required',
+            'warehouse_id' => 'nullable|integer',
+            'is_approved'  => 'nullable'
         ]);
 
         $data = [
@@ -65,6 +74,8 @@ class EmployeeController extends Controller
             'ho_ten'  => $request->ho_ten,
             'email'   => $request->email,
             'vai_tro' => $request->vai_tro,
+            'warehouse_id' => $request->warehouse_id,
+            'is_approved'  => $request->boolean('is_approved'),
         ];
 
         // Chỉ cập nhật mật khẩu nếu người dùng có nhập mật khẩu mới

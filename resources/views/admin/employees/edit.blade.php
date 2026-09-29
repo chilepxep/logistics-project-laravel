@@ -40,6 +40,48 @@
                             (Admin)</option>
                     </select>
                 </div>
+
+                <!-- BỘ LỌC QUỐC GIA & KHO LÀM VIỆC -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-primary">Khu vực / Quốc gia</label>
+                    <select id="countrySelect" class="form-select border-primary">
+                        <option value="">-- Tất cả quốc gia --</option>
+                        <option value="VN">Việt Nam (VN)</option>
+                        <option value="TQ">Trung Quốc (TQ)</option>
+                        <option value="JP">Nhật Bản (JP)</option>
+                        <option value="AU">Úc (AU)</option>
+                        <option value="DE">Đức (DE)</option>
+                        <option value="FR">Pháp (FR)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-primary">Kho làm việc (Trụ sở)</label>
+                    <select name="warehouse_id" id="warehouseSelect" class="form-select border-primary">
+                        <option value="">-- Chọn kho --</option>
+                        @foreach($warehouses as $kho)
+                        <!-- Lưu ý thuộc tính data-country để JS dùng làm mỏ neo lọc dữ liệu -->
+                        <option value="{{ $kho->id }}" data-country="{{ $kho->loai_kho }}"
+                            {{ $employee->warehouse_id == $kho->id ? 'selected' : '' }}>
+                            {{ $kho->ten_kho }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- TRẠNG THÁI HOẠT ĐỘNG (is_approved) -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Trạng thái tài khoản</label>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input fs-5 shadow-none" type="checkbox" name="is_approved"
+                            id="isApprovedSwitch" value="1" {{ $employee->is_approved ? 'checked' : '' }}>
+                        <label
+                            class="form-check-label pt-1 ms-2 {{ $employee->is_approved ? 'text-success fw-bold' : 'text-muted' }}"
+                            for="isApprovedSwitch" id="statusLabel">
+                            {{ $employee->is_approved ? 'Đang hoạt động' : 'Đang khóa' }}
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <hr class="my-4">
@@ -49,4 +91,58 @@
         </form>
     </div>
 </div>
+
+<!-- JAVASCRIPT XỬ LÝ LỌC KHO VÀ ĐỔI NHÃN TRẠNG THÁI -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const countrySelect = document.getElementById('countrySelect');
+    const warehouseSelect = document.getElementById('warehouseSelect');
+    const options = Array.from(warehouseSelect.options); // Chuyển danh sách option thành mảng để duyệt
+
+    // Hàm thực thi lọc kho
+    function filterWarehouses(countryCode) {
+        options.forEach(option => {
+            if (option.value === "") return; // Bỏ qua tùy chọn "-- Chọn kho --"
+
+            // Nếu không chọn quốc gia nào hoặc loại kho khớp với quốc gia đã chọn -> Hiển thị
+            if (countryCode === "" || option.dataset.country === countryCode) {
+                option.style.display = "";
+            } else {
+                option.style.display = "none"; // Ngược lại thì ẩn đi
+                if (option.selected) {
+                    warehouseSelect.value = ""; // Xóa chọn nếu kho đang bị ẩn
+                }
+            }
+        });
+    }
+
+    // 1. Tự động nhận diện Quốc gia khi vừa load trang (dựa trên kho hiện tại của NV)
+    const initialSelected = warehouseSelect.options[warehouseSelect.selectedIndex];
+    if (initialSelected && initialSelected.value !== "") {
+        const currentCountry = initialSelected.dataset.country;
+        if (currentCountry) {
+            countrySelect.value = currentCountry;
+            filterWarehouses(currentCountry); // Lọc ngay lập tức
+        }
+    }
+
+    // 2. Bắt sự kiện người dùng tự chọn đổi Quốc gia
+    countrySelect.addEventListener('change', function() {
+        filterWarehouses(this.value);
+    });
+
+    // 3. Đổi chữ Trạng thái động (Trang trí UX)
+    const statusSwitch = document.getElementById('isApprovedSwitch');
+    const statusLabel = document.getElementById('statusLabel');
+    statusSwitch.addEventListener('change', function() {
+        if (this.checked) {
+            statusLabel.textContent = 'Đang hoạt động';
+            statusLabel.className = 'form-check-label pt-1 ms-2 text-success fw-bold';
+        } else {
+            statusLabel.textContent = 'Đang khóa';
+            statusLabel.className = 'form-check-label pt-1 ms-2 text-muted';
+        }
+    });
+});
+</script>
 @endsection
