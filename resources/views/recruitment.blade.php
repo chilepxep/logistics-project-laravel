@@ -76,74 +76,41 @@
                     <!-- Khối: Danh sách Vị trí tuyển dụng -->
                     <h5 class="fw-bold text-uppercase mb-4" style="color: #0b3a68;">Vị trí đang tuyển dụng</h5>
 
-                    <!-- Job 1 -->
+                    @forelse($recruitments as $job)
                     <div class="card mb-3 border-0 shadow-sm job-card">
                         <div
                             class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                             <div class="mb-3 mb-md-0">
                                 <h5 class="fw-bold mb-2">
-                                    <a href="#" class="text-decoration-none text-dark job-title">Nhân viên Kinh doanh
-                                        Logistics (Sales)</a>
+                                    <a href="{{ route('recruitments.show', $job->slug) }}"
+                                        class="text-decoration-none text-dark job-title">
+                                        {{ $job->title }}
+                                    </a>
                                 </h5>
                                 <div class="d-flex flex-wrap gap-3 text-muted font-14">
-                                    <span><i class="bi bi-geo-alt me-1 text-danger"></i>Hà Nội</span>
-                                    <span><i class="bi bi-currency-dollar me-1 text-success"></i>10 - 20 Triệu</span>
+                                    <span><i
+                                            class="bi bi-geo-alt me-1 text-danger"></i>{{ $job->location ?? 'Đang cập nhật' }}</span>
+                                    <span><i
+                                            class="bi bi-currency-dollar me-1 text-success"></i>{{ $job->salary ?? 'Thỏa thuận' }}</span>
                                     <span><i class="bi bi-clock-history me-1 text-warning"></i>Hạn nộp:
-                                        30/09/2026</span>
+                                        {{ $job->deadline ? $job->deadline->format('d/m/Y') : 'Không giới hạn' }}</span>
                                 </div>
                             </div>
                             <div>
-                                <a href="#" class="btn btn-outline-primary rounded-pill px-4 fw-semibold w-100">Ứng
-                                    tuyển ngay</a>
+                                <a href="{{ route('recruitments.show', $job->slug) }}"
+                                    class="btn btn-outline-primary rounded-pill px-4 fw-semibold w-100">Chi tiết</a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Job 2 -->
-                    <div class="card mb-3 border-0 shadow-sm job-card">
-                        <div
-                            class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-                            <div class="mb-3 mb-md-0">
-                                <h5 class="fw-bold mb-2">
-                                    <a href="#" class="text-decoration-none text-dark job-title">Nhân viên CSKH Tiếng
-                                        Trung</a>
-                                </h5>
-                                <div class="d-flex flex-wrap gap-3 text-muted font-14">
-                                    <span><i class="bi bi-geo-alt me-1 text-danger"></i>Hà Nội / TP.HCM</span>
-                                    <span><i class="bi bi-currency-dollar me-1 text-success"></i>12 - 15 Triệu</span>
-                                    <span><i class="bi bi-clock-history me-1 text-warning"></i>Hạn nộp:
-                                        15/09/2026</span>
-                                </div>
-                            </div>
-                            <div>
-                                <a href="#" class="btn btn-outline-primary rounded-pill px-4 fw-semibold w-100">Ứng
-                                    tuyển ngay</a>
-                            </div>
-                        </div>
+                    @empty
+                    <div class="alert alert-info border-0 shadow-sm text-center py-4">
+                        Hiện tại HTKK 360 chưa có vị trí tuyển dụng mới. Bạn vui lòng quay lại sau nhé!
                     </div>
+                    @endforelse
 
-                    <!-- Job 3 -->
-                    <div class="card mb-4 border-0 shadow-sm job-card">
-                        <div
-                            class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-                            <div class="mb-3 mb-md-0">
-                                <h5 class="fw-bold mb-2">
-                                    <a href="#" class="text-decoration-none text-dark job-title">Nhân viên Kho bãi (Kiểm
-                                        đếm)</a>
-                                    <span class="badge bg-danger ms-2">Gấp</span>
-                                </h5>
-                                <div class="d-flex flex-wrap gap-3 text-muted font-14">
-                                    <span><i class="bi bi-geo-alt me-1 text-danger"></i>Quảng Châu, TQ</span>
-                                    <span><i class="bi bi-currency-dollar me-1 text-success"></i>Thỏa thuận</span>
-                                    <span><i class="bi bi-clock-history me-1 text-warning"></i>Hạn nộp:
-                                        10/09/2026</span>
-                                </div>
-                            </div>
-                            <div>
-                                <a href="#" class="btn btn-outline-primary rounded-pill px-4 fw-semibold w-100">Ứng
-                                    tuyển ngay</a>
-                            </div>
-                        </div>
+                    <!-- Phân trang -->
+                    <div class="mt-4">
+                        {{ $recruitments->links() }}
                     </div>
 
                 </div>

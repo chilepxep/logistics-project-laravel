@@ -95,9 +95,22 @@ Route::get('/su-kien', function() {
 })->name('su-kien');
 
 
-Route::get('/tuyen-dung', function() {
-    return view('recruitment');
-})->name('tuyen-dung');
+Route::get('/tuyen-dung', function () {
+    $recruitments = App\Models\Recruitment::where('is_active', 1)
+                    ->where(function($query) {
+                        $query->whereNull('deadline')->orWhere('deadline', '>=', now());
+                    })
+                    ->orderBy('created_at', 'desc')->paginate(10);
+    return view('recruitment', compact('recruitments'));
+})->name('tuyen-dung'); 
+
+
+// Hiển thị bài tuyển dụng
+Route::get('/tuyen-dung/{slug}', function ($slug) {
+    $job = App\Models\Recruitment::where('slug', $slug)->where('is_active', 1)->firstOrFail();
+    return view('recruitments_show', compact('job'));
+})->name('recruitments.show');
+
 
 
 
@@ -317,6 +330,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'show'])->name('admin.deliveries.show');
         Route::put('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'update'])->name('admin.deliveries.update');
         Route::delete('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'destroy'])->name('admin.deliveries.destroy');
+
+        //Quản lý tin tuyên dụng
+        Route::resource('recruitments', App\Http\Controllers\Admin\RecruitmentController::class)
+        ->names('admin.recruitments')
+        ->except(['show']);
+        
 
 
         // ==========================================

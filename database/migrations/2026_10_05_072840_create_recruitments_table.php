@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recruitments', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+       Schema::create('recruitments', function (Blueprint $table) {
+        $table->id();
+        $table->string('title'); 
+        $table->string('slug')->unique(); 
+        $table->string('salary')->nullable();
+        $table->string('location')->nullable();
+        $table->date('deadline')->nullable(); 
+        $table->longText('description')->nullable(); 
+        $table->longText('requirements')->nullable(); 
+        $table->boolean('is_active')->default(1); 
+        $table->timestamps();
+    });
     }
 
     /**
