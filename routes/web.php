@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\FrontendController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -96,6 +98,8 @@ Route::get('/su-kien', function() {
 Route::get('/tuyen-dung', function() {
     return view('recruitment');
 })->name('tuyen-dung');
+
+
 
 //khách vãng lai chưa đăng nhập
 Route::middleware('guest')->group(function(){
@@ -319,13 +323,36 @@ Route::prefix('admin')->group(function () {
         // 3. CÁC ROUTE CHỈ DÀNH CHO ADMIN QUẢN TRỊ
         // ==========================================
         Route::middleware(['role:admin'])->group(function () {
+
+            //quan ly nhan vien
             Route::get('/nhan-vien', [App\Http\Controllers\Admin\EmployeeController::class, 'index'])->name('admin.employees.index');
             Route::get('/nhan-vien/create', [App\Http\Controllers\Admin\EmployeeController::class, 'create'])->name('admin.employees.create');
             Route::post('/nhan-vien', [App\Http\Controllers\Admin\EmployeeController::class, 'store'])->name('admin.employees.store')->middleware('throttle:30,1');
             Route::get('/nhan-vien/{id}/edit', [App\Http\Controllers\Admin\EmployeeController::class, 'edit'])->name('admin.employees.edit');
             Route::put('/nhan-vien/{id}', [App\Http\Controllers\Admin\EmployeeController::class, 'update'])->name('admin.employees.update')->middleware('throttle:30,1');
             Route::delete('/nhan-vien/{id}', [App\Http\Controllers\Admin\EmployeeController::class, 'destroy'])->name('admin.employees.destroy');
+
+
+            // Quản lý Bài viết
+            Route::get('/articles', [App\Http\Controllers\Admin\ArticleController::class, 'index'])->name('admin.articles.index');
+            Route::get('/articles/create', [ArticleController::class, 'create'])->name('admin.articles.create');
+            Route::post('/articles/store', [ArticleController::class, 'store'])->name('admin.articles.store');
+            Route::get('/articles/{id}/edit', [App\Http\Controllers\Admin\ArticleController::class, 'edit'])->name('admin.articles.edit');
+            Route::put('/articles/{id}', [App\Http\Controllers\Admin\ArticleController::class, 'update'])->name('admin.articles.update');
+            Route::delete('/articles/{id}', [App\Http\Controllers\Admin\ArticleController::class, 'destroy'])->name('admin.articles.destroy');
+            Route::patch('/articles/{id}/toggle-status', [App\Http\Controllers\Admin\ArticleController::class, 'toggleStatus'])->name('admin.articles.toggle');
+            // Route nhận ảnh từ TinyMCE
+            Route::post('/articles/upload-image', [ArticleController::class, 'uploadImage'])->name('admin.articles.upload_image');
+
+            //thông tin công ty
+            Route::get('/settings', [App\Http\Controllers\Admin\CompanySettingController::class, 'edit'])->name('admin.settings.edit');
+            Route::put('/settings', [App\Http\Controllers\Admin\CompanySettingController::class, 'update'])->name('admin.settings.update');
+
         });
         
     }); // Kết thúc cụm Auth + Approved
 });
+
+
+// Đường dẫn hiển thị bài viết
+Route::get('/{category_slug}/{article_slug}', [FrontendController::class, 'showArticle'])->name('frontend.article.show');

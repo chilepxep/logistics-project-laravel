@@ -8,14 +8,18 @@
                 <a class="navbar-brand fw-bold fs-3 mb-3 d-block" href="#">
                     <span class="text-warning">HTKK</span> <span class="text-white">360</span>
                 </a>
-                <p class="mb-2"><i class="bi bi-geo-alt-fill text-warning me-2"></i><strong>Hà Nội:</strong> Số 1, Đường
-                    ABC, Quận XYZ, TP. Hà Nội</p>
-                <p class="mb-2"><i class="bi bi-geo-alt-fill text-warning me-2"></i><strong>HCM:</strong> Số 2, Đường
-                    DEF, Quận UVW, TP. HCM</p>
-                <p class="mb-2"><i class="bi bi-geo-alt-fill text-warning me-2"></i><strong>Trung Quốc:</strong> Kho
-                    Quảng Châu, Bằng Tường</p>
-                <p class="mb-2"><i class="bi bi-envelope-fill text-warning me-2"></i><strong>Email:</strong>
-                    hotro@htkk360.com</p>
+
+
+                @if(!empty($globalSetting->addresses) && is_array($globalSetting->addresses))
+                @foreach($globalSetting->addresses as $address)
+                <p class="mb-2"><i class="bi bi-geo-alt-fill text-warning me-2"></i>{{ $address }}
+                    @endforeach
+                    @else
+                    <li>Đang cập nhật địa chỉ...</li>
+                    @endif
+
+                <p class="mb-2"><i class="bi bi-envelope-fill text-warning me-2"></i><strong>Email:
+                        {{ $globalSetting->email ?? 'Đang cập nhật' }}</strong>
             </div>
 
             <!-- Cột 2: Về HTKK -->
@@ -46,7 +50,7 @@
             <div class="col-12 col-md-3">
                 <h6 class="text-white fw-bold mb-3 text-uppercase">Hỗ trợ khách hàng</h6>
                 <div class="mb-3">
-                    <p class="text-warning fw-bold fs-5 mb-0">0123 456 789</p>
+                    <p class="text-warning fw-bold fs-5 mb-0">{{ $globalSetting->hotline ?? 'Đang cập nhật' }}</p>
                     <small>Hotline hỗ trợ (8:00 - 17:30)</small>
                 </div>
 

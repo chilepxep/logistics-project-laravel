@@ -161,6 +161,20 @@
                         <i class="bi bi-person-badge"></i> Quản lý Nhân sự
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.articles.*') ? 'active' : '' }}"
+                        href="{{ route('admin.articles.index') }}">
+                        <i class="bi bi-newspaper"></i> Quản lý Bài viết
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+                        href="{{ route('admin.settings.edit') }}">
+                        <i class="bi bi-buildings"></i> Thông tin công ty
+                    </a>
+                </li>
                 @endif
             </ul>
         </div>
