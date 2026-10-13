@@ -150,6 +150,12 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.warehouses.index') }}">
+                        <i class="bi bi-building"></i> Kho hàng
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.recruitments.index') }}">
                         <i class="bi bi-person-lines-fill"></i> Tuyển dụng
                     </a>

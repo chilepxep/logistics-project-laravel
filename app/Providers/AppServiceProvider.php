@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use App\Models\Category;
 use Illuminate\Support\Facades\Schema;
 use App\Models\CompanySetting;
+use Illuminate\Pagination\Paginator;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -38,5 +39,7 @@ class AppServiceProvider extends ServiceProvider
             $globalSetting = CompanySetting::first();
             View::share('globalSetting', $globalSetting);
         }
+
+        Paginator::useBootstrapFive();
     }
 }

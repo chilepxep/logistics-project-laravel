@@ -335,8 +335,10 @@ Route::prefix('admin')->group(function () {
         Route::resource('recruitments', App\Http\Controllers\Admin\RecruitmentController::class)
         ->names('admin.recruitments')
         ->except(['show']);
-        
 
+        //Quản lý kho
+        Route::resource('warehouses', App\Http\Controllers\Admin\WarehouseController::class)->names('admin.warehouses')->except(['show']);
+        
 
         // ==========================================
         // 3. CÁC ROUTE CHỈ DÀNH CHO ADMIN QUẢN TRỊ

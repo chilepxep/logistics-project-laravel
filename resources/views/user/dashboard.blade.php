@@ -12,7 +12,7 @@
         <i class="bi bi-headset text-primary fs-1 me-2"></i>
         <div>
             <small class="text-muted fw-bold">HOTLINE</small>
-            <h5 class="text-danger fw-bold mb-0">024.6680.3049</h5>
+            <h5 class="text-danger fw-bold mb-0">{{ $globalSetting->hotline ?? 'Đang cập nhật...' }}</h5>
         </div>
     </div>
 
