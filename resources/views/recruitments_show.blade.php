@@ -77,7 +77,7 @@
                                 <i class="bi bi-telephone-fill text-success fs-4 me-3"></i>
                                 <div>
                                     <small class="text-muted d-block">Hotline/Zalo</small>
-                                    <strong>0987.654.321</strong>
+                                    <strong>{{ $globalSetting->hotline ?? 'Đang cập nhật...' }}</strong>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center bg-light p-3 rounded">

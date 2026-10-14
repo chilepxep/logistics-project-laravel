@@ -32,7 +32,7 @@ class OrderListController extends Controller
         $order = Order::with(['khoNhan', 'items'])->findOrFail($id);
 
         // Bảo mật: Kiểm tra xem đơn hàng này có đúng là của user đang đăng nhập không
-        if ($order->user_id !== Auth::id()) {
+        if ((int) $order->user_id !== (int) Auth::id()) {
             abort(403, 'Bạn không có quyền xem đơn hàng này!');
         }
 
@@ -45,7 +45,7 @@ class OrderListController extends Controller
         $order = Order::with('items')->findOrFail($id);
 
         // Chỉ cho phép người tạo ra đơn mới được sửa
-        if ($order->user_id !== Auth::id()) {
+        if ((int) $order->user_id !== (int) Auth::id()) {
             abort(403, 'Bạn không có quyền sửa đơn hàng này!');
         }
 
@@ -70,7 +70,7 @@ class OrderListController extends Controller
 {
     $order = Order::findOrFail($id);
 
-    if ($order->user_id !== Auth::id()) {
+    if ((int) $order->user_id !== (int) Auth::id()) {
         abort(403);
     }
 
@@ -196,7 +196,7 @@ class OrderListController extends Controller
         $order = Order::findOrFail($id);
 
         // Bảo mật: Chỉ cho phép chủ nhân của đơn hàng mới được xóa
-        if ($order->user_id !== Auth::id()) {
+        if ((int) $order->user_id !== (int) Auth::id()) {
             abort(403, 'Bạn không có quyền xóa đơn hàng này!');
         }
 

@@ -131,9 +131,9 @@ public function create()
         $order = ConsignmentOrder::with(['KhoVn', 'items', 'extraRequirements'])->findOrFail($id);
 
         // Bảo mật: Chỉ chủ nhân của đơn mới được xem
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền xem đơn ký gửi này!');
-        }
+        if ((int) $order->user_id !== (int) Auth::id()) {
+    abort(403, 'Bạn không có quyền xem  đơn ký gửi này!');
+}
 
         return view('user.consignment-detail', compact('order'));
     }
@@ -144,9 +144,9 @@ public function create()
         $order = ConsignmentOrder::with(['items', 'extraRequirements'])->findOrFail($id);
     $countries = \App\Models\Country::all();
     $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền sửa đơn hàng này!');
-        }
+        if ((int) $order->user_id !== (int) Auth::id()) {
+       abort(403, 'Bạn không có quyền sửa đơn hàng này!');
+}
 
         // Chỉ cho phép sửa khi đơn đang chờ xử lý
         if ($order->trang_thai !== 'cho_xu_ly') {
@@ -164,7 +164,7 @@ public function update(Request $request, $id)
 {
     $order = ConsignmentOrder::findOrFail($id);
 
-    if ($order->user_id !== Auth::id()) abort(403);
+    if ((int) $order->user_id !== (int) Auth::id()) abort(403);
 
     $request->validate([
         'chieu_van_chuyen'          => 'required|in:ve_vn,di_qt',
@@ -275,9 +275,9 @@ public function update(Request $request, $id)
         $order = ConsignmentOrder::findOrFail($id);
 
         // Bảo mật: Kiểm tra xem user có phải là chủ đơn hàng không
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền xóa đơn hàng này!');
-        }
+        if ((int) $order->user_id !== (int) Auth::id()) {
+    abort(403, 'Bạn không có quyền xem đơn hàng này!');
+}
 
         //cho phép xóa khi đơn đang ở trạng thái 'Chờ xử lý'
         if ($order->trang_thai !== 'cho_xu_ly') {

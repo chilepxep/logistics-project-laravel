@@ -11,7 +11,7 @@
         <i class="bi bi-headset text-primary fs-1 me-2"></i>
         <div>
             <small class="text-muted fw-bold">HOTLINE</small>
-            <h5 class="text-danger fw-bold mb-0">024.6680.3049</h5>
+            <h5 class="text-danger fw-bold mb-0">{{ $globalSetting->hotline ?? 'Đang cập nhật...' }}</h5>
         </div>
     </div>
 
@@ -26,12 +26,20 @@
         </div>
     </div>
 
-    <!-- Tỉ giá -->
-    <div class="d-flex align-items-center text-end">
-        <i class="bi bi-cash-coin text-warning fs-1 me-2"></i>
+
+    <div class="d-flex align-items-center cursor-pointer" style="cursor: pointer;" data-bs-toggle="modal"
+        data-bs-target="#wiseCurrencyModal" title="Nhấn để mở công cụ quy đổi tiền tệ">
+        <div class="me-2 text-warning">
+            <i class="bi bi-cash-coin" style="font-size: 2.2rem;"></i>
+        </div>
         <div>
-            <small class="text-muted fw-bold">TỈ GIÁ</small>
-            <h5 class="text-danger fw-bold mb-0">3,520 đ</h5>
+            <div class="text-muted fw-bold" style="font-size: 12px;">
+                TỈ GIÁ ({{ $defaultExchangeRate->currency_code ?? 'CNY' }}) <i
+                    class="bi bi-caret-down-fill text-dark"></i>
+            </div>
+            <div class="text-danger fw-bold" style="font-size: 18px;">
+                {{ isset($defaultExchangeRate) ? number_format($defaultExchangeRate->rate, 0, ',', '.') : '3,520' }} đ
+            </div>
         </div>
     </div>
 </div>
@@ -438,6 +446,111 @@ document.addEventListener('DOMContentLoaded', function() {
             supplierSelect.innerHTML = '<option value="">-- Chọn Kho --</option>';
         }
     });
+});
+</script>
+
+<!-- MODAL CÔNG CỤ ĐỔI TỶ GIÁ PHONG CÁCH WISE.COM -->
+<div class="modal fade" id="wiseCurrencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" style="color: #0b3a68;">
+                    <i class="bi bi-currency-exchange me-2"></i>Công cụ quy đổi tỷ giá HTKK
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Ô 1: Số tiền ngoại tệ cần đổi -->
+                <label class="form-label text-muted fw-semibold font-14">Số tiền ngoại tệ</label>
+                <div class="input-group input-group-lg border rounded-3 overflow-hidden shadow-sm mb-2">
+                    <input type="number" id="wiseAmountInput" class="form-control border-0 fw-bold fs-4" value="100"
+                        min="0" step="any">
+
+                    <!-- Dropdown chọn Quốc Gia / Tiền tệ -->
+                    <select id="wiseCurrencySelect" class="form-select border-0 bg-light fw-bold text-dark"
+                        style="max-width: 140px; cursor: pointer;">
+                        @if(isset($globalExchangeRates) && count($globalExchangeRates) > 0)
+                        @foreach($globalExchangeRates as $rateItem)
+                        <option value="{{ $rateItem->rate }}" data-code="{{ $rateItem->currency_code }}"
+                            data-name="{{ $rateItem->currency_name }}" {{ $rateItem->is_default ? 'selected' : '' }}>
+                            {{ $rateItem->currency_code }} ({{$rateItem->currency_name }})
+                        </option>
+                        @endforeach
+                        @else
+                        <option value="3520" data-code="CNY" data-name="Nhân dân tệ">CNY (Tệ)</option>
+                        @endif
+                    </select>
+                </div>
+
+                <!-- Đường timeline hiển thị tỷ giá kiểu Wise -->
+                <div class="position-relative my-3 ps-4 py-2"
+                    style="border-left: 2px solid #dee2e6; margin-left: 15px;">
+                    <span
+                        class="position-absolute top-50 start-0 translate-middle bg-white border rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 24px; height: 24px;">
+                        <i class="bi bi-arrow-down-up text-primary" style="font-size: 12px;"></i>
+                    </span>
+                    <div class="font-14 text-muted">
+                        Tỷ giá áp dụng: <strong class="text-dark" id="wiseRateDisplay">1 CNY = 3,520 VNĐ</strong>
+                    </div>
+                </div>
+
+                <!-- Ô 2: Thành tiền VNĐ -->
+                <label class="form-label text-muted fw-semibold font-14">Thành tiền Việt Nam (VNĐ)</label>
+                <div class="input-group input-group-lg border rounded-3 overflow-hidden bg-light shadow-sm">
+                    <input type="text" id="wiseResultOutput"
+                        class="form-control border-0 bg-light fw-bold fs-4 text-danger" readonly>
+                    <span class="input-group-text border-0 bg-light fw-bold text-dark px-4">
+                        🇻🇳 VNĐ
+                    </span>
+                </div>
+
+                <div class="mt-3 text-muted" style="font-size: 12px;">
+                    <i class="bi bi-info-circle me-1"></i> Tỷ giá trên được áp dụng để tính phí mua hàng và vận chuyển
+                    hộ tại hệ thống HTKK 360.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT TÍNH TOÁN THỜI GIAN THỰC -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const amountInput = document.getElementById('wiseAmountInput');
+    const currencySelect = document.getElementById('wiseCurrencySelect');
+    const rateDisplay = document.getElementById('wiseRateDisplay');
+    const resultOutput = document.getElementById('wiseResultOutput');
+
+    function calculateWiseExchange() {
+        if (!amountInput || !currencySelect) return;
+
+        const amount = parseFloat(amountInput.value) || 0;
+        const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+        const rate = parseFloat(selectedOption.value) || 0;
+        const code = selectedOption.getAttribute('data-code') || '';
+
+        // Tính tổng tiền VNĐ
+        const totalVND = amount * rate;
+
+        // Định dạng số đẹp mắt (VD: 352,000)
+        const formattedRate = new Intl.NumberFormat('vi-VN').format(rate);
+        const formattedTotal = new Intl.NumberFormat('vi-VN').format(Math.round(totalVND));
+
+        // Cập nhật giao diện
+        rateDisplay.innerHTML = `1 ${code} = <span class="text-danger">${formattedRate} VNĐ</span>`;
+        resultOutput.value = formattedTotal;
+    }
+
+    // Lắng nghe sự kiện khi gõ phím hoặc đổi quốc gia
+    if (amountInput && currencySelect) {
+        amountInput.addEventListener('input', calculateWiseExchange);
+        currencySelect.addEventListener('change', calculateWiseExchange);
+
+        // Chạy lần đầu khi tải trang
+        calculateWiseExchange();
+    }
 });
 </script>
 
