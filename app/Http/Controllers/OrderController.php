@@ -58,7 +58,7 @@ public function store(Request $request)
             $country = \App\Models\Country::findOrFail($request->country_id);
             
             // Chuyển đổi mã tiền tệ sang Tỉ giá cố định (Bạn có thể kéo từ DB nếu sau này có bảng Tỉ Giá)
-            $tiGia = 3500; // Mặc định là Tệ (CNY)
+            $tiGia = 35000; // Mặc định là Tệ (CNY)
             if ($country->tien_te == 'JPY') $tiGia = 170;
             if ($country->tien_te == 'AUD') $tiGia = 16500;
             if ($country->tien_te == 'EUR') $tiGia = 27000;

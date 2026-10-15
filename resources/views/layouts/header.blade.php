@@ -184,7 +184,7 @@
                         </a>
                         <ul class="dropdown-menu " aria-labelledby="banggiaDropdown"
                             style="background-color: #0b3a68; ">
-                            <li><a class="dropdown-item text-white" href="{{route('quotations.bang-gia-dich-vu')}}">Bảng
+                            <!-- <li><a class="dropdown-item text-white" href="{{route('quotations.bang-gia-dich-vu')}}">Bảng
                                     giá dịch vụ đặt hàng Trung
                                     Quốc</a></li>
                             <li><a class="dropdown-item text-white"
@@ -198,7 +198,7 @@
                                     Việt Nam</a></li>
                             <li><a class="dropdown-item text-white" href="{{route('services.doi-tien-te')}}">Bảng
                                     giá dịch vụ
-                                    chuyển tiền</a></li>
+                                    chuyển tiền</a></li>  -->
 
 
                             <!-- 2. PHẦN ĐỘNG: NỐI THÊM CÁC BÀI VIẾT DO ADMIN TẠO -->
@@ -206,9 +206,9 @@
                             $dynamicCategories['bang-gia']->articles->count() > 0)
 
                             <!-- Thêm một đường kẻ ngang nhạt để phân biệt web tĩnh và web động (Tuỳ chọn) -->
-                            <li>
+                            <!-- <li>
                                 <hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.2);">
-                            </li>
+                            </li> -->
 
                             <!-- Vòng lặp in ra bài viết -->
                             @foreach($dynamicCategories['bang-gia']->articles as $article)
@@ -278,7 +278,8 @@
                                     hàng trên
                                     Taobao</a></li>
                             <li><a class="dropdown-item text-white"
-                                    href="{{route('instructions.cong-cu-dat-hang')}}">Hướng dẫn cài đặt công
+                                    href="{{route('instructions.cong-cu-dat-hang')}}">Hướng
+                                    dẫn cài đặt công
                                     cụ đặt hàng</a>
                             </li>
                             <li><a class="dropdown-item text-white"
@@ -321,9 +322,11 @@
                             <li><a class="dropdown-item text-white" href="{{route('policy.questions')}}">Câu hỏi
                                     thường gặp</a></li>
                             <li><a class="dropdown-item text-white"
-                                    href="{{route('policy.chinh-sach-khieu-nai')}}">Chính sách khiếu nại</a></li>
+                                    href="{{route('policy.chinh-sach-khieu-nai')}}">Chính
+                                    sách khiếu nại</a></li>
                             <li><a class="dropdown-item text-white"
-                                    href="{{route('policy.quy-dinh-ve-ky-gui-hang')}}">Quy định về hàng ký gửi</a>
+                                    href="{{route('policy.quy-dinh-ve-ky-gui-hang')}}">Quy
+                                    định về hàng ký gửi</a>
                             </li>
                             <li><a class="dropdown-item text-white" href="{{route('policy.chinh-sach-bao-mat')}}">Chính
                                     sách bảo mật</a></li>

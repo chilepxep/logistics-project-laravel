@@ -8,17 +8,16 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
 
         <div class="d-flex align-items-center gap-2">
-            <!-- Form Lọc theo Quốc gia -->
+
             <form action="{{ route('admin.warehouses.index') }}" method="GET" class="m-0">
-                <select name="loai_kho" class="form-select bg-white" onchange="this.form.submit()"
-                    style="min-width: 180px;">
-                    <option value="">-- Tất cả quốc gia --</option>
-                    <option value="VN" {{ request('loai_kho') == 'VN' ? 'selected' : '' }}>Việt Nam (VN)</option>
-                    <option value="TQ" {{ request('loai_kho') == 'TQ' ? 'selected' : '' }}>Trung Quốc (TQ)</option>
-                    <option value="JP" {{ request('loai_kho') == 'JP' ? 'selected' : '' }}>Nhật Bản (JP)</option>
-                    <option value="AU" {{ request('loai_kho') == 'AU' ? 'selected' : '' }}>Úc (AU)</option>
-                    <option value="DE" {{ request('loai_kho') == 'DE' ? 'selected' : '' }}>Đức (DE)</option>
-                    <option value="FR" {{ request('loai_kho') == 'FR' ? 'selected' : '' }}>Pháp (FR)</option>
+                <select name="loai_kho" id="loai_kho" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả các kho --</option>
+                    @foreach($countries as $country)
+                    <option value="{{ $country->ma_quoc_gia }}"
+                        {{ request('loai_kho') == $country->ma_quoc_gia ? 'selected' : '' }}>
+                        {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
+                    </option>
+                    @endforeach
                 </select>
             </form>
         </div>

@@ -18,19 +18,12 @@
                     <label class="form-label fw-bold">Loại kho (Quốc gia) *</label>
                     <select name="loai_kho" id="loai_kho" class="form-select" required>
                         <option value="">-- Chọn loại kho --</option>
-                        <!-- Đã sửa: Bổ sung $warehouse->loai_kho để hiển thị đúng lựa chọn cũ -->
-                        <option value="VN" {{ old('loai_kho', $warehouse->loai_kho) == 'VN' ? 'selected' : '' }}>Việt
-                            Nam (VN)</option>
-                        <option value="TQ" {{ old('loai_kho', $warehouse->loai_kho) == 'TQ' ? 'selected' : '' }}>Trung
-                            Quốc (TQ)</option>
-                        <option value="JP" {{ old('loai_kho', $warehouse->loai_kho) == 'JP' ? 'selected' : '' }}>Nhật
-                            Bản (JP)</option>
-                        <option value="AU" {{ old('loai_kho', $warehouse->loai_kho) == 'AU' ? 'selected' : '' }}>Úc (AU)
+                        @foreach($countries as $country)
+                        <option value="{{ $country->ma_quoc_gia }}"
+                            {{ old('loai_kho', $warehouse->loai_kho) == $country->ma_quoc_gia ? 'selected' : '' }}>
+                            {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
                         </option>
-                        <option value="DE" {{ old('loai_kho', $warehouse->loai_kho) == 'DE' ? 'selected' : '' }}>Đức
-                            (DE)</option>
-                        <option value="FR" {{ old('loai_kho', $warehouse->loai_kho) == 'FR' ? 'selected' : '' }}>Pháp
-                            (FR)</option>
+                        @endforeach
                     </select>
                 </div>
 

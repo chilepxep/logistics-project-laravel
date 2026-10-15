@@ -15,12 +15,12 @@
                     <label class="form-label fw-bold">Loại kho (Quốc gia) *</label>
                     <select name="loai_kho" id="loai_kho" class="form-select" required>
                         <option value="">-- Chọn loại kho --</option>
-                        <option value="VN" {{ old('loai_kho') == 'VN' ? 'selected' : '' }}>Việt Nam (VN)</option>
-                        <option value="TQ" {{ old('loai_kho') == 'TQ' ? 'selected' : '' }}>Trung Quốc (TQ)</option>
-                        <option value="JP" {{ old('loai_kho') == 'JP' ? 'selected' : '' }}>Nhật Bản (JP)</option>
-                        <option value="AU" {{ old('loai_kho') == 'AU' ? 'selected' : '' }}>Úc (AU)</option>
-                        <option value="DE" {{ old('loai_kho') == 'DE' ? 'selected' : '' }}>Đức (DE)</option>
-                        <option value="FR" {{ old('loai_kho') == 'FR' ? 'selected' : '' }}>Pháp (FR)</option>
+                        @foreach($countries as $country)
+                        <option value="{{ $country->ma_quoc_gia }}"
+                            {{ old('loai_kho') == $country->ma_quoc_gia ? 'selected' : '' }}>
+                            {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
+                        </option>
+                        @endforeach
                     </select>
                 </div>
 

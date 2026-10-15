@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 2. Lấy đơn vị tiền tệ và Tỉ giá hiện tại
         const selectedOption = countrySelect.options[countrySelect.selectedIndex];
         const currencyCode = selectedOption ? selectedOption.getAttribute('data-currency') : '¥';
-        const currentExchangeRate = TIGIA[currencyCode] || 1;
+        const currentExchangeRate = TIGIA[currencyCode] || 35000;
 
         // 3. Quy đổi tiền hàng ra VNĐ
         const totalAmountVND = totalAmountFC * currentExchangeRate;

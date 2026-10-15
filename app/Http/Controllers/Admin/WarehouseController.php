@@ -5,24 +5,27 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Warehouse;
+use App\Models\Country;
 
 class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
         $query = Warehouse::query();
+        $countries = Country::all();
         if ($request->filled('loai_kho')) {
             $query->where('loai_kho', $request->loai_kho);
         }
 
         $warehouses = $query->orderBy('loai_kho')->paginate(15)->appends($request->all());
 
-        return view('admin.warehouses.index', compact('warehouses'));
+        return view('admin.warehouses.index', compact('warehouses', 'countries'));
     }
 
     public function create()
     {
-        return view('admin.warehouses.create');
+        $countries = Country::all();
+        return view('admin.warehouses.create', compact('countries'));
     }
 
     public function store(Request $request)
@@ -48,7 +51,8 @@ class WarehouseController extends Controller
 
     public function edit(Warehouse $warehouse)
     {
-        return view('admin.warehouses.edit', compact('warehouse'));
+        $countries = Country::all();
+        return view('admin.warehouses.edit', compact('warehouse','countries'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
