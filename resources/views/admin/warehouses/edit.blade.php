@@ -37,16 +37,34 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Tên kho *</label>
-                    <!-- Đã sửa: Thêm $warehouse->ten_kho -->
                     <input type="text" name="ten_kho" class="form-control" required
                         value="{{ old('ten_kho', $warehouse->ten_kho) }}" placeholder="VD: Kho Hà Nội 1">
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Địa chỉ chi tiết *</label>
-                    <!-- Đã sửa: Thêm $warehouse->dia_chi -->
                     <input type="text" name="dia_chi" class="form-control" required
                         value="{{ old('dia_chi', $warehouse->dia_chi) }}" placeholder="Nhập địa chỉ kho...">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Số điện thoại</label>
+                    <input type="text" name="so_dien_thoai" class="form-control"
+                        value="{{ old('so_dien_thoai', $warehouse->so_dien_thoai ?? '') }}">
+
+                </div>
+
+                <div class=" col-md-6 mb-3">
+                    <label class="form-label fw-bold">Mã bưu điện (Zip Code)</label>
+                    <input type="text" name="ma_buu_dien" class="form-control"
+                        value="{{ old('ma_buu_dien', $warehouse->ma_buu_dien ?? '') }}">
+
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Ghi chú (Tên người quản lý, lưu ý kho...)</label>
+                    <textarea name="ghi_chu" class="form-control"
+                        rows="3">{{ old('ghi_chu', $warehouse->ghi_chu ?? '') }}</textarea>
                 </div>
             </div>
 

@@ -13,6 +13,9 @@ class Warehouse extends Model
         'ten_kho',
         'loai_kho',
         'dia_chi',
+        'so_dien_thoai', 
+        'ma_buu_dien',   
+        'ghi_chu',       
     ];
 
     //  Quan hệ ngược lại: 1 Kho có nhiều Đơn mua hộ

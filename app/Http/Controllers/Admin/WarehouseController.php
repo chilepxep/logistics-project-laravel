@@ -31,15 +31,17 @@ class WarehouseController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'loai_kho' => 'required|string|max:10',
-            'ma_kho'   => 'required|string|max:50|unique:warehouses,ma_kho',
-            'ten_kho'  => 'required|string|max:255',
-            'dia_chi'  => 'required|string|max:255',
+            'loai_kho'      => 'required|string|max:10',
+            'ma_kho'        => 'required|string|max:50|unique:warehouses,ma_kho',
+            'ten_kho'       => 'required|string|max:255',
+            'dia_chi'       => 'required|string|max:255',
+            'so_dien_thoai' => 'nullable|string|max:50',  
+            'ma_buu_dien'   => 'nullable|string|max:20',  
+            'ghi_chu'       => 'nullable|string',         
         ], [
             'ma_kho.unique' => 'Mã kho này đã tồn tại trên hệ thống.'
         ]);
 
-        
         $prefix = $request->loai_kho . '-';
         if (!str_starts_with($request->ma_kho, $prefix)) {
             return back()->withErrors(['ma_kho' => 'Mã kho phải bắt đầu bằng ' . $prefix])->withInput();
@@ -58,15 +60,17 @@ class WarehouseController extends Controller
     public function update(Request $request, Warehouse $warehouse)
     {
         $data = $request->validate([
-            'loai_kho' => 'required|string|max:10',
-            'ma_kho'   => 'required|string|max:50|unique:warehouses,ma_kho,' . $warehouse->id,
-            'ten_kho'  => 'required|string|max:255',
-            'dia_chi'  => 'required|string|max:255',
+            'loai_kho'      => 'required|string|max:10',
+            'ma_kho'        => 'required|string|max:50|unique:warehouses,ma_kho,' . $warehouse->id,
+            'ten_kho'       => 'required|string|max:255',
+            'dia_chi'       => 'required|string|max:255',
+            'so_dien_thoai' => 'nullable|string|max:50',  
+            'ma_buu_dien'   => 'nullable|string|max:20',  
+            'ghi_chu'       => 'nullable|string',         
         ], [
             'ma_kho.unique' => 'Mã kho này đã tồn tại.'
         ]);
 
-       
         $prefix = $request->loai_kho . '-';
         if (!str_starts_with($request->ma_kho, $prefix)) {
             return back()->withErrors(['ma_kho' => 'Mã kho phải bắt đầu bằng ' . $prefix])->withInput();

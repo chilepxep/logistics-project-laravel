@@ -42,6 +42,25 @@
                     <input type="text" name="dia_chi" class="form-control" required value="{{ old('dia_chi') }}"
                         placeholder="Nhập địa chỉ kho...">
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Số điện thoại</label>
+                    <input type="text" name="so_dien_thoai" class="form-control" value="{{ old('so_dien_thoai') }}"
+                        placeholder="VD: +84901234567">
+                    <small class="text-muted">Không bắt buộc</small>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Mã bưu điện (Zip Code)</label>
+                    <input type="text" name="ma_buu_dien" class="form-control" value="{{ old('ma_buu_dien') }}"
+                        placeholder="VD: 100000">
+                    <small class="text-muted">Không bắt buộc</small>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Ghi chú (Tên người quản lý, lưu ý kho...)</label>
+                    <textarea name="ghi_chu" class="form-control" rows="3"
+                        placeholder="Nhập ghi chú hoặc tên người quản lý kho...">{{ old('ghi_chu') }}</textarea>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary px-5 fw-bold mt-3"><i class="bi bi-save"></i> LƯU KHO</button>

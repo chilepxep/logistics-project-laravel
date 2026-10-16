@@ -129,6 +129,14 @@
                             <option value="">-- Chọn Kho --</option>
                         </select>
                     </div>
+                    <div id="warehouseDetails" class="mt-3 p-3 border rounded bg-light border-warning"
+                        style="display: none;">
+                        <h6 class="fw-bold mb-2 text-warning" id="detailTenKho">Tên kho</h6>
+                        <p class="mb-1"><strong>Địa chỉ:</strong> <span id="detailDiaChi">...</span></p>
+                        <p class="mb-1"><strong>SĐT:</strong> <span id="detailSDT">...</span></p>
+                        <p class="mb-1"><strong>Mã bưu điện:</strong> <span id="detailZip">...</span></p>
+                        <p class="mb-0"><strong>Ghi chú:</strong> <span id="detailGhiChu">...</span></p>
+                    </div>
                 </div>
             </div>
 
@@ -136,15 +144,26 @@
             <div class="col-md-6 mb-3" id="boxVietNam">
                 <label class="form-label fw-bold"><span class="badge bg-success me-1" id="lblVietNam">ĐẾN</span> Kho
                     Việt Nam <span class="text-danger">*</span></label>
-                <select name="tru_so_nhan_hang_id" class="form-select border-success" required>
+                <select name="tru_so_nhan_hang_id" id="vnWarehouseSelect" class="form-select border-success" required>
                     <option value="">-- Chọn Kho Nội Địa --</option>
                     @foreach($warehouses as $kho)
                     @if(str_starts_with($kho->ma_kho, 'VN-'))
-                    <option value="{{ $kho->id }}">{{ $kho->ten_kho }}
+                    <option value="{{ $kho->id }}" data-tenkho="{{ $kho->ten_kho }}" data-diachi="{{ $kho->dia_chi }}"
+                        data-sdt="{{ $kho->so_dien_thoai }}" data-zip="{{ $kho->ma_buu_dien }}"
+                        data-ghichu="{{ $kho->ghi_chu }}">
+                        {{ $kho->ten_kho }}
                     </option>
                     @endif
                     @endforeach
                 </select>
+                <div id="vnWarehouseDetails" class="mt-3 p-3 border border-success rounded bg-light"
+                    style="display: none;">
+                    <h6 class="fw-bold mb-2 text-success" id="vnDetailTenKho">Tên kho</h6> <!-- Dòng mới thêm -->
+                    <p class="mb-1"><strong>Địa chỉ:</strong> <span id="vnDetailDiaChi">...</span></p>
+                    <p class="mb-1"><strong>SĐT:</strong> <span id="vnDetailSDT">...</span></p>
+                    <p class="mb-1"><strong>Mã bưu điện:</strong> <span id="vnDetailZip">...</span></p>
+                    <p class="mb-0"><strong>Ghi chú:</strong> <span id="vnDetailGhiChu">...</span></p>
+                </div>
             </div>
         </div>
         <!-- FORM NHẬP KIỆN HÀNG -->
@@ -239,23 +258,15 @@
                     </tr>
                 </tbody>
             </table>
+            <!-- Nút Thêm kiện hàng -->
+            <button type="button" id="btnAddPackage"
+                class="btn btn-light border btn-sm px-3 mb-4 mt-2 font-13 fw-semibold text-primary">
+                <i class="bi bi-plus-lg fs-5 align-middle"></i> Thêm kiện hàng
+            </button>
         </div>
 
-        <!-- Nút Thêm kiện hàng -->
-        <button type="button" id="btnAddPackage"
-            class="btn btn-light border btn-sm px-3 mb-4 font-13 fw-semibold text-primary">
-            <i class="bi bi-plus-lg fs-5 align-middle"></i> Thêm kiện hàng
-        </button>
 
 
-        <!-- ĐỊA CHỈ TRẢ HÀNG -->
-        <div class="p-3 mb-4 border font-14">
-            <div class="fw-bold mb-2 text-uppercase">ĐỊA CHỈ TRẢ HÀNG</div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="dia_chi_tra_hang" id="dc_khac">
-                <label class="form-check-label" for="dc_khac">Thêm địa chỉ khác</label>
-            </div>
-        </div>
 
         <button type="submit" class="btn text-white px-4 py-2 fw-bold rounded-1" style="background-color: #0b3a68;">Tạo
             đơn ký gửi</button>
@@ -421,20 +432,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.getElementById('countrySelect');
     const supplierSelect = document.getElementById('supplierSelect');
 
+    // Các DOM element để hiển thị chi tiết
+    const warehouseDetails = document.getElementById('warehouseDetails');
+    const detailTenKho = document.getElementById('detailTenKho');
+    const detailDiaChi = document.getElementById('detailDiaChi');
+    const detailSDT = document.getElementById('detailSDT');
+    const detailZip = document.getElementById('detailZip');
+    const detailGhiChu = document.getElementById('detailGhiChu');
+
+    // Biến lưu trữ tạm dữ liệu kho vừa tải về
+    let currentWarehousesList = [];
+
     countrySelect.addEventListener('change', function() {
         const countryId = this.value;
         supplierSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
         supplierSelect.disabled = true;
+        warehouseDetails.style.display = 'none'; // Ẩn bảng chi tiết khi đổi quốc gia
 
         if (countryId) {
             fetch(`/api/suppliers-by-country/${countryId}`)
                 .then(response => response.json())
                 .then(data => {
                     supplierSelect.innerHTML = '<option value="">-- Chọn Kho --</option>';
+                    currentWarehousesList = data;
                     if (data.length > 0) {
                         data.forEach(sup => {
                             supplierSelect.insertAdjacentHTML('beforeend',
-                                `<option value="${sup.id}">${sup.ten_ncc} (${sup.thanh_pho})</option>`
+                                `<option value="${sup.id}">${sup.ten_kho || sup.ten_ncc}</option>`
                             );
                         });
                         supplierSelect.disabled = false;
@@ -446,6 +470,66 @@ document.addEventListener('DOMContentLoaded', function() {
             supplierSelect.innerHTML = '<option value="">-- Chọn Kho --</option>';
         }
     });
+
+    // 3. LOGIC HIỂN THỊ CHI TIẾT KHI CHỌN KHO
+    supplierSelect.addEventListener('change', function() {
+        const selectedId = this.value;
+
+        if (selectedId) {
+            // Tìm kho được chọn trong mảng currentWarehousesList
+            const selectedWarehouse = currentWarehousesList.find(w => w.id == selectedId);
+
+            if (selectedWarehouse) {
+                // Đổ dữ liệu vào các thẻ HTML
+                detailTenKho.textContent = selectedWarehouse.ten_kho || selectedWarehouse.ten_ncc ||
+                    'Không có tên';
+                detailDiaChi.textContent = selectedWarehouse.dia_chi || selectedWarehouse.thanh_pho ||
+                    'Chưa cập nhật';
+                detailSDT.textContent = selectedWarehouse.so_dien_thoai || 'Chưa cập nhật';
+                detailZip.textContent = selectedWarehouse.ma_buu_dien || 'Chưa cập nhật';
+                detailGhiChu.textContent = selectedWarehouse.ghi_chu || 'Không có ghi chú';
+
+                // Hiển thị khung thông tin lên
+                warehouseDetails.style.display = 'block';
+            }
+        } else {
+            // Nếu chọn lại "-- Chọn Kho --", ẩn khung thông tin
+            warehouseDetails.style.display = 'none';
+        }
+    });
+
+
+    // LOGIC HIỂN THỊ CHI TIẾT KHO VIỆT NAM (Dữ liệu có sẵn trong data-*)
+    const vnWarehouseSelect = document.getElementById('vnWarehouseSelect');
+    const vnWarehouseDetails = document.getElementById('vnWarehouseDetails');
+    const vnDetailTenKho = document.getElementById('vnDetailTenKho');
+    const vnDetailDiaChi = document.getElementById('vnDetailDiaChi');
+    const vnDetailSDT = document.getElementById('vnDetailSDT');
+    const vnDetailZip = document.getElementById('vnDetailZip');
+    const vnDetailGhiChu = document.getElementById('vnDetailGhiChu');
+
+    vnWarehouseSelect.addEventListener('change', function() {
+        // Lấy thẻ <option> đang được chọn
+        const selectedOption = this.options[this.selectedIndex];
+
+        // Kiểm tra xem người dùng có chọn một kho hợp lệ không (value != rỗng)
+        if (this.value) {
+            // Lấy dữ liệu từ các thuộc tính data-*
+            vnDetailTenKho.textContent = selectedOption.getAttribute('data-tenkho') || 'Chưa cập nhật';
+            vnDetailDiaChi.textContent = selectedOption.getAttribute('data-diachi') || 'Chưa cập nhật';
+            vnDetailSDT.textContent = selectedOption.getAttribute('data-sdt') || 'Chưa cập nhật';
+            vnDetailZip.textContent = selectedOption.getAttribute('data-zip') || 'Chưa cập nhật';
+            vnDetailGhiChu.textContent = selectedOption.getAttribute('data-ghichu') ||
+                'Không có ghi chú';
+
+            // Hiển thị khung thông tin
+            vnWarehouseDetails.style.display = 'block';
+        } else {
+            // Nếu người dùng chọn lại "-- Chọn Kho Nội Địa --", thì ẩn khung đi
+            vnWarehouseDetails.style.display = 'none';
+        }
+    });
+
 });
 </script>
 
