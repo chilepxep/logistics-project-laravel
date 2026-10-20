@@ -42,14 +42,15 @@
             </div>
         </div>
     </div>
-    
+
 </div>
 
 <!-- Khối Lưới Icon Chức năng (Grid 5 cột) -->
 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 px-2">
     <!-- Item 1 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('order.create') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-primary-subtle text-primary mx-auto mb-3">
                 <i class="bi bi-pencil-square fs-2"></i>
             </div>
@@ -59,7 +60,8 @@
 
     <!-- Item 2 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('consignment.create') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-warning-subtle text-warning mx-auto mb-3">
                 <i class="bi bi-truck fs-2"></i>
             </div>
@@ -69,7 +71,8 @@
 
     <!-- Item 3 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('list.order') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-info-subtle text-info mx-auto mb-3">
                 <i class="bi bi-journal-text fs-2"></i>
             </div>
@@ -79,7 +82,8 @@
 
     <!-- Item 3 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('consignment.index') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-info-subtle text-success mx-auto mb-3">
                 <i class="bi bi-journal-text fs-2"></i>
             </div>
@@ -89,7 +93,8 @@
 
     <!-- Item 4 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('package.index') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-success-subtle text-success mx-auto mb-3">
                 <i class="bi bi-boxes fs-2"></i>
             </div>
@@ -99,7 +104,8 @@
 
     <!-- Item 5 -->
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('delivery.completed') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-info-subtle text-info mx-auto mb-3">
                 <i class="bi bi-truck fs-2"></i>
             </div>
@@ -109,7 +115,8 @@
 
 
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('transaction.index') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-primary-subtle text-primary mx-auto mb-3">
                 <i class="bi bi-people fs-2"></i>
             </div>
@@ -118,7 +125,8 @@
     </div>
 
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('complaint.index') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-danger-subtle text-danger mx-auto mb-3">
                 <i class="bi bi-chat-left-dots fs-2"></i>
             </div>
@@ -127,7 +135,8 @@
     </div>
 
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('profile.edit') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-success-subtle text-success mx-auto mb-3">
                 <i class="bi bi-person-vcard fs-2"></i>
             </div>
@@ -136,7 +145,8 @@
     </div>
 
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('supplier.index') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-warning-subtle text-warning mx-auto mb-3">
                 <i class="bi bi-buildings fs-2"></i>
             </div>
@@ -145,7 +155,8 @@
     </div>
 
     <div class="col">
-        <a href="#" class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
+        <a href="{{ route('password.edit') }}"
+            class="card h-100 border-0 shadow-sm text-center text-decoration-none feature-card py-4 rounded-4">
             <div class="icon-wrapper bg-secondary-subtle text-secondary mx-auto mb-3">
                 <i class="bi bi-gear fs-2"></i>
             </div>

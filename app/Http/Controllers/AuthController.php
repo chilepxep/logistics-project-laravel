@@ -17,21 +17,27 @@ class AuthController extends Controller
 
     //2. xử lý đăng ký
     public function register(Request $request){
-
         $request->validate([
-            'ho_ten'   => 'required|string|max:150',
+            'ho_ten'   => 'required|string|min:2|max:100',
             'email'    => 'required|string|email|max:150|unique:users,email',
-            'sdt'      => 'required|string|max:20',
-            'password' => 'required|string|min:6|confirmed',
+            'sdt'      => ['required', 'string', 'regex:/^(0|\+84)[0-9]{8,11}$/', 'unique:users,sdt'],
+            'password' => 'required|string|min:8|confirmed',
         ], [
-            'ho_ten.required'   => 'Vui lòng nhập họ và tên.',
-            'email.required'    => 'Vui lòng nhập địa chỉ email.',
-            'email.email'       => 'Địa chỉ email không đúng định dạng.',
-            'email.unique'      => 'Email này đã được sử dụng.',
-            'sdt.required'      => 'Vui lòng nhập số điện thoại.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.min'      => 'Mật khẩu phải có ít nhất 6 ký tự.',
-            'password.confirmed'=> 'Mật khẩu xác nhận không khớp.',
+            'ho_ten.required'    => 'Vui lòng nhập họ và tên.',
+            'ho_ten.min'         => 'Họ và tên quá ngắn.',
+            'ho_ten.max'         => 'Họ và tên không được vượt quá 100 ký tự.',
+            
+            'email.required'     => 'Vui lòng nhập địa chỉ email.',
+            'email.email'        => 'Địa chỉ email không đúng định dạng.',
+            'email.unique'       => 'Email này đã được sử dụng.',
+            
+            'sdt.required'       => 'Vui lòng nhập số điện thoại.',
+            'sdt.regex'          => 'Số điện thoại không hợp lệ (Phải bắt đầu bằng 0 hoặc +84 và chứa 9-12 chữ số).',
+            'sdt.unique'         => 'Số điện thoại này đã được đăng ký.',
+            
+            'password.required'  => 'Vui lòng nhập mật khẩu.',
+            'password.min'       => 'Mật khẩu phải có ít nhất 8 ký tự để đảm bảo an toàn.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
         ]);
 
         do {
@@ -45,8 +51,7 @@ class AuthController extends Controller
             'ho_ten'       => $request->ho_ten,
             'email'        => $request->email,
             'sdt'          => $request->sdt,
-             'password'     => $request->password,
-            //'password'     => Hash::make($request->password),
+            'password'     => Hash::make($request->password),
             'so_du'        => 0,
         ]);
         // Đăng nhập ngay sau khi đăng ký

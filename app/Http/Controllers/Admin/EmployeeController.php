@@ -27,8 +27,8 @@ class EmployeeController extends Controller
     {
         $request->validate([
             'ma_nv'    => 'required|unique:employees,ma_nv',
-            'ho_ten'   => 'required|string|max:255',
-            'email'    => 'required|email|unique:employees,email',
+            'ho_ten'   => 'required|string|min:2|max:100',
+            'email'    => 'required|string|email|max:150|unique:users,email',
             'password' => 'required|min:6',
             'vai_tro'  => 'required',
             'warehouse_id' => 'nullable|integer',
@@ -39,7 +39,7 @@ class EmployeeController extends Controller
             'ma_nv'    => $request->ma_nv,
             'ho_ten'   => $request->ho_ten,
             'email'    => $request->email,
-            'password' => Hash::make($request->password), // Mã hoá mật khẩu
+            'password' => Hash::make($request->password), 
             'vai_tro'  => $request->vai_tro,
             'warehouse_id' => $request->warehouse_id,
             'is_approved'  => $request->boolean('is_approved'),

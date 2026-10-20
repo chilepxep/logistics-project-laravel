@@ -24,6 +24,9 @@
                             {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
                         </option>
                         @endforeach
+                        <option value="VN" {{ old('loai_kho') == 'VN' ? 'selected' : '' }}>
+                            Việt Nam (VN)
+                        </option>
                     </select>
                 </div>
 
