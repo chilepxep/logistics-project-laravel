@@ -75,19 +75,49 @@
 
             <!-- KHỐI TRẠNG THÁI VÀ NGÀY THÁNG CỦA ADMIN -->
             <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label font-14 fw-bold">Trạng thái xử lý</label>
-                    <select name="trang_thai" class="form-select border-secondary">
-                        <option value="cho_xu_ly" {{ $order->trang_thai == 'cho_xu_ly' ? 'selected' : '' }}>Chờ xử lý
-                        </option>
-                        <option value="dang_xu_ly" {{ $order->trang_thai == 'dang_xu_ly' ? 'selected' : '' }}>Đang xử lý
-                        </option>
-                        <option value="can_lien_he_lai" {{ $order->trang_thai == 'can_lien_he_lai' ? 'selected' : '' }}>
-                            Cần liên hệ lại</option>
-                        <option value="hoan_thanh" {{ $order->trang_thai == 'hoan_thanh' ? 'selected' : '' }}>Hoàn thành
-                        </option>
-                        <option value="da_huy" {{ $order->trang_thai == 'da_huy' ? 'selected' : '' }}>Đã huỷ</option>
-                    </select>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-14 fw-bold mb-2">Trạng thái xử lý</label>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        @if($order->trang_thai == 'cho_xu_ly')
+
+                        <!-- NÚT XÁC NHẬN KÝ GỬI (Trỏ tới form ẩn) -->
+                        <button type="submit" form="form-confirm-consignment"
+                            class="btn btn-info text-white fw-bold shadow-sm px-3 py-2 rounded">
+                            <i class="bi bi-check2-circle"></i> Xác nhận Ký gửi
+                        </button>
+
+                        <!-- NÚT HỦY ĐƠN KÝ GỬI (Trỏ tới form ẩn) -->
+                        <button type="submit" form="form-cancel-consignment"
+                            class="btn btn-outline-danger fw-bold shadow-sm px-3 py-2 rounded"
+                            onclick="return confirm('Hủy đơn ký gửi này và các kiện hàng liên quan?');">
+                            <i class="bi bi-x-circle"></i> Hủy đơn
+                        </button>
+
+                        @else
+                        <!-- HIỂN THỊ BADGE NẾU ĐÃ XỬ LÝ -->
+                        @if(in_array($order->trang_thai, ['dang_xu_ly', 'xac_nhan_dat_hang']))
+                        <span class="badge bg-info text-dark fs-6 px-3 py-2 shadow-sm rounded">Đã xác nhận</span>
+                        @elseif($order->trang_thai == 'dang_giao_hang')
+                        <span class="badge bg-primary fs-6 px-3 py-2 shadow-sm rounded">Đang giao hàng</span>
+                        @elseif($order->trang_thai == 'hoan_thanh')
+                        <span class="badge bg-success fs-6 px-3 py-2 shadow-sm rounded">Hoàn thành</span>
+                        @elseif($order->trang_thai == 'da_huy')
+                        <span class="badge bg-danger fs-6 px-3 py-2 shadow-sm rounded">Đã hủy</span>
+                        @endif
+
+                        <!-- LINK SANG TRANG KIỆN HÀNG -->
+                        @php
+                        $pkg = \App\Models\Package::where('consignment_order_id', $order->id)->first();
+                        @endphp
+                        @if($pkg)
+                        <a href="{{ route('admin.packages.edit', $pkg->id) }}"
+                            class="btn btn-primary shadow-sm rounded px-3 py-2 fw-semibold">
+                            <i class="bi bi-box-seam"></i> Xem Kiện hàng
+                        </a>
+                        @endif
+                        @endif
+                    </div>
                 </div>
 
                 <div class="col-md-3">
@@ -111,54 +141,56 @@
                     <input type="date" name="ngay_nhan_hang" class="form-control" value="{{ $order->ngay_nhan_hang }}">
                 </div>
 
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-14 fw-bold mb-2">Tình trạng Thanh toán</label>
+                    <select name="trang_thai_thanh_toan" class="form-select border-success">
+                        <option value="chua_thanh_toan"
+                            {{ $order->trang_thai_thanh_toan == 'chua_thanh_toan' ? 'selected' : '' }}>Chưa thanh toán
+                        </option>
+                        <option value="da_thanh_toan"
+                            {{ $order->trang_thai_thanh_toan == 'da_thanh_toan' ? 'selected' : '' }}>Đã thanh toán
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label font-14 fw-semibold">
+                        Vị trí kho hiện tại
+                    </label>
+
+                    <!-- Hiển thị thông tin kho dưới dạng Chỉ đọc (Read-only) -->
+                    <div class="p-2 border rounded bg-light form-control-solid">
+                        @php
+                        // Tìm tên kho từ danh sách $warehouses dựa trên ID hiện tại
+                        $currentWarehouse = $warehouses->firstWhere('id', $order->kho_hien_tai_id);
+                        @endphp
+
+                        @if($currentWarehouse)
+                        <span class="text-primary fw-bold">
+                            <i class="bi bi-geo-alt-fill me-1"></i> {{ $currentWarehouse->ten_kho }}
+                        </span>
+                        @else
+                        <span class="text-muted fst-italic">Chưa có thông tin kho</span>
+                        @endif
+                    </div>
+
+                    <!-- THẺ ẨN SỐNG CÒN: Đảm bảo dữ liệu gửi lên Controller luôn có kho_hien_tai_id -->
+                    <input type="hidden" name="kho_hien_tai_id" value="{{ $order->kho_hien_tai_id }}">
+
+                    <small class="text-secondary fst-italic mt-1 d-block" style="font-size: 12px;">
+                        <i class="bi bi-info-circle"></i> Hệ thống tự động cập nhật vị trí theo trạng thái Kiện hàng.
+                    </small>
+
+                </div>
+
                 <div class="col-md-12">
                     <label class="form-label font-14 fw-bold">Địa chỉ trả hàng (Giao tận nơi)</label>
                     <input type="text" name="dia_chi_tra_hang" class="form-control"
                         value="{{ $order->dia_chi_tra_hang }}" placeholder="Để trống nếu khách nhận tại kho...">
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label font-14 fw-semibold">
-                        Vị trí hiện tại (Trạm trung chuyển)
-                    </label>
-                    @if($order->trang_thai === 'dang_xu_ly')
-                    <!-- TRẠNG THÁI ĐANG XỬ LÝ: Mở khóa cho phép chỉnh sửa -->
-                    <select name="kho_hien_tai_id" class="form-select border-info">
-                        <option value="">-- Chưa nhập kho --</option>
-                        @foreach($warehouses as $kho)
-                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
-                            {{ $kho->ten_kho }} ({{ $kho->loai_kho }})
-                        </option>
-                        @endforeach
-                    </select>
 
-                    <small class="text-muted fst-italic mt-1 d-block">
-                        * Chọn trạm tiếp theo khi xuất kho luân chuyển.
-                    </small>
-                    @else
-                    <!-- CÁC TRẠNG THÁI KHÁC: Khóa ô select để tránh lỗi thiếu Package -->
-                    <select class="form-select border-info bg-light" disabled>
-                        <option value="">-- Chưa nhập kho --</option>
-                        @foreach($warehouses as $kho)
-                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
-                            {{ $kho->ten_kho }} ({{ $kho->loai_kho }})
-                        </option>
-                        @endforeach
-                    </select>
-
-                    <!-- THẺ ẨN SỐNG CÒN: Giữ lại giá trị cũ để không bị null khi lưu Form -->
-                    <input type="hidden" name="kho_hien_tai_id" value="{{ $order->kho_hien_tai_id }}">
-
-                    <small class="text-danger fst-italic mt-1 d-block">
-                        <i class="bi bi-lock-fill"></i> Chỉ được chuyển kho khi đơn Đang xử lý.
-                    </small>
-                    @endif
-
-                    <!-- Chú thích nhỏ cho nhân viên -->
-                    <small class="text-muted fst-italic mt-1 d-block">
-                        * Chọn trạm tiếp theo khi xuất kho luân chuyển.
-                    </small>
-                </div>
             </div>
         </div>
     </div>
@@ -272,6 +304,14 @@
         <button type="submit" class="btn btn-primary fw-bold px-5"><i class="bi bi-save me-2"></i> LƯU THAY ĐỔI</button>
         <a href="{{ route('admin.consignment_orders.index') }}" class="btn btn-secondary">Hủy</a>
     </div>
+</form>
+<form id="form-confirm-consignment" action="{{ route('admin.consignment_orders.confirm', $order->id) }}" method="POST"
+    class="d-none">
+    @csrf
+</form>
+<form id="form-cancel-consignment" action="{{ route('admin.consignment_orders.cancel', $order->id) }}" method="POST"
+    class="d-none">
+    @csrf
 </form>
 @endsection
 

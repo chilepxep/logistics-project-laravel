@@ -138,9 +138,10 @@ $daDenKhoCuoi = true;
                 </div>
             </div>
             @else
-            <div class="alert alert-warning px-3 py-2">
-                <i class="bi bi-info-circle"></i> Kiện hàng chưa về đến kho cuối cùng, chưa thể điều phối giao hàng.
-            </div>
+            <button type="button" class="btn btn-warning text-dark opacity-75" style="cursor: not-allowed;"
+                title="Kiện hàng chưa về đến kho cuối cùng, chưa thể điều phối giao hàng." disabled>
+                <i class="bi bi-info-circle me-1"></i> Chưa thể điều phối
+            </button>
             @endif
 
             @if(auth()->user()->vai_tro === 'admin' || (auth()->user()->vai_tro === 'nhan_vien' &&

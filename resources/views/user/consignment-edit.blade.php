@@ -231,6 +231,33 @@
                 </div>
             </div>
         </div>
+
+        <div class="form-check m-3">
+            <input type="hidden" name="co_bao_hiem" value="0">
+            <input type="checkbox" name="co_bao_hiem" value="1" class="form-check-input" id="checkBaoHiem"
+                {{ old('co_bao_hiem', $order->co_bao_hiem) ? 'checked' : '' }}>
+            <label class="form-check-label fw-bold text-primary" for="checkBaoHiem">
+                Đóng bảo hiểm hàng hóa
+            </label>
+            <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
+                <i class="bi bi-info-circle"></i> Đền bù 100% giá trị khai báo nếu xảy ra thất lạc, mất mát hoặc hư
+                hỏng nặng do lỗi vận chuyển. Phí bảo hiểm áp dụng theo quy định hiện hành.
+            </div>
+        </div>
+
+        <!-- Checkbox Khai thuế (Giao diện Edit) -->
+        <div class="form-check m-3">
+            <input type="hidden" name="co_khai_thue" value="0">
+            <input type="checkbox" name="co_khai_thue" value="1" class="form-check-input" id="checkKhaiThue"
+                {{ old('co_khai_thue', $order->co_khai_thue) ? 'checked' : '' }}>
+            <label class="form-check-label fw-bold text-success" for="checkKhaiThue">
+                Khai báo thuế hải quan
+            </label>
+            <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
+                <i class="bi bi-info-circle"></i> Đảm bảo hàng hóa thông quan hợp pháp, không lo tắc biên. HTKK sẽ
+                hỗ trợ làm thủ tục và xuất trả hóa đơn VAT đầy đủ cho doanh nghiệp.
+            </div>
+        </div>
     </form>
 </div>
 

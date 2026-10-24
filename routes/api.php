@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\AuthController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
 Route::get('/suppliers-by-country/{country_id}', function($country_id) {
     $country = Country::find($country_id);
 
@@ -28,6 +27,18 @@ Route::get('/suppliers-by-country/{country_id}', function($country_id) {
             'dia_chi',
             'ten_kho'
         ]);
+});
+
+Route::get('/get-suppliers-mua-ho/{country_id}', function($country_id) {
+    $suppliers = \App\Models\Supplier::where('country_id', $country_id)->get([
+        'id', 
+        'ten_ncc',
+        'ten_nguoi_dai_dien',
+        'thanh_pho',
+        'chi_tiet'
+    ]);
+
+    return response()->json($suppliers);
 });
 
 // Các API không cần đăng nhập

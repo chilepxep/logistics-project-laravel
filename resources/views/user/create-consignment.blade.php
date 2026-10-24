@@ -214,8 +214,14 @@
                             <select name="packages[0][loai_danh_muc]"
                                 class="form-select form-select-sm mb-2 rounded-0 font-13">
                                 <option value="">- Chọn loại danh mục -</option>
-                                <option value="1">Quần áo</option>
-                                <option value="2">Điện tử</option>
+                                <option value="Quần áo">Quần áo</option>
+                                <option value="Dày dép">Dày dép</option>
+                                <option value="Điện tử/ Điện máy">Điện tử/ Điện máy</option>
+                                <option value="Nội thất/ Xây dựng">Nội thất/ Xây dựng</option>
+                                <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
+                                <option value="Mỹ phẩm">Mỹ phẩm</option>
+                                <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
+                                <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
                             </select>
                             <input type="number" name="packages[0][so_luong]"
                                 class="form-control form-control-sm mb-2 rounded-0 font-13"
@@ -263,6 +269,32 @@
                 class="btn btn-light border btn-sm px-3 mb-4 mt-2 font-13 fw-semibold text-primary">
                 <i class="bi bi-plus-lg fs-5 align-middle"></i> Thêm kiện hàng
             </button>
+
+
+            <div class="form-check m-3">
+                <input type="hidden" name="co_bao_hiem" value="0">
+                <input type="checkbox" name="co_bao_hiem" value="1" class="form-check-input" id="checkBaoHiem">
+                <label class="form-check-label fw-bold text-primary" for="checkBaoHiem">
+                    Đóng bảo hiểm hàng hóa
+                </label>
+                <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
+                    <i class="bi bi-info-circle"></i> Đền bù 100% giá trị khai báo nếu xảy ra thất lạc, mất mát hoặc hư
+                    hỏng nặng do lỗi vận chuyển. Phí bảo hiểm áp dụng theo quy định hiện hành.
+                </div>
+            </div>
+
+            <!-- Checkbox Khai thuế -->
+            <div class="form-check m-3">
+                <input type="hidden" name="co_khai_thue" value="0">
+                <input type="checkbox" name="co_khai_thue" value="1" class="form-check-input" id="checkKhaiThue">
+                <label class="form-check-label fw-bold text-success" for="checkKhaiThue">
+                    Khai báo thuế hải quan
+                </label>
+                <div class="form-text text-muted mt-1" style="font-size: 0.85rem;">
+                    <i class="bi bi-info-circle"></i> Đảm bảo hàng hóa thông quan hợp pháp, không lo tắc biên. HTKK sẽ
+                    hỗ trợ làm thủ tục và xuất trả hóa đơn VAT đầy đủ cho doanh nghiệp.
+                </div>
+            </div>
         </div>
 
 
@@ -325,13 +357,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="text" name="packages[${packageIndex}][hang_van_chuyen]" class="form-control form-control-sm rounded-0 font-13" placeholder="Hãng vận chuyển (*)" required>
             </td>
             <td>
-                <select name="packages[${packageIndex}][tq_vn]" class="form-select form-select-sm mb-2 rounded-0 font-13">
-                    <option value="TQ-VN">Trung Quốc - Việt Nam</option>
-                </select>
                 <select name="packages[${packageIndex}][loai_danh_muc]" class="form-select form-select-sm mb-2 rounded-0 font-13">
                     <option value="">- Chọn loại danh mục -</option>
                     <option value="Quần áo">Quần áo</option>
-                    <option value="Điện tử">Điện tử</option>
+                    <option value="Dày dép">Dày dép</option>
+                    <option value="Điện tử/ Điện máy">Điện tử/ Điện máy</option>
+                    <option value="Nội thất/ Xây dựng">Nội thất/ Xây dựng</option>
+                    <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
+                    <option value="Mỹ phẩm">Mỹ phẩm</option>
+                    <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
+                    <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
                 </select>
                 <input type="number" name="packages[${packageIndex}][so_luong]" class="form-control form-control-sm mb-2 rounded-0 font-13" placeholder="Số lượng sản phẩm (*)" required>
                 <input type="number" name="packages[${packageIndex}][gia_tri_hang_hoa]" class="form-control form-control-sm rounded-0 font-13" placeholder="Giá trị hàng hóa * (VNĐ)" required>

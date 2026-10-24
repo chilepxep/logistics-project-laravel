@@ -38,6 +38,9 @@
                         <option value="giao_hang_tiet_kiem"
                             {{ request('phuong_thuc_van_chuyen') == 'giao_hang_tiet_kiem' ? 'selected' : '' }}>GHTK
                         </option>
+                        <option value="grab"
+                            {{ request('phuong_thuc_van_chuyen') == 'giao_hang_tiet_kiem' ? 'selected' : '' }}>Grab
+                        </option>
                     </select>
                 </div>
 
@@ -66,9 +69,9 @@
                         <option value="">-- Tất cả --</option>
                         <option value="cho_xu_ly" {{ request('trang_thai') == 'cho_xu_ly' ? 'selected' : '' }}>Chờ xử lý
                         </option>
-                        <option value="dang_xu_ly" {{ request('trang_thai') == 'dang_xu_ly' ? 'selected' : '' }}>Đang
+                        <option value="dang_giao" {{ request('trang_thai') == 'dang_giao' ? 'selected' : '' }}>Đang
                             giao hàng</option>
-                        <option value="da_hoan_thanh" {{ request('trang_thai') == 'da_hoan_thanh' ? 'selected' : '' }}>
+                        <option value="hoan_thanh" {{ request('trang_thai') == 'hoan_thanh' ? 'selected' : '' }}>
                             Đã giao xong</option>
                         <option value="da_huy" {{ request('trang_thai') == 'da_huy' ? 'selected' : '' }}>Đã hủy</option>
                     </select>
@@ -101,7 +104,7 @@
                         <th style="width: 15%;">Thanh Toán</th>
                         <th style="width: 15%;">Mã VĐ (Nội Địa)</th>
                         <th style="width: 12%;">Trạng Thái</th>
-                        <th style="width: 5%;">Xem</th>
+                        <!-- <th style="width: 5%;">Xem</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -158,12 +161,12 @@
                             @endswitch
                         </td>
 
-                        <td class="text-center">
+                        <!-- <td class="text-center">
                             <a href="#" class="btn btn-sm text-white" style="background-color: #fd7e14;"
                                 title="Xem chi tiết">
                                 <i class="bi bi-eye"></i>
                             </a>
-                        </td>
+                        </td> -->
                     </tr>
                     @empty
                     <tr>

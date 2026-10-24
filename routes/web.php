@@ -280,6 +280,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/don-mua-ho/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('admin.orders.show');
         Route::post('/don-mua-ho/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('admin.orders.update_status')->middleware('throttle:30,1');
         Route::get('/don-mua-ho/{id}/edit', [App\Http\Controllers\Admin\OrderController::class, 'edit'])->name('admin.orders.edit');
+        Route::post('/don-mua-ho/{id}/confirm', [App\Http\Controllers\Admin\OrderController::class, 'confirm'])->name('admin.orders.confirm');
+        Route::post('/don-mua-ho/{id}/cancel', [App\Http\Controllers\Admin\OrderController::class, 'cancel'])->name('admin.orders.cancel');
         Route::put('/don-mua-ho/{id}', [App\Http\Controllers\Admin\OrderController::class, 'update'])->name('admin.orders.update')->middleware('throttle:30,1');
         Route::delete('/don-mua-ho/{id}', [App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('admin.orders.destroy');
 
@@ -287,6 +289,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/don-ky-gui', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'index'])->name('admin.consignment_orders.index');
         Route::get('/don-ky-gui/{id}', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'show'])->name('admin.consignment_orders.show');
         Route::get('/don-ky-gui/{id}/edit', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'edit'])->name('admin.consignment_orders.edit');
+        Route::post('/don-ky-gui/{id}/confirm', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'confirm'])->name('admin.consignment_orders.confirm');
+        Route::post('/don-ky-gui/{id}/cancel', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'cancel'])->name('admin.consignment_orders.cancel');
         Route::put('/don-ky-gui/{id}', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'update'])->name('admin.consignment_orders.update')->middleware('throttle:30,1');
         Route::delete('/don-ky-gui/{id}', [App\Http\Controllers\Admin\ConsignmentOrderController::class, 'destroy'])->name('admin.consignment_orders.destroy');
 

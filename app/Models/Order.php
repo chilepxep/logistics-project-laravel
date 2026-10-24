@@ -54,4 +54,10 @@ public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'tru_so_nhan_hang_id');
     }
+
+
+    public function packages()
+{
+    return $this->hasMany(Package::class, 'order_id'); 
+}
 }

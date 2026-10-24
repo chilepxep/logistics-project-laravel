@@ -208,7 +208,6 @@ class OrderListController extends Controller
         try {
             DB::transaction(function () use ($order) {
                 // Bước 1: Xóa toàn bộ sản phẩm (items) thuộc về đơn hàng này trước 
-                // để tránh lỗi ràng buộc khóa ngoại (Foreign Key Constraint)
                 OrderItem::where('order_id', $order->id)->delete();
 
                 // Bước 2: Xóa đơn hàng cha

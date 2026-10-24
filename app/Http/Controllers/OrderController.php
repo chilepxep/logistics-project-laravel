@@ -40,7 +40,7 @@ public function store(Request $request)
         'products.*.so_luong.required'     => 'Số lượng sản phẩm không được để trống.',
         'products.required'                => 'Đơn hàng phải có ít nhất 1 sản phẩm.',
     ]);
-
+ 
     try {
         DB::transaction(function () use ($request) {
             
@@ -146,48 +146,54 @@ public function store(Request $request)
     public function allOrders(Request $request)
     {
         $userId = Auth::id();
+        $query = \App\Models\Package::with(['order', 'consignmentOrder'])
+            ->where(function ($q) use ($userId) {
+                $q->whereHas('order', function ($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                })->orWhereHas('consignmentOrder', function ($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                });
+            })
+            ->orderByDesc('created_at');
 
-        // 1. Lấy danh sách Đơn mua hộ và chuẩn hóa thuộc tính
-        $orders = Order::where('user_id', $userId)
-            ->get()
-            ->map(function ($item) {
-                $item->loai_don = 'mua_ho';
-                $item->ma_hien_thi = $item->ma_don_hang ?? ('DH-' . $item->id);
-                $item->trang_thai_hien_thi = $item->trang_thai;
-                return $item;
-            });
-
-        // 2. Lấy danh sách Đơn ký gửi và chuẩn hóa thuộc tính
-        $consignmentOrders = ConsignmentOrder::where('user_id', $userId)
-            ->get()
-            ->map(function ($item) {
-                $item->loai_don = 'ky_gui';
-                $item->ma_hien_thi = $item->ma_don_ky_gui ?? ('KG-' . $item->id);
-                $item->trang_thai_hien_thi = $item->tinh_trang;
-                return $item;
-            });
-
-        // 3. Gom chung (Concat) 2 danh sách lại và sắp xếp mới nhất lên đầu
-        $merged = $orders->concat($consignmentOrders)->sortByDesc('created_at');
-
-        // 4. Bộ lọc theo Loại đơn nếu người dùng chọn trên giao diện
+        // 2. Lọc theo Loại đơn từ giao diện 
         if ($request->filled('loai')) {
-            $merged = $merged->where('loai_don', $request->loai);
+            if ($request->loai === 'mua_ho') {
+                $query->whereNotNull('order_id');
+            } elseif ($request->loai === 'ky_gui') {
+                $query->whereNotNull('consignment_order_id');
+            }
         }
 
-        // 5. Phân trang thủ công cho Collection (15 dòng / trang)
-        $perPage = 15;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $merged->slice(($currentPage - 1) * $perPage, $perPage)->values();
-        
-        $allOrders = new LengthAwarePaginator(
-            $currentItems,
-            $merged->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // 3. Phân trang trực tiếp bằng Eloquent
+        $allOrders = $query->paginate(15)->withQueryString();
 
-        return view('user.all-orders', compact('allOrders'));
+        // 4. Thống kê Summary 
+        $summaryData = \App\Models\Package::where(function ($q) use ($userId) {
+                $q->whereHas('order', function ($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                })->orWhereHas('consignmentOrder', function ($sub) use ($userId) {
+                    $sub->where('user_id', $userId);
+                });
+            })->select('tinh_trang')->get();
+
+        $summary = [
+            'cho_xu_ly'       => $summaryData->where('tinh_trang', 'cho_xu_ly')->count(),
+            'da_nhap_kho'     => $summaryData->where('tinh_trang', 'da_nhap_kho')->count(),
+            'dang_luan_chuyen'=> $summaryData->where('tinh_trang', 'dang_van_chuyen')->count(),
+            'dang_giao_hang'  => $summaryData->where('tinh_trang', 'dang_giao_hang')->count(),
+            'khach_da_nhan'   => $summaryData->where('tinh_trang', 'hoan_thanh')->count(),
+            'yeu_cau_tra_hang'=> $summaryData->where('tinh_trang', 'tra_hang')->count(),
+        ];
+
+        $deliveryCount = \App\Models\Delivery::whereHas('package', function ($q) use ($userId) {
+            $q->whereHas('order', function ($sub) use ($userId) {
+                $sub->where('user_id', $userId);
+            })->orWhereHas('consignmentOrder', function ($sub) use ($userId) {
+                $sub->where('user_id', $userId);
+            });
+        })->count();
+
+        return view('user.all-orders', compact('allOrders', 'summary', 'deliveryCount'));
     }
 }

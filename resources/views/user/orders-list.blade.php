@@ -117,6 +117,8 @@
                             <span class="badge bg-warning text-dark px-2 py-1">Chờ xử lý</span>
                             @elseif($order->trang_thai == 'dang_xu_ly')
                             <span class="badge bg-primary px-2 py-1">Đang xử lý</span>
+                            @elseif($order->trang_thai == 'dang_giao_hang')
+                            <span class="badge bg-primary px-2 py-1">Đang giao hàng</span>
                             @elseif($order->trang_thai == 'can_lien_he_lai')
                             <span class="badge bg-info text-dark px-2 py-1">Cần liên hệ lại</span>
                             @elseif($order->trang_thai == 'hoan_thanh')

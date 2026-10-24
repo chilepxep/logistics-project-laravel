@@ -35,17 +35,20 @@
                         <!-- Chỉ hiển thị số lượng khi người dùng đã đăng nhập -->
                         @auth
                         @php
-                        // Đếm tổng số đơn mua hộ và đơn ký gửi của user hiện tại
                         $userId = Auth::id();
-                        $tongDon = \App\Models\Order::where('user_id', $userId)->count()
-                        + \App\Models\ConsignmentOrder::where('user_id', $userId)->count();
+
+                        // Đếm tổng số kiện hàng thuộc về Đơn mua hộ HOẶC Đơn ký gửi của user này
+                        $tongDon = \App\Models\Package::whereHas('order', function ($query) use ($userId) {
+                        $query->where('user_id', $userId);
+                        })->orWhereHas('consignmentOrder', function ($query) use ($userId) {
+                        $query->where('user_id', $userId);
+                        })->count();
                         @endphp
 
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             {{ $tongDon > 99 ? '99+' : $tongDon }}
                         </span>
                         @else
-                        <!-- Nếu chưa đăng nhập thì hiện 0 -->
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             0
                         </span>

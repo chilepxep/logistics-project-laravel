@@ -123,14 +123,14 @@
                         <span class="badge bg-warning text-dark">Xác nhận lại</span> @break
                         @case('da_dat_hang')
                         <span class="badge bg-info text-dark">Đã đặt hàng</span> @break
-                        @case('dang_o_kho_a')
-                        <span class="badge bg-primary">Đang ở Kho TQ</span> @break
-                        @case('dang_o_kho_b')
-                        <span class="badge bg-primary">Đang ở Kho VN</span> @break
+                        @case('dang_van_chuyen')
+                        <span class="badge bg-primary">Đang vận chuyển</span> @break
+                        @case('da_nhap_kho')
+                        <span class="badge bg-primary">Đã đến kho</span> @break
                         @case('dang_giao_hang')
                         <span class="badge bg-warning text-dark">Đang giao hàng</span> @break
-                        @case('cho_cod')
-                        <span class="badge bg-dark">Chờ COD</span> @break
+                        @case('hoan_thanh')
+                        <span class="badge bg-dark">Hoàn thành</span> @break
                         @case('da_huy')
                         <span class="badge bg-danger">Đã hủy</span> @break
                         @default

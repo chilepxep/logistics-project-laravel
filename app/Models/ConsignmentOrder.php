@@ -21,7 +21,9 @@ class ConsignmentOrder extends Model
         'dia_chi_tra_hang',
         'so_kien',
         'trang_thai',
-        'kho_hien_tai_id'
+        'kho_hien_tai_id',
+        'co_bao_hiem',  
+        'co_khai_thue'  
     ];
 
     public function user()
@@ -44,19 +46,30 @@ class ConsignmentOrder extends Model
         return $this->belongsTo(Warehouse::class,  'kho_vn_id');
     }
 
-    
-public function country()
+        
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function khoHienTai()
+    {
+        return $this->belongsTo(Warehouse::class, 'kho_hien_tai_id');
+    }
+
+    public function packages()
 {
-    return $this->belongsTo(Country::class, 'country_id');
+
+    return $this->hasMany(Package::class, 'consignment_order_id'); 
 }
 
-public function supplier()
-{
-    return $this->belongsTo(Supplier::class, 'supplier_id');
-}
-
-public function khoHienTai()
-{
-    return $this->belongsTo(Warehouse::class, 'kho_hien_tai_id');
-}
+    protected $casts = [
+            'co_bao_hiem' => 'boolean',
+            'co_khai_thue' => 'boolean',
+    ];
 }

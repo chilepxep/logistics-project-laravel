@@ -56,9 +56,9 @@ class OrderController extends Controller
         $order = Order::with('items')->findOrFail($id);
         
               // Load danh sách Quốc gia 
-    $countries = \App\Models\Country::all();
-    //  danh sách Nhà cung cấp thuộc Quốc gia mà đơn hàng đang lưu
-    $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
+        $countries = \App\Models\Country::all();
+        //  danh sách Nhà cung cấp thuộc Quốc gia mà đơn hàng đang lưu
+        $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
         // Admin lấy danh sách kho VN để sửa nếu khách chọn sai
         $warehouses = Warehouse::all(); 
 
@@ -83,7 +83,7 @@ public function update(Request $request, $id)
         'supplier_id'         => 'required|exists:suppliers,id',
         'tru_so_nhan_hang_id' => 'required',
         'kho_hien_tai_id'     => 'nullable',
-        'trang_thai'          => 'required',
+        //'trang_thai'          => 'required',
         'items'               => 'required|array|min:1',
         'items.*.ten_san_pham'=> 'required|string',
         'items.*.don_gia'     => 'required|numeric|min:0',
@@ -108,39 +108,12 @@ public function update(Request $request, $id)
                 'country_id'          => $request->country_id,
                 'supplier_id'         => $request->supplier_id,
                 'tru_so_nhan_hang_id' => $request->tru_so_nhan_hang_id,
-                'kho_hien_tai_id'     => $khoMoiCuaDon, // Dùng luôn biến đã khởi tạo ở trên
+                'kho_hien_tai_id'     => $khoMoiCuaDon, 
                 'yeu_cau_toc_do'      => $request->yeu_cau_toc_do ?? 'thuong',
-                'trang_thai'          => $request->trang_thai,
+               // 'trang_thai'          => $request->trang_thai,
                 'tong_tien'           => $request->tong_tien ?? $order->tong_tien,
             ]);
 
-            
-            if ($request->trang_thai == 'dang_xu_ly') {
-                $daCoKienHang = \App\Models\Package::where('order_id', $order->id)->exists();
-                
-                if (!$daCoKienHang) {
-                    $newPkg = \App\Models\Package::create([
-                        'ma_van_don'             => 'CHUA_CAP_NHAT', 
-                        'ma_don_kien_hang'       => 'PKG' . time() . rand(100, 999), 
-                        'order_id'               => $order->id,
-                        'consignment_order_id'   => null,
-                        'tinh_trang'             => 'da_dat_hang', 
-                        'loai_hang'              => 'Hàng mua hộ',
-                        'tru_so_id'              => $khoMoiCuaDon, // Nằm ở kho xuất phát
-                        'phi_van_chuyen_noi_dia' => 0,
-                        'thanh_tien'             => 0
-                    ]);
-
-                    // Sinh Tracking gốc khi vừa tạo kiện
-                    \App\Models\PackageTracking::create([
-                        'package_id'   => $newPkg->id,
-                        'warehouse_id' => $khoMoiCuaDon,
-                        'employee_id'  => Auth::id(),
-                        'title'        => 'Khởi tạo kiện hàng',
-                        'description'  => "Kiện hàng mua hộ được khởi tạo và nhập vào: " . $tenKhoMoi,
-                    ]);
-                }
-            }
 
            
             if ($khoCuCuaDon != $khoMoiCuaDon) {
@@ -167,9 +140,9 @@ public function update(Request $request, $id)
                 }
             }
 
-            // ========================================================
-            // 5. XỬ LÝ DANH SÁCH SẢN PHẨM (ITEMS)
-            // ========================================================
+
+            // 5. XỬ LÝ DANH SÁCH SẢN PHẨM
+
             $existingItemIds = $order->items->pluck('id')->toArray();
             $submittedItemIds = []; 
 
@@ -230,26 +203,127 @@ public function update(Request $request, $id)
     // 4. Hàm xử lý Xóa đơn hàng
     public function destroy($id)
     {
-        $order = Order::findOrFail($id);
+        try {
+            DB::transaction(function () use ($id) {
+                $order = \App\Models\Order::findOrFail($id);
 
-        // Tùy chọn: Bạn có thể chặn không cho Admin xoá đơn đã Hoàn thành để giữ lịch sử kế toán
-        if ($order->trang_thai == 'hoan_thanh') {
-            return back()->withErrors('Không thể xoá đơn hàng đã hoàn thành để đảm bảo dữ liệu kế toán.');
+                // 1. Xóa các khiếu nại liên quan
+                \App\Models\Complaint::where('order_id', $id)->delete();
+
+                // 2. TÌM VÀ XÓA CÁC SẢN PHẨM CON CÙNG FILE ẢNH VẬT LÝ
+                $orderItems = \App\Models\OrderItem::where('order_id', $id)->get();
+                
+                foreach ($orderItems as $item) {
+                    // Kiểm tra xem sản phẩm có ảnh không
+                    if (!empty($item->hinh_anh_url) && str_starts_with($item->hinh_anh_url, '/storage/')) {
+                        // Cắt bỏ '/storage/' để lấy đường dẫn tương đối (VD: 'uploads/orders/ten-file.png')
+                        $relativePath = str_replace('/storage/', '', $item->hinh_anh_url);
+
+                        // Xóa file vật lý khỏi server nếu file đó thực sự tồn tại
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                    // Xóa dòng dữ liệu trong DB
+                    $item->delete();
+                }
+
+                // 3. Tìm và xóa các Kiện hàng (Packages) + Lịch sử Tracking
+                $packages = \App\Models\Package::where('order_id', $id)->get();
+                foreach ($packages as $pkg) {
+                    \App\Models\PackageTracking::where('package_id', $pkg->id)->delete();
+                    $pkg->delete();
+                }
+
+                // 4. Cuối cùng, xóa đơn hàng gốc
+                $order->delete();
+            });
+
+            return redirect()->route('admin.orders.index')->with('success', 'Đã xóa vĩnh viễn đơn mua hộ và dọn sạch file ảnh liên quan!');
+
+        } catch (\Exception $e) {
+            return back()->withErrors('Lỗi khi xóa dữ liệu: ' . $e->getMessage());
+        }
+    }
+
+    public function confirm($id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+
+        // Chống thao tác trùng lặp
+        if ($order->trang_thai !== 'cho_xu_ly') {
+            return back()->withErrors('Đơn hàng này đã được xác nhận trước đó!');
+        }
+
+        try {
+            $newPkgId = null;
+
+            DB::transaction(function () use ($order, &$newPkgId) {
+                
+                // 1. Đổi trạng thái Order thành Xác nhận đặt hàng
+                $order->update(['trang_thai' => 'xac_nhan_dat_hang']);
+
+                // 2. Tự động sinh Kiện hàng
+                $tenKhoMoi = \App\Models\Warehouse::find($order->kho_hien_tai_id)->ten_kho ?? 'Kho không xác định';
+                
+                $newPkg = \App\Models\Package::create([
+                    'ma_van_don'             => 'CHUA_CAP_NHAT', 
+                    'ma_don_kien_hang'       => 'PKG' . time() . rand(100, 999), 
+                    'order_id'               => $order->id,
+                    'tinh_trang'             => 'cho_xu_ly', 
+                    'loai_hang'              => 'Hàng mua hộ',
+                    'tru_so_id'              => $order->kho_hien_tai_id, 
+                    'phi_van_chuyen_noi_dia' => 0,
+                    'thanh_tien'             => 0
+                ]);
+
+                $newPkgId = $newPkg->id;
+
+                // 3. Ghi Tracking lịch sử cho kiện hàng vừa tạo
+                \App\Models\PackageTracking::create([
+                    'package_id'   => $newPkg->id,
+                    'warehouse_id' => $order->kho_hien_tai_id,
+                    'employee_id'  => Auth::id(),
+                    'title'        => 'Khởi tạo kiện hàng',
+                    'description'  => "Kiện hàng được khởi tạo thành công tại: " . $tenKhoMoi,
+                ]);
+            });
+
+            // Chuyển thẳng nhân viên sang trang Edit của Kiện hàng vừa tạo
+            return redirect()->route('admin.packages.edit', $newPkgId)
+                            ->with('success', 'Đã xác nhận đơn hàng! Mời bạn cập nhật lộ trình Kiện hàng.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors('Lỗi hệ thống khi xác nhận đơn: ' . $e->getMessage());
+        }
+    }
+
+    public function cancel($id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+
+        if (!in_array($order->trang_thai, ['cho_xu_ly', 'xac_nhan_dat_hang'])) {
+            return back()->withErrors('Không thể hủy! Đơn hàng này đã bắt đầu được luân chuyển.');
         }
 
         try {
             DB::transaction(function () use ($order) {
-                // Bước 1: Xóa toàn bộ sản phẩm (items) thuộc về đơn hàng này
-                OrderItem::where('order_id', $order->id)->delete();
+                
+                // 1. Cập nhật trạng thái Đơn hàng thành Đã hủy
+                $order->update(['trang_thai' => 'da_huy']);
 
-                // Bước 2: Xóa đơn hàng cha
-                $order->delete();
+                // 2. Thu hồi các Kiện hàng vật lý đã lỡ tạo để không bị rác trong kho
+                $packages = \App\Models\Package::where('order_id', $order->id)->get();
+                foreach ($packages as $pkg) {
+                    \App\Models\PackageTracking::where('package_id', $pkg->id)->delete();
+                    $pkg->delete();
+                }
             });
 
-            return redirect()->route('admin.orders.index')->with('success', 'Đã xóa đơn hàng thành công!');
+            return back()->with('success', 'Đã hủy đơn hàng thành công! Các kiện hàng liên quan đã được thu hồi.');
 
         } catch (\Exception $e) {
-            return back()->withErrors('Lỗi hệ thống khi xóa: ' . $e->getMessage());
+            return back()->withErrors('Lỗi khi hủy đơn: ' . $e->getMessage());
         }
     }
 }

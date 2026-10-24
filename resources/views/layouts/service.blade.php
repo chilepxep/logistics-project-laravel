@@ -28,8 +28,8 @@
                         <div>
                             <h5 class="fw-bold" style="color: #0b3a68;">Đặt hàng các trang TMĐT</h5>
                             <p class="text-muted mb-0" style="font-size: 14px;">
-                                Hỗ trợ tìm kiếm nguồn hàng, đặt hàng trên Taobao, 1688, Tmall, JD... nhanh chóng, chính
-                                xác với chi phí tối ưu nhất.
+                                Hỗ trợ tìm kiếm nguồn hàng, đặt hàng trên Taobao, 1688, Tmall, JD.. Amazon, EC21 nhanh
+                                chóng, chính xác với chi phí tối ưu nhất.
                             </p>
                         </div>
                     </div>
@@ -43,10 +43,10 @@
                             <i class="bi bi-truck-flatbed fs-2"></i>
                         </div>
                         <div>
-                            <h5 class="fw-bold" style="color: #0b3a68;">Vận chuyển hàng Trung - Việt</h5>
+                            <h5 class="fw-bold" style="color: #0b3a68;">Vận chuyển hàng quốc tế - Việt Nam</h5>
                             <p class="text-muted mb-0" style="font-size: 14px;">
-                                Hệ thống kho bãi rộng lớn tại Trung Quốc và Việt Nam. Vận chuyển hàng hóa an toàn, tốc
-                                độ chỉ từ 2-5 ngày.
+                                Hệ thống kho bãi rộng lớn tại Trung Quốc ,Mỹ. Úc, Canada, Đức, Pháp, Nhật bản, Hàn quốc
+                                tốc độ vận chuyển chỉ từ 2-5 ngày.
                             </p>
                         </div>
                     </div>

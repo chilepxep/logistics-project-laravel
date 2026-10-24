@@ -235,14 +235,7 @@
                     </div>
                 </div>
 
-                <!-- Box Thông tin mua hàng -->
-                <div class="p-3 mb-3 border font-14" style="background-color: #f8f9fa;">
-                    <div class="fw-bold mb-2">THÔNG TIN MUA HÀNG</div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="dia_chi_mua" id="dc_khac">
-                        <label class="form-check-label" for="dc_khac">Thêm địa chỉ khác</label>
-                    </div>
-                </div>
+
 
                 <!-- Box Trụ sở nhận hàng -->
                 <div class="p-3 mb-4 border font-14" style="background-color: #f8f9fa;">
@@ -410,23 +403,24 @@ document.addEventListener('DOMContentLoaded', function() {
         supplierSelect.innerHTML = '<option value="">-- Đang tải dữ liệu... --</option>';
         supplierSelect.disabled = true;
 
-        fetch(`/api/suppliers-by-country/${countryId}`)
+        // ĐÃ SỬA: Gọi vào API mới tạo
+        fetch(`/api/get-suppliers-mua-ho/${countryId}`)
             .then(response => response.json())
             .then(data => {
                 supplierSelect.innerHTML = '<option value="">-- Chọn Kho / Nhà cung cấp --</option>';
 
                 if (data.length > 0) {
                     data.forEach(sup => {
-                        // Kiểm tra xem có trùng với lựa chọn cũ không
                         let isSelected = (selectedSupplierId == sup.id) ? 'selected' : '';
                         let text = `${sup.ten_ncc} (${sup.thanh_pho || 'Chưa rõ vị trí'})`;
 
                         supplierSelect.insertAdjacentHTML('beforeend',
                             `<option value="${sup.id}" ${isSelected}>${text}</option>`);
                     });
-                    supplierSelect.disabled = false; // Mở khóa ô chọn
+                    supplierSelect.disabled = false;
                 } else {
-                    supplierSelect.innerHTML = '<option value="">Không có kho nào ở quốc gia này</option>';
+                    supplierSelect.innerHTML =
+                        '<option value="">Không có nhà cung cấp ở quốc gia này</option>';
                 }
             })
             .catch(error => {

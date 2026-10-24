@@ -76,39 +76,33 @@
                     @endif
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3 mb-3">
                     <label class="form-label font-14 fw-semibold">
-                        Vị trí kho hiện tại <span class="text-danger">*</span>
+                        Vị trí kho hiện tại
                     </label>
 
-                    @if($order->trang_thai === 'dang_xu_ly')
-                    <!-- NẾU ĐƠN ĐANG XỬ LÝ: Cho phép nhân viên chọn trạm dừng -->
-                    <select name="kho_hien_tai_id" class="form-select border-info" required>
-                        <option value="">-- Chọn trạm dừng --</option>
-                        @foreach($warehouses as $kho)
-                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
-                            {{ $kho->ten_kho }}
-                        </option>
-                        @endforeach
-                    </select>
-                    @else
-                    <!-- CÁC TRẠNG THÁI KHÁC: Khóa ô select lại -->
-                    <select class="form-select border-info bg-light" disabled>
-                        <option value="">-- Chọn trạm dừng --</option>
-                        @foreach($warehouses as $kho)
-                        <option value="{{ $kho->id }}" {{ $order->kho_hien_tai_id == $kho->id ? 'selected' : '' }}>
-                            {{ $kho->ten_kho }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <!-- Hiển thị thông tin kho dưới dạng Chỉ đọc (Read-only) -->
+                    <div class="p-2 border rounded bg-light form-control-solid">
+                        @php
+                        // Tìm tên kho từ danh sách $warehouses dựa trên ID hiện tại
+                        $currentWarehouse = $warehouses->firstWhere('id', $order->kho_hien_tai_id);
+                        @endphp
 
-                    <!-- THẺ ẨN SỐNG CÒN: Gửi giá trị cũ lên server để vượt qua điều kiện required -->
+                        @if($currentWarehouse)
+                        <span class="text-primary fw-bold">
+                            <i class="bi bi-geo-alt-fill me-1"></i> {{ $currentWarehouse->ten_kho }}
+                        </span>
+                        @else
+                        <span class="text-muted fst-italic">Chưa có thông tin kho</span>
+                        @endif
+                    </div>
+
+                    <!-- THẺ ẨN SỐNG CÒN: Đảm bảo dữ liệu gửi lên Controller luôn có kho_hien_tai_id -->
                     <input type="hidden" name="kho_hien_tai_id" value="{{ $order->kho_hien_tai_id }}">
 
-                    <small class="text-danger fst-italic mt-1 d-block">
-                        <i class="bi bi-lock-fill"></i> Chỉ được chuyển kho khi đơn Đang xử lý.
+                    <small class="text-secondary fst-italic mt-1 d-block" style="font-size: 12px;">
+                        <i class="bi bi-info-circle"></i> Hệ thống tự động cập nhật vị trí theo trạng thái Kiện hàng.
                     </small>
-                    @endif
                 </div>
 
                 <div class="col-md-3">
@@ -120,18 +114,61 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label font-14 fw-semibold">Trạng thái đơn hàng</label>
-                    <select name="trang_thai" class="form-select border-warning">
-                        <option value="cho_xu_ly" {{ $order->trang_thai == 'cho_xu_ly' ? 'selected' : '' }}>Chờ xử lý
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-14 fw-semibold mb-2">Trạng thái Đơn hàng</label>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        @if($order->trang_thai == 'cho_xu_ly')
+
+                        <!-- CHỈ CẦN THẺ BUTTON trỏ tới form-confirm -->
+                        <button type="submit" form="form-confirm"
+                            class="btn btn-info text-white fw-bold shadow-sm px-3 py-2 rounded">
+                            <i class="bi bi-check2-circle"></i> Xác nhận đặt hàng
+                        </button>
+
+                        <!-- CHỈ CẦN THẺ BUTTON trỏ tới form-cancel -->
+                        <button type="submit" form="form-cancel"
+                            class="btn btn-outline-danger fw-bold shadow-sm px-3 py-2 rounded"
+                            onsubmit="return confirm('Hủy đơn hàng và các kiện liên quan?');">
+                            <i class="bi bi-x-circle"></i> Hủy đơn
+                        </button>
+
+                        @else
+                        <!-- Các Badge trạng thái khác (Giữ nguyên như cũ) -->
+                        @if($order->trang_thai == 'xac_nhan_dat_hang')
+                        <span class="badge bg-info text-dark fs-6 px-3 py-2 shadow-sm rounded">Xác nhận đặt hàng</span>
+                        @elseif($order->trang_thai == 'dang_giao_hang')
+                        <span class="badge bg-primary fs-6 px-3 py-2 shadow-sm rounded">Đang giao hàng</span>
+                        @elseif($order->trang_thai == 'hoan_thanh')
+                        <span class="badge bg-success fs-6 px-3 py-2 shadow-sm rounded">Hoàn thành</span>
+                        @elseif($order->trang_thai == 'da_huy')
+                        <span class="badge bg-danger fs-6 px-3 py-2 shadow-sm rounded">Đã hủy</span>
+                        @endif
+
+                        <!-- Link sang trang Edit Kiện hàng -->
+                        @php
+                        $pkg = \App\Models\Package::where('order_id', $order->id)->first();
+                        @endphp
+                        @if($pkg)
+                        <a href="{{ route('admin.packages.edit', $pkg->id) }}"
+                            class="btn btn-primary shadow-sm rounded px-3 py-2 fw-semibold">
+                            <i class="bi bi-box-seam"></i> Xem Kiện hàng
+                        </a>
+                        @endif
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Khối mới quản lý riêng Thanh toán (Nếu bạn muốn thêm luôn ở trang này) -->
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-14 fw-semibold">Tình trạng Thanh toán</label>
+                    <select name="trang_thai_thanh_toan" class="form-select border-success">
+                        <option value="chua_thanh_toan"
+                            {{ $order->trang_thai_thanh_toan == 'chua_thanh_toan' ? 'selected' : '' }}>Chưa thanh toán
                         </option>
-                        <option value="dang_xu_ly" {{ $order->trang_thai == 'dang_xu_ly' ? 'selected' : '' }}>Đang xử lý
-                            (Sẽ tự tạo Kiện hàng)</option>
-                        <option value="can_lien_he_lai" {{ $order->trang_thai == 'can_lien_he_lai' ? 'selected' : '' }}>
-                            Cần liên hệ lại</option>
-                        <option value="hoan_thanh" {{ $order->trang_thai == 'hoan_thanh' ? 'selected' : '' }}>Hoàn thành
+                        <option value="da_thanh_toan"
+                            {{ $order->trang_thai_thanh_toan == 'da_thanh_toan' ? 'selected' : '' }}>Đã thanh toán
                         </option>
-                        <option value="da_huy" {{ $order->trang_thai == 'da_huy' ? 'selected' : '' }}>Đã huỷ</option>
                     </select>
                 </div>
 
@@ -224,6 +261,13 @@
         <button type="submit" class="btn btn-primary fw-bold px-5"><i class="bi bi-save me-2"></i> LƯU THAY ĐỔI</button>
         <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Hủy</a>
     </div>
+</form>
+<form id="form-confirm" action="{{ route('admin.orders.confirm', $order->id) }}" method="POST" class="d-none">
+    @csrf
+</form>
+
+<form id="form-cancel" action="{{ route('admin.orders.cancel', $order->id) }}" method="POST" class="d-none">
+    @csrf
 </form>
 @endsection
 

@@ -40,7 +40,9 @@ public function create()
             'packages.*.loai_danh_muc'   => 'nullable|string',
             'packages.*.link_san_pham'   => 'nullable|string', 
             'packages.*.mo_ta_chi_tiet'  => 'nullable|string', 
-            'packages.*.ghi_chu'         => 'nullable|string'  
+            'packages.*.ghi_chu'         => 'nullable|string' ,
+            'co_bao_hiem'                => 'nullable|boolean',
+            'co_khai_thue'               => 'nullable|boolean'
         ]);
 
         try {
@@ -56,11 +58,13 @@ public function create()
                     'chieu_van_chuyen' => $request->chieu_van_chuyen,
                     'country_id'       => $request->country_id,  
                     'supplier_id'      => $request->supplier_id,
-                    'kho_vn_id'        => $request->tru_so_nhan_hang_id, // Lưu chuẩn vào cột kho_vn_id
+                    'kho_vn_id'        => $request->tru_so_nhan_hang_id,
                     'ngay_tao_yeu_cau' => now()->toDateString(),
                     'so_kien'          => count($request->packages),
                     'yeu_cau_toc_do'   => $tocDo,
-                    'trang_thai'       => 'cho_xu_ly'
+                    'trang_thai'       => 'cho_xu_ly',
+                    'co_bao_hiem'      => $request->boolean('co_bao_hiem'),
+                    'co_khai_thue'     => $request->boolean('co_khai_thue'),
                 ]);
 
                 $hasDongGo = false; 
@@ -96,7 +100,7 @@ public function create()
                     }
                 }
 
-                // 4. Lưu Dịch vụ gia tăng (Bảng Extra Requirements)
+                // 4. Lưu Dịch vụ gia tăng
                 if ($hasDongGo) {
                     ConsignmentExtraRequirement::create([
                         'consignment_order_id' => $order->id,
@@ -180,7 +184,9 @@ public function update(Request $request, $id)
         'packages.*.gia_tri_hang_hoa'=> 'required|numeric|min:0',
         'packages.*.loai_danh_muc'  => 'nullable|string',
         'packages.*.link_san_pham'  => 'nullable|string',
-        'packages.*.ghi_chu'        => 'nullable|string'
+        'packages.*.ghi_chu'        => 'nullable|string',
+        'co_bao_hiem'                => 'nullable|boolean',
+        'co_khai_thue'               => 'nullable|boolean',
     ]);
 
     try {
@@ -195,6 +201,8 @@ public function update(Request $request, $id)
                 'kho_vn_id'        => $request->tru_so_nhan_hang_id,
                 'so_kien'          => count($request->packages),
                 'yeu_cau_toc_do'   => $tocDo,
+                'co_bao_hiem'      => $request->boolean('co_bao_hiem'),
+                'co_khai_thue'     => $request->boolean('co_khai_thue'),
             ]);
 
             // 3. Cập nhật các kiện hàng (Thêm/Sửa/Xóa)

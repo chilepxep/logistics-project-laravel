@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm border-0" role="alert">
     <i class="bi bi-check-circle-fill me-2"></i> <strong>Thành công!</strong> {{ session('success') }}
@@ -36,41 +37,162 @@
             </h3>
         </div>
         <div>
-            @if($order->trang_thai == 'cho_bao_gia')
-            <span class="badge bg-warning text-dark px-3 py-2 fs-6">Chờ báo giá</span>
-            @elseif($order->trang_thai == 'can_xac_nhan_lai')
-            <span class="badge bg-info text-dark px-3 py-2 fs-6">Cần xác nhận lại</span>
-            @elseif($order->trang_thai == 'da_hoan_thanh')
-            <span class="badge bg-success px-3 py-2 fs-6">Đã hoàn thành</span>
-            @else
-            <span class="badge bg-secondary px-3 py-2 fs-6">Đã hủy</span>
+            @if($order->trang_thai == 'cho_xu_ly')
+            <span class="badge bg-warning text-dark px-2 py-1">Chờ xử lý</span>
+            @elseif($order->trang_thai == 'dang_xu_ly')
+            <span class="badge bg-primary px-2 py-1">Đang xử lý</span>
+            @elseif($order->trang_thai == 'dang_giao_hang')
+            <span class="badge bg-primary px-2 py-1">Đang giao hàng</span>
+            @elseif($order->trang_thai == 'can_lien_he_lai')
+            <span class="badge bg-info text-dark px-2 py-1">Cần liên hệ lại</span>
+            @elseif($order->trang_thai == 'hoan_thanh')
+            <span class="badge bg-success px-2 py-1">Hoàn thành</span>
+            @elseif($order->trang_thai == 'da_huy')
+            <span class="badge bg-secondary px-2 py-1">Đã hủy</span>
             @endif
         </div>
     </div>
 
 
     <!-- Thông tin chung của đơn hàng -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-header bg-light fw-bold text-uppercase">
-            <i class="bi bi-info-circle me-1"></i> Thông tin chung
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <!-- Header -->
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+            <h6 class="fw-bold text-primary mb-0 text-uppercase" style="letter-spacing: 0.5px;">
+                <i class="bi bi-info-circle-fill me-2"></i>Thông tin chung
+            </h6>
         </div>
-        <div class="card-body row font-14">
-            <div class="col-md-6 mb-2">
-                <span class="text-muted">Ngày tạo:</span>
-                <span class="fw-semibold">{{ $order->created_at->format('d/m/Y H:i') }}</span>
-            </div>
-            <div class="col-md-6 mb-2">
-                <span class="text-muted">Kho nhận hàng (VN):</span>
-                <span class="fw-semibold">{{ $order->khoNhan->ten_kho ?? 'N/A' }}</span>
-            </div>
-            <div class="col-md-6 mb-2">
-                <span class="text-muted">Yêu cầu tốc độ:</span>
-                <span
-                    class="fw-semibold text-danger">{{ $order->yeu_cau_toc_do == 'nhanh' ? 'Nhanh' : 'Thường' }}</span>
-            </div>
-            <div class="col-md-6 mb-2">
-                <span class="text-muted">Tổng tiền:</span>
-                <span class="fw-bold text-danger fs-5">{{ number_format($order->tong_tien, 0, ',', '.') }} VNĐ</span>
+
+        <div class="card-body pt-2">
+            <div class="row g-4">
+
+                <!-- Cột trái -->
+                <div class="col-md-6">
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Ngày tạo:</span>
+                            <span class="fw-bold text-dark fs-6"><i
+                                    class="bi bi-calendar-event text-secondary me-2"></i>{{ $order->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Yêu cầu tốc độ:</span>
+                            <span
+                                class="fw-bold fs-6 {{ $order->yeu_cau_toc_do == 'nhanh' ? 'text-danger' : 'text-primary' }}">
+                                <i class="bi bi-lightning-charge-fill me-1"></i>
+                                {{ $order->yeu_cau_toc_do == 'nhanh' ? 'Giao Hỏa Tốc' : 'Tiêu Chuẩn' }}
+                            </span>
+                        </div>
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Tổng tiền:</span>
+                            <span class="fw-bold text-danger fs-5">{{ number_format($order->tong_tien, 0, ',', '.') }}
+                                <small class="text-muted fs-6 fw-normal">VNĐ</small></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải -->
+                <div class="col-md-6">
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Kho nhận hàng (VN):</span>
+                            <span class="fw-bold text-dark fs-6"><i
+                                    class="bi bi-geo-alt-fill text-danger me-2"></i>{{ $order->khoNhan->ten_kho ?? 'N/A' }}</span>
+                        </div>
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Tình trạng thanh toán:</span>
+                            @if($order->trang_thai_thanh_toan == 'chua_thanh_toan')
+                            <span
+                                class="badge bg-warning text-dark px-3 py-2 rounded-2 fw-semibold border border-warning">
+                                <i class="bi bi-clock-history me-1"></i> Chưa thanh toán
+                            </span>
+                            @elseif($order->trang_thai_thanh_toan == 'da_thanh_toan')
+                            <span class="badge bg-success px-3 py-2 rounded-2 fw-semibold">
+                                <i class="bi bi-check-circle-fill me-1"></i> Đã thanh toán
+                            </span>
+                            @endif
+                        </div>
+                        <!-- Item -->
+                        <div>
+                            <span class="text-muted font-13 d-block mb-1">Dịch vụ yêu cầu:</span>
+                            @if(isset($order->extraRequirements) && $order->extraRequirements->count() > 0)
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($order->extraRequirements as $req)
+                                @if($req->loai_yeu_cau == 'dong_go')
+                                <span class="badge bg-secondary rounded-2 py-2 px-3 fw-normal shadow-sm"><i
+                                        class="bi bi-box-seam me-1"></i> Đóng gỗ</span>
+                                @elseif($req->loai_yeu_cau == 'kiem_hang')
+                                <span class="badge bg-info text-dark rounded-2 py-2 px-3 fw-normal shadow-sm"><i
+                                        class="bi bi-search me-1"></i> Kiểm hàng</span>
+                                @elseif($req->loai_yeu_cau == 'khai_thue_gtgt')
+                                <span class="badge bg-dark rounded-2 py-2 px-3 fw-normal shadow-sm"><i
+                                        class="bi bi-receipt me-1"></i> Khai thuế</span>
+                                @endif
+                                @endforeach
+                            </div>
+                            @else
+                            <span class="fst-italic text-muted font-13">Không sử dụng dịch vụ thêm</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khối Lộ trình & Nút theo dõi bọc trong 1 khung riêng biệt -->
+                <div class="col-12 mt-4">
+                    <div class="p-3 bg-light rounded-3 border border-light-subtle">
+                        <div class="row align-items-center g-3">
+
+                            <!-- Lộ trình -->
+                            <div class="col-md-8">
+                                <span class="text-muted font-13 d-block mb-2">Lộ trình vận chuyển:</span>
+                                <div class="d-flex align-items-center flex-wrap gap-2 font-14">
+                                    <div
+                                        class="bg-white px-3 py-2 rounded-2 border shadow-sm d-flex align-items-center">
+                                        <span class="badge bg-warning text-dark me-2">TỪ</span>
+                                        <strong class="text-dark">{{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                            ({{ $order->country->ten_quoc_gia ?? '' }})</strong>
+                                    </div>
+
+                                    <i class="bi bi-arrow-right text-muted mx-1 fs-5 d-none d-md-block"></i>
+                                    <i class="bi bi-arrow-down text-muted my-1 fs-5 d-block d-md-none"></i>
+
+                                    <div
+                                        class="bg-white px-3 py-2 rounded-2 border shadow-sm d-flex align-items-center">
+                                        <span class="badge bg-success me-2">ĐẾN</span>
+                                        <strong
+                                            class="text-success">{{ $order->khoNhan->ten_kho ?? 'Chưa chọn' }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nút bấm -->
+                            <div class="col-md-4 text-md-end border-md-start ps-md-4">
+                                <span class="text-muted font-13 d-block mb-2 text-md-center">Tra cứu lộ trình:</span>
+                                @php
+                                $firstPackage = $order->packages->first() ?? null;
+                                @endphp
+
+                                @if($firstPackage)
+                                <a href="{{ route('package.show', $firstPackage->id) }}"
+                                    class="btn btn-primary fw-bold px-4 py-2 w-100 shadow-sm rounded-3">
+                                    <i class="bi bi-geo-alt-fill me-1"></i> Xem chi tiết kiện hàng
+                                </a>
+                                @else
+                                <button class="btn btn-secondary disabled px-4 py-2 w-100 rounded-3 border-0"
+                                    style="opacity: 0.65; cursor: not-allowed;">
+                                    <i class="bi bi-hourglass-split me-1"></i> Chưa có kiện hàng
+                                </button>
+                                @endif
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
