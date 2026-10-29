@@ -138,11 +138,10 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.suppliers.index') }}">
-                        <i class="bi bi-person-workspace"></i> Nhà cung cấp
+                    <a class="nav-link" href="{{ route('admin.warehouses.index') }}">
+                        <i class="bi bi-building"></i> Kho hàng
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.deliveries.index') }}">
                         <i class="bi bi-truck"></i> Giao hàng
@@ -150,8 +149,8 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.warehouses.index') }}">
-                        <i class="bi bi-building"></i> Kho hàng
+                    <a class="nav-link" href="{{ route('admin.suppliers.index') }}">
+                        <i class="bi bi-person-workspace"></i> Nhà cung cấp
                     </a>
                 </li>
 
@@ -215,6 +214,21 @@
                 <div class="text-muted font-14">
                     <i class="bi bi-calendar-event me-1"></i> {{ date('d/m/Y') }}
                 </div>
+
+                @php
+                $currentUser = Auth::guard('employee')->user();
+                @endphp
+
+                @if($currentUser && $currentUser->vai_tro === 'nhan_vien')
+                <div class="font-14 border-start border-2 ps-3">
+                    <i class="bi bi-house-door-fill text-primary me-1"></i>
+                    @if($currentUser->warehouse_id && $currentUser->warehouse)
+                    <span class="fw-bold text-primary">Kho: {{ $currentUser->warehouse->ten_kho }}</span>
+                    @else
+                    <span class="text-danger fw-semibold fst-italic">Bạn chưa được phân kho</span>
+                    @endif
+                </div>
+                @endif
 
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle"

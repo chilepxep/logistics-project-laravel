@@ -68,10 +68,10 @@
         <h3 class="text-uppercase fw-bold m-0" style="color: #6f42c1;">
             <i class="bi bi-shop me-2"></i> Danh sách Nhà Cung Cấp
         </h3>
-        <a href="{{ route('supplier.create') }}" class="btn text-white fw-semibold shadow-sm"
+        <!-- <a href="#" class="btn text-white fw-semibold shadow-sm"
             style="background-color: #6f42c1;">
             <i class="bi bi-plus-lg me-1"></i> Thêm NCC mới
-        </a>
+        </a> -->
     </div>
 
     <!-- KHỐI TÌM KIẾM -->
@@ -102,7 +102,7 @@
                             <th style="width: 20%;">Liên hệ</th>
                             <th style="width: 20%;">Tài khoản ngân hàng</th>
                             <th style="width: 20%;">Thống kê giao dịch</th>
-                            <th style="width: 10%;">Thao tác</th>
+                            <!-- <th style="width: 10%;">Thao tác</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -200,11 +200,11 @@
                                 </div>
                             </td>
 
-                            <td class="text-center">
+                            <!-- <td class="text-center">
                                 <button class="btn btn-sm btn-info text-white mb-1 w-100" title="Xem / Sửa">
                                     <i class="bi bi-eye"></i> Chi tiết
                                 </button>
-                            </td>
+                            </td> -->
                         </tr>
                         @empty
                         <tr>

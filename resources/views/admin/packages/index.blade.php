@@ -70,6 +70,18 @@
                             <span class="badge bg-secondary">Ký gửi:
                                 {{ $pkg->consignmentOrder->ma_don_ky_gui ?? $pkg->consignment_order_id }}</span>
                             @endif
+
+                            @if($pkg->delivery && $pkg->delivery->trang_thai != 'thanh_cong' &&
+                            $pkg->delivery->so_ngay_tre > 0)
+                            <div class="mt-2">
+                                <span
+                                    class="d-inline-flex align-items-center gap-1 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill font-12 fw-semibold">
+                                    <i class="bi bi-clock-history"></i> Trễ {{ $pkg->delivery->so_ngay_tre }} ngày
+                                    (+{{ number_format($pkg->delivery->phu_phi_tre_han) }}đ)
+                                </span>
+                            </div>
+                            @endif
+
                         </td>
                         <td>
                             <div class="mb-1 fw-bold text-success"><i class="bi bi-geo-alt-fill"></i>

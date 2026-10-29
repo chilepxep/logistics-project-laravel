@@ -102,12 +102,18 @@
                             @if($order->chieu_van_chuyen == 've_vn')
                             <!-- Chiều: Quốc Tế về Việt Nam -->
                             <div class="d-flex flex-column align-items-center font-12">
+                                <!-- Nơi gửi: KHO QUỐC TẾ (Lấy từ bảng Warehouse thông qua supplier_id) -->
                                 <span class="text-danger fw-bold text-truncate" style="max-width: 180px;"
-                                    title="{{ $order->supplier->ten_ncc ?? 'N/A' }}">
-                                    {{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
-                                    ({{ $order->country->ten_quoc_gia ?? '' }})
+                                    title="{{ $order->khoQuocTe->ten_kho ?? 'N/A' }}">
+                                    {{ $order->khoQuocTe->ten_kho ?? 'Kho Quốc Tế' }}
+                                    @if(isset($order->country->ten_quoc_gia))
+                                    ({{ $order->country->ten_quoc_gia }})
+                                    @endif
                                 </span>
+
                                 <i class="bi bi-arrow-down-short text-muted fs-5 lh-1"></i>
+
+                                <!-- Nơi nhận: KHO VIỆT NAM -->
                                 <span class="text-success fw-bold text-truncate" style="max-width: 180px;"
                                     title="{{ $order->khoVn->ten_kho ?? 'N/A' }}">
                                     {{ $order->khoVn->ten_kho ?? 'Kho Việt Nam' }}
@@ -123,7 +129,7 @@
                                 <i class="bi bi-arrow-down-short text-muted fs-5 lh-1"></i>
                                 <span class="text-danger fw-bold text-truncate" style="max-width: 180px;"
                                     title="{{ $order->supplier->ten_ncc ?? 'N/A' }}">
-                                    {{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                    {{ $order->khoQuocTe->ten_kho ?? 'Kho Quốc Tế' }}
                                     ({{ $order->country->ten_quoc_gia ?? '' }})
                                 </span>
                             </div>
@@ -147,6 +153,8 @@
                             <span class="badge bg-primary px-2 py-1">Đang xử lý</span>
                             @elseif($order->trang_thai == 'can_lien_he_lai')
                             <span class="badge bg-info text-dark px-2 py-1">Cần liên hệ lại</span>
+                            @elseif($order->trang_thai == 'dang_giao_hang')
+                            <span class="badge bg-info text-dark px-2 py-1">Đang giao hàng</span>
                             @elseif($order->trang_thai == 'hoan_thanh')
                             <span class="badge bg-success px-2 py-1">Hoàn thành</span>
                             @elseif($order->trang_thai == 'da_huy')

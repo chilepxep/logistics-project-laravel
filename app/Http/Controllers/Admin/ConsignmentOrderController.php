@@ -54,14 +54,20 @@ class ConsignmentOrderController extends Controller
     }
 
     // 3. Form sửa đơn
-    public function edit($id)
+        public function edit($id)
     {
+        // 1. Lấy thông tin đơn hàng và chi tiết (gọi 1 lần)
         $order = ConsignmentOrder::with(['items', 'extraRequirements'])->findOrFail($id);
-    $countries = \App\Models\Country::all();
-    $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
-        $order = ConsignmentOrder::findOrFail($id);
-        $warehouses = Warehouse::all();
-        return view('admin.consignment_orders.edit', compact('order', 'warehouses','countries','currentSuppliers'));
+        
+        $countries = \App\Models\Country::all();
+        
+        // 2. Lấy danh sách Kho Quốc Tế (Bỏ kho VN)
+        $internationalWarehouses = \App\Models\Warehouse::where('loai_kho', '!=', 'VN')->get();
+        
+        // 3. Lấy danh sách Kho Việt Nam (Chỉ lấy kho VN)
+        $warehouses = \App\Models\Warehouse::where('loai_kho', 'VN')->get();
+        
+        return view('admin.consignment_orders.edit', compact('order', 'warehouses', 'countries', 'internationalWarehouses'));
     }
 
     // 4. Lưu cập nhật

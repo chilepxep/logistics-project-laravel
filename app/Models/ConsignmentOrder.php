@@ -68,6 +68,11 @@ class ConsignmentOrder extends Model
     return $this->hasMany(Package::class, 'consignment_order_id'); 
 }
 
+public function khoQuocTe()
+    {
+        return $this->belongsTo(Warehouse::class, 'supplier_id');
+    }
+
     protected $casts = [
             'co_bao_hiem' => 'boolean',
             'co_khai_thue' => 'boolean',

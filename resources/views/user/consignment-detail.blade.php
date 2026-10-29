@@ -152,7 +152,7 @@
                             @if($order->chieu_van_chuyen == 've_vn')
                             <div class="bg-white px-3 py-2 rounded-2 border shadow-sm d-flex align-items-center">
                                 <span class="badge bg-warning text-dark me-2">TỪ</span>
-                                <strong class="text-danger">{{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                <strong class="text-danger"> {{ $order->khoQuocTe->ten_kho ?? 'Kho Quốc Tế' }}
                                     ({{ $order->country->ten_quoc_gia ?? '' }})</strong>
                             </div>
                             <i class="bi bi-arrow-right text-muted mx-1 fs-5 d-none d-md-block"></i>
@@ -170,7 +170,7 @@
                             <i class="bi bi-arrow-down text-muted my-1 fs-5 d-block d-md-none"></i>
                             <div class="bg-white px-3 py-2 rounded-2 border shadow-sm d-flex align-items-center">
                                 <span class="badge bg-success me-2">ĐẾN</span>
-                                <strong class="text-danger">{{ $order->supplier->ten_ncc ?? 'Kho Quốc Tế' }}
+                                <strong class="text-danger">{{ $order->khoQuocTe->ten_kho ?? 'Kho Quốc Tế' }}
                                     ({{ $order->country->ten_quoc_gia ?? '' }})</strong>
                             </div>
                             @endif

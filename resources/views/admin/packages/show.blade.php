@@ -178,6 +178,16 @@ $daDenKhoCuoi = true;
                 <p class="text-muted mb-1">Trạng thái kiện hàng</p>
                 <span
                     class="badge bg-info text-dark fs-6">{{ $package->trang_thai_hien_thi ?? $package->tinh_trang }}</span>
+                @if($package->delivery && $package->delivery->trang_thai != 'thanh_cong' &&
+                $package->delivery->so_ngay_tre > 0)
+                <div class="mt-2">
+                    <span
+                        class="d-inline-flex align-items-center gap-1 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill font-12 fw-semibold">
+                        <i class="bi bi-clock-history"></i> Trễ {{ $package->delivery->so_ngay_tre }} ngày
+                        (+{{ number_format($package->delivery->phu_phi_tre_han) }}đ)
+                    </span>
+                </div>
+                @endif
             </div>
             <div class="col-md-12 mt-3">
                 <p class="text-muted mb-1">Thuộc về Đơn hàng:</p>

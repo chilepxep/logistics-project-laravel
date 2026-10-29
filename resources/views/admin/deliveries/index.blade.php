@@ -108,14 +108,12 @@
                             </td>
                         </tr>
 
+                        @if(!$package->delivery)
                         <!-- ============================================== -->
                         <!-- MODAL TẠO PHIẾU GIAO HÀNG CHƯA CÓ -->
                         <!-- ============================================== -->
-                        @if(!$package->delivery)
                         <div class="modal fade" id="modalCreateDelivery{{ $package->id }}" tabindex="-1">
                             <div class="modal-dialog modal-lg">
-
-                                <!-- TÁCH RIÊNG THẺ DIV VÀ THÊM BG-WHITE ĐỂ CHỐNG TRONG SUỐT -->
                                 <div class="modal-content shadow bg-white">
                                     <form action="{{ route('admin.deliveries.store') }}" method="POST">
                                         @csrf
@@ -129,40 +127,68 @@
                                         </div>
 
                                         <div class="modal-body bg-white">
+                                            <div
+                                                class="form-check form-switch mb-4 bg-light p-3 rounded-3 border border-info shadow-sm d-flex align-items-center">
+                                                <input class="form-check-input fs-4 ms-0 me-3 mt-0" type="checkbox"
+                                                    id="togglePickup{{ $package->id }}"
+                                                    onchange="handlePickupToggle('{{ $package->id }}')"
+                                                    style="cursor: pointer;">
+                                                <label class="form-check-label fw-bold text-primary mb-0"
+                                                    for="togglePickup{{ $package->id }}" style="cursor: pointer;">
+                                                    <i class="bi bi-person-walking me-2"></i> Khách hàng đến tận kho
+                                                    nhận
+                                                </label>
+                                            </div>
+
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold">Hãng vận chuyển <span
                                                             class="text-danger">*</span></label>
+                                                    <!-- Thêm ID để JS thao tác -->
                                                     <input type="text" name="phuong_thuc_van_chuyen"
-                                                        class="form-control border-success"
-                                                        placeholder="VD: GHTK, Viettel Post, Grab..." required>
+                                                        id="provider{{ $package->id }}"
+                                                        class="form-control border-success fw-bold"
+                                                        placeholder="VD: GHTK, Viettel Post..." required>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label fw-bold">Mã vận đơn nội địa (Tra
-                                                        cứu)</label>
-                                                    <input type="text" name="ma_van_don" class="form-control"
-                                                        placeholder="Nhập mã bill nếu có">
+                                                    <label class="form-label fw-bold">Mã vận đơn nội địa</label>
+                                                    <input type="text" name="ma_van_don" id="tracking{{ $package->id }}"
+                                                        class="form-control" placeholder="Nhập mã bill nếu có">
                                                 </div>
                                             </div>
+
                                             <div class="row mb-3">
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <label class="form-label">Mã vùng / Tuyến</label>
-                                                    <input type="text" name="ma_vung_noi_dia" class="form-control"
+                                                    <input type="text" name="ma_vung_noi_dia"
+                                                        id="zone{{ $package->id }}" class="form-control"
                                                         placeholder="VD: SG-01">
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <label class="form-label">Thanh toán cước</label>
-                                                    <select name="phuong_thuc_thanh_toan" class="form-select">
+                                                    <select name="phuong_thuc_thanh_toan" id="payment{{ $package->id }}"
+                                                        class="form-select">
                                                         <option value="nguoi_nhan_tra">Khách trả cước (FOB)</option>
                                                         <option value="da_thanh_toan">Công ty trả cước</option>
                                                     </select>
                                                 </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold text-primary">Trạng thái ban
+                                                        đầu</label>
+                                                    <select name="trang_thai" id="status{{ $package->id }}"
+                                                        class="form-select border-primary fw-bold">
+                                                        <option value="dang_van_chuyen">Đang đi giao</option>
+                                                        <option value="den_kho_nhan_hang">Khách đến kho nhận hàng
+                                                        </option>
+                                                    </select>
+                                                </div>
                                             </div>
+
                                             <div class="mb-0">
-                                                <label class="form-label fw-bold">Thông tin người nhận (SĐT, Địa chỉ chi
-                                                    tiết) <span class="text-danger">*</span></label>
-                                                <textarea name="thong_tin_giao_hang" class="form-control" rows="3"
-                                                    required></textarea>
+                                                <label class="form-label fw-bold">Thông tin người nhận <span
+                                                        class="text-danger">*</span></label>
+                                                <textarea name="thong_tin_giao_hang" id="receiverInfo{{ $package->id }}"
+                                                    class="form-control" rows="2" required></textarea>
                                             </div>
                                         </div>
 
@@ -174,7 +200,6 @@
                                         </div>
                                     </form>
                                 </div>
-
                             </div>
                         </div>
                         @else
@@ -185,7 +210,6 @@
                         <div class="modal fade" id="modalUpdateDelivery{{ $package->id }}" tabindex="-1">
                             <div class="modal-dialog">
                                 <div class="modal-content shadow bg-white">
-                                    <!-- Đổi màu header nếu đã giao thành công -->
                                     <div
                                         class="modal-header {{ $package->delivery->trang_thai == 'thanh_cong' ? 'bg-success' : 'bg-primary' }} text-white">
                                         <h5 class="modal-title">Cập nhật Giao hàng - {{ $package->ma_don_kien_hang }}
@@ -231,6 +255,9 @@
                                                     <option value="thanh_cong"
                                                         {{ $package->delivery->trang_thai == 'thanh_cong' ? 'selected' : '' }}>
                                                         Giao thành công</option>
+                                                    <option value="den_kho_nhan_hang"
+                                                        {{ $package->delivery->trang_thai == 'den_kho_nhan_hang' ? 'selected' : '' }}>
+                                                        Đến kho nhận hàng</option>
                                                     <option value="that_bai"
                                                         {{ $package->delivery->trang_thai == 'that_bai' ? 'selected' : '' }}>
                                                         Thất bại / Hoàn hàng</option>
@@ -296,4 +323,65 @@
         </div>
     </div>
 </div>
+
+
 @endsection
+
+<script>
+function handlePickupToggle(packageId) {
+    const toggle = document.getElementById('togglePickup' + packageId);
+
+    // Lấy các element dựa theo ID của từng kiện hàng
+    const provider = document.getElementById('provider' + packageId);
+    const tracking = document.getElementById('tracking' + packageId);
+    const zone = document.getElementById('zone' + packageId);
+    const status = document.getElementById('status' + packageId);
+    const receiver = document.getElementById('receiverInfo' + packageId);
+
+    if (toggle.checked) {
+        // NẾU BẬT GẠT: Tự động điền dữ liệu và khóa ô (Dùng readOnly để Form vẫn gửi dữ liệu lên Backend)
+        provider.value = "Khách nhận tại kho";
+        provider.readOnly = true;
+        provider.classList.replace('border-success', 'bg-light');
+        provider.classList.add('text-muted');
+
+        tracking.value = "";
+        tracking.readOnly = true;
+        tracking.classList.add('bg-light');
+        tracking.placeholder = "Không yêu cầu mã vận đơn";
+
+        zone.value = "Tại kho";
+        zone.readOnly = true;
+        zone.classList.add('bg-light', 'text-muted');
+
+        status.value = "den_kho_nhan_hang";
+
+        // Gợi ý luôn câu nhận hàng để nhân viên không cần gõ (Chỉ điền nếu ô đang trống)
+        if (receiver.value.trim() === "") {
+            receiver.value = "Khách hàng đến nhận trực tiếp tại kho.";
+        }
+
+    } else {
+        // NẾU TẮT GẠT: Xóa dữ liệu tự động, mở khóa ô trở lại bình thường
+        provider.value = "";
+        provider.readOnly = false;
+        provider.classList.replace('bg-light', 'border-success');
+        provider.classList.remove('text-muted');
+
+        tracking.readOnly = false;
+        tracking.classList.remove('bg-light');
+        tracking.placeholder = "Nhập mã bill nếu có";
+
+        zone.value = "";
+        zone.readOnly = false;
+        zone.classList.remove('bg-light', 'text-muted');
+
+        status.value = "dang_van_chuyen";
+
+        // Xóa câu gợi ý nếu nhân viên chưa sửa gì
+        if (receiver.value === "Khách hàng đến nhận trực tiếp tại kho.") {
+            receiver.value = "";
+        }
+    }
+}
+</script>

@@ -51,6 +51,10 @@ public function create()
                 // Lấy yêu cầu tốc độ từ kiện đầu tiên
                 $tocDo = $request->packages[0]['yeu_cau_toc_do'] ?? 'thuong'; 
 
+                $khoHienTai = ($request->chieu_van_chuyen === 've_vn') 
+                  ? $request->supplier_id 
+                  : $request->tru_so_nhan_hang_id;
+
                 // 2. Tạo đơn hàng (Bảng Cha)
                 $order = ConsignmentOrder::create([
                     'ma_don_ky_gui'    => 'KG' . time() . rand(10, 99),
@@ -59,6 +63,7 @@ public function create()
                     'country_id'       => $request->country_id,  
                     'supplier_id'      => $request->supplier_id,
                     'kho_vn_id'        => $request->tru_so_nhan_hang_id,
+                    'kho_hien_tai_id'  => $khoHienTai,
                     'ngay_tao_yeu_cau' => now()->toDateString(),
                     'so_kien'          => count($request->packages),
                     'yeu_cau_toc_do'   => $tocDo,
@@ -115,13 +120,12 @@ public function create()
             return back()->withErrors('Lỗi hệ thống: ' . $e->getMessage())->withInput();
         }
     }
+    
 
-    public function index()
+public function index()
     {
         $userId = Auth::id();
-
-        // Lấy danh sách ký gửi kèm thông tin kho, sắp xếp mới nhất lên đầu
-        $consignmentOrders = ConsignmentOrder::with('KhoVn')
+        $consignmentOrders = ConsignmentOrder::with(['khoVn', 'khoQuocTe', 'country'])
                                              ->where('user_id', $userId)
                                              ->orderBy('created_at', 'desc')
                                              ->get();
@@ -132,7 +136,7 @@ public function create()
     public function show($id)
     {
         // Lấy đơn ký gửi kèm theo kho nhận, các kiện hàng và yêu cầu gia tăng
-        $order = ConsignmentOrder::with(['KhoVn', 'items', 'extraRequirements'])->findOrFail($id);
+        $order = ConsignmentOrder::with([ 'khoQuocTe','KhoVn', 'items', 'extraRequirements'])->findOrFail($id);
 
         // Bảo mật: Chỉ chủ nhân của đơn mới được xem
         if ((int) $order->user_id !== (int) Auth::id()) {
@@ -143,24 +147,32 @@ public function create()
     }
 
     // 1. Giao diện sửa đơn ký gửi
-    public function edit($id)
+        public function edit($id)
     {
+        // 1. Lấy thông tin đơn hàng kèm chi tiết
         $order = ConsignmentOrder::with(['items', 'extraRequirements'])->findOrFail($id);
-    $countries = \App\Models\Country::all();
-    $currentSuppliers = \App\Models\Supplier::where('country_id', $order->country_id)->get();
-        if ((int) $order->user_id !== (int) Auth::id()) {
-       abort(403, 'Bạn không có quyền sửa đơn hàng này!');
-}
 
-        // Chỉ cho phép sửa khi đơn đang chờ xử lý
+        // 2. Kiểm tra bảo mật: Chỉ chủ nhân đơn hàng mới được sửa
+        if ((int) $order->user_id !== (int) Auth::id()) {
+            abort(403, 'Bạn không có quyền sửa đơn hàng này!');
+        }
+
+        // 3. Ràng buộc nghiệp vụ: Chỉ cho phép sửa khi đơn đang chờ xử lý
         if ($order->trang_thai !== 'cho_xu_ly') {
             return redirect()->route('consignment.index')->withErrors('Chỉ được sửa đơn hàng đang ở trạng thái Chờ xử lý.');
         }
 
-        // Lấy danh sách kho để hiển thị ra Select box
-        $warehouses = Warehouse::all();
+        // 4. Lấy dữ liệu danh mục để render ra form
+        $countries = \App\Models\Country::all();
 
-        return view('user.consignment-edit', compact('order', 'countries', 'warehouses', 'currentSuppliers'));
+        // Lấy danh sách Kho Quốc Tế (Bỏ kho VN) - Thay thế cho Supplier cũ
+        $internationalWarehouses = \App\Models\Warehouse::where('loai_kho', '!=', 'VN')->get();
+
+        // Lấy danh sách Kho Việt Nam (Dùng cho Select box Trụ sở nhận hàng)
+        $warehouses = \App\Models\Warehouse::where('loai_kho', 'VN')->get();
+
+        // 5. Trả về view kèm các biến đã chuẩn hóa (thay currentSuppliers bằng internationalWarehouses)
+        return view('user.consignment-edit', compact('order', 'countries', 'internationalWarehouses', 'warehouses'));
     }
 
     // 2. Logic cập nhật dữ liệu

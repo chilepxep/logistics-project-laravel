@@ -66,9 +66,9 @@
                         <!-- Tải thẳng danh sách nhà cung cấp của quốc gia hiện tại -->
                         <select name="supplier_id" id="supplierSelect" class="form-select border-warning" required>
                             <option value="">-- Chọn Kho --</option>
-                            @foreach($currentSuppliers as $sup)
-                            <option value="{{ $sup->id }}" {{ $order->supplier_id == $sup->id ? 'selected' : '' }}>
-                                {{ $sup->ten_ncc }} ({{ $sup->thanh_pho ?? 'Chưa rõ' }})
+                            @foreach($internationalWarehouses as $kho)
+                            <option value="{{ $kho->id }}" {{ $order->supplier_id == $kho->id ? 'selected' : '' }}>
+                                {{ $kho->ten_kho }}
                             </option>
                             @endforeach
                         </select>

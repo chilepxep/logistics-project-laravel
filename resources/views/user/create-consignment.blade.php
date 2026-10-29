@@ -135,7 +135,7 @@
                         <p class="mb-1"><strong>Địa chỉ:</strong> <span id="detailDiaChi">...</span></p>
                         <p class="mb-1"><strong>SĐT:</strong> <span id="detailSDT">...</span></p>
                         <p class="mb-1"><strong>Mã bưu điện:</strong> <span id="detailZip">...</span></p>
-                        <p class="mb-0"><strong>Ghi chú:</strong> <span id="detailGhiChu">...</span></p>
+                        <p class="mb-0"><strong>Quản kho:</strong> <span id="detailGhiChu">...</span></p>
                     </div>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                     <p class="mb-1"><strong>Địa chỉ:</strong> <span id="vnDetailDiaChi">...</span></p>
                     <p class="mb-1"><strong>SĐT:</strong> <span id="vnDetailSDT">...</span></p>
                     <p class="mb-1"><strong>Mã bưu điện:</strong> <span id="vnDetailZip">...</span></p>
-                    <p class="mb-0"><strong>Ghi chú:</strong> <span id="vnDetailGhiChu">...</span></p>
+                    <p class="mb-0"><strong>Quản kho:</strong> <span id="vnDetailGhiChu">...</span></p>
                 </div>
             </div>
         </div>
@@ -221,7 +221,9 @@
                                 <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
                                 <option value="Mỹ phẩm">Mỹ phẩm</option>
                                 <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
-                                <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
+                                <option value="Đồ chơi/ Thể thao">Thịt/ Sữa</option>
+                                <option value="Đồ chơi/ Thể thao">Thực phẩm chức năng</option>
+                                <option value="Đồ chơi/ Thể thao">Thuỷ sản</option>
                             </select>
                             <input type="number" name="packages[0][so_luong]"
                                 class="form-control form-control-sm mb-2 rounded-0 font-13"

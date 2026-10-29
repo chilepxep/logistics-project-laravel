@@ -46,12 +46,11 @@
                     <label class="form-label fw-bold text-primary">Khu vực / Quốc gia</label>
                     <select id="countrySelect" class="form-select border-primary">
                         <option value="">-- Tất cả quốc gia --</option>
-                        <option value="VN">Việt Nam (VN)</option>
-                        <option value="TQ">Trung Quốc (TQ)</option>
-                        <option value="JP">Nhật Bản (JP)</option>
-                        <option value="AU">Úc (AU)</option>
-                        <option value="DE">Đức (DE)</option>
-                        <option value="FR">Pháp (FR)</option>
+                        @foreach($countries as $country)
+                        <option value="{{ $country->ma_quoc_gia }}">
+                            {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
+                        </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -97,51 +96,78 @@
 document.addEventListener("DOMContentLoaded", function() {
     const countrySelect = document.getElementById('countrySelect');
     const warehouseSelect = document.getElementById('warehouseSelect');
-    const options = Array.from(warehouseSelect.options);
+
+    // 1. Sao chép và lưu trữ toàn bộ các option gốc vào bộ nhớ tạm
+    // Dùng cloneNode để giữ nguyên các attribute (data-country, value...)
+    const allOptions = Array.from(warehouseSelect.options).map(opt => opt.cloneNode(true));
 
     // Hàm lọc kho
     function filterWarehouses(countryCode) {
-        options.forEach(option => {
-            if (option.value === "") return;
+        // Ghi nhớ lại kho đang được chọn (nếu có)
+        const currentValue = warehouseSelect.value;
 
-            if (countryCode === "" || option.dataset.country === countryCode) {
-                option.style.display = "";
-            } else {
-                option.style.display = "none";
-                if (option.selected) {
-                    warehouseSelect.value = "";
+        // Làm sạch thẻ select
+        warehouseSelect.innerHTML = '';
+
+        let isCurrentValueStillValid = false;
+
+        // Lặp qua danh sách gốc và chỉ render lại những option hợp lệ
+        allOptions.forEach(option => {
+            // Giữ lại option mặc định (value="") HOẶC hiển thị tất cả HOẶC hiển thị kho khớp quốc gia
+            if (option.value === "" || countryCode === "" || option.dataset.country === countryCode) {
+                // Thêm bản sao vào select
+                warehouseSelect.appendChild(option.cloneNode(true));
+
+                // Kiểm tra xem kho đang chọn trước đó có nằm trong danh sách mới này không
+                if (option.value === currentValue && currentValue !== "") {
+                    isCurrentValueStillValid = true;
                 }
             }
         });
-    }
 
-    // Tự động khôi phục Quốc gia nếu form bị lỗi validation (giữ lại old data)
-    const initialSelected = warehouseSelect.options[warehouseSelect.selectedIndex];
-    if (initialSelected && initialSelected.value !== "") {
-        const currentCountry = initialSelected.dataset.country;
-        if (currentCountry) {
-            countrySelect.value = currentCountry;
-            filterWarehouses(currentCountry);
+        // Phục hồi lại giá trị cũ nếu hợp lệ, nếu không thì reset về "-- Chọn kho --"
+        if (isCurrentValueStillValid) {
+            warehouseSelect.value = currentValue;
+        } else {
+            warehouseSelect.value = "";
         }
     }
 
-    // Khi người dùng tự chọn Quốc gia
+    // 2. Xử lý tự động chọn Quốc gia dựa trên Kho (Dành cho trường hợp Laravel trả về old data)
+    // Lấy data-country từ option đang được selected cứng bằng HTML
+    const initialSelectedOption = allOptions.find(opt => opt.hasAttribute('selected') || opt.selected);
+
+    if (initialSelectedOption && initialSelectedOption.value !== "") {
+        const initialCountry = initialSelectedOption.dataset.country;
+        if (initialCountry) {
+            countrySelect.value = initialCountry; // Chuyển dropdown Quốc gia về đúng nước
+            filterWarehouses(initialCountry); // Lọc lại danh sách
+            warehouseSelect.value = initialSelectedOption.value; // Set lại đúng kho
+        }
+    } else {
+        // Chạy lần đầu tiên để đảm bảo logic đồng bộ
+        filterWarehouses(countrySelect.value);
+    }
+
+    // 3. Sự kiện khi người dùng đổi Quốc gia
     countrySelect.addEventListener('change', function() {
         filterWarehouses(this.value);
     });
 
-    // Đổi chữ Trạng thái động
+    // 4. Sự kiện đổi chữ Trạng thái động (Giữ nguyên của bạn)
     const statusSwitch = document.getElementById('isApprovedSwitch');
     const statusLabel = document.getElementById('statusLabel');
-    statusSwitch.addEventListener('change', function() {
-        if (this.checked) {
-            statusLabel.textContent = 'Đang hoạt động';
-            statusLabel.className = 'form-check-label pt-1 ms-2 text-success fw-bold';
-        } else {
-            statusLabel.textContent = 'Đang khóa';
-            statusLabel.className = 'form-check-label pt-1 ms-2 text-muted';
-        }
-    });
+    if (statusSwitch && statusLabel) {
+        statusSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                statusLabel.textContent = 'Đang hoạt động';
+                statusLabel.className = 'form-check-label pt-1 ms-2 text-success fw-bold';
+            } else {
+                statusLabel.textContent = 'Đang khóa';
+                statusLabel.className = 'form-check-label pt-1 ms-2 text-muted';
+            }
+        });
+    }
 });
 </script>
 @endsection

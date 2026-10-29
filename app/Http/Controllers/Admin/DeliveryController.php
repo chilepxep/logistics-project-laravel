@@ -101,7 +101,7 @@ public function index(Request $request)
         return back()->with('success', 'Đã điều phối giao hàng thành công!');
     }
 
-    // 3. Cập nhật trạng thái giao hàng (Ví dụ: Đổi thành Thành công)
+// 3. Cập nhật trạng thái giao hàng 
     public function update(Request $request, $id)
     {
         $delivery = Delivery::findOrFail($id);
@@ -122,15 +122,40 @@ public function index(Request $request)
             'ngay_giao_xong'         => ($request->trang_thai === 'thanh_cong' && $trangThaiCu !== 'thanh_cong') ? now() : $delivery->ngay_giao_xong,
         ]);
 
+        // KHI GIAO THÀNH CÔNG: TÍNH TIỀN PHẠT VÀ CHỐT ĐƠN
         if ($request->trang_thai === 'thanh_cong' && $trangThaiCu !== 'thanh_cong') {
-            $package->update(['tinh_trang' => 'hoan_thanh']);
             
+            // 1. Tính tiền phạt từ thuộc tính ảo bên Model (Delivery)
+            $tienPhat = $delivery->phu_phi_tre_han; 
+            $motaTracking = "Kiện hàng đã được giao thành công đến tay khách hàng.";
+            $ghiChuPhat = "";
+
+            if ($tienPhat > 0) {
+                // Tạo chuỗi ghi chú thông báo tiền phạt
+                $ghiChuPhat = " [Hệ thống tự động cộng " . number_format($tienPhat) . "đ phí lưu kho do trễ " . $delivery->so_ngay_tre . " ngày]";
+                
+                // Cộng dồn tiền và nối thêm ghi chú
+                $package->update([
+                    'tinh_trang' => 'hoan_thanh',
+                    'phi_khac'   => ($package->phi_khac ?? 0) + $tienPhat,
+                    'thanh_tien' => ($package->thanh_tien ?? 0) + $tienPhat,
+                    'ghi_chu'    => $package->ghi_chu ? $package->ghi_chu . $ghiChuPhat : ltrim($ghiChuPhat)
+                ]);
+
+                // Đính kèm thông báo phạt vào Tracking để dễ đối soát
+                $motaTracking .= " Đơn hàng bị tính phụ phí lưu kho " . number_format($tienPhat) . "đ.";
+            } else {
+                // Nếu không bị phạt thì cập nhật bình thường
+                $package->update(['tinh_trang' => 'hoan_thanh']);
+            }
+            
+            // 2. Lưu lịch sử hành trình
             PackageTracking::create([
                 'package_id'   => $package->id,
                 'warehouse_id' => $package->tru_so_id,
                 'employee_id'  => Auth::id(),
                 'title'        => 'Giao hàng thành công',
-                'description'  => "Kiện hàng đã được giao thành công đến tay khách hàng.",
+                'description'  => $motaTracking,
             ]);
         }
 

@@ -72,15 +72,16 @@
 
 
                 <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="bi bi-person-video"></i><br>NHÀ CUNG CẤP</a>
+                    <a href="{{ route('supplier.index') }}" class="nav-link"><i class="bi bi-person-video"></i><br>NHÀ
+                        CUNG CẤP</a>
 
-                    <ul class="submenu list-unstyled shadow-lg">
+                    <!-- <ul class="submenu list-unstyled shadow-lg">
                         <li><a href="{{ route('supplier.index') }}"><i
                                     class="bi bi-list-check me-2 text-warning"></i>Tất cả nhà cung cấp</a></li>
-                        <li><a href="{{ route('supplier.create') }}"><i
+                        <li><a href="#"><i
                                     class="bi bi-person-plus-fill me-2 text-warning"></i>Thêm nhà cung cấp</a>
                         </li>
-                    </ul>
+                    </ul> -->
                 </li>
 
 

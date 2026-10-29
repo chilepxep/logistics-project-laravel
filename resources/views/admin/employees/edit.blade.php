@@ -46,12 +46,11 @@
                     <label class="form-label fw-bold text-primary">Khu vực / Quốc gia</label>
                     <select id="countrySelect" class="form-select border-primary">
                         <option value="">-- Tất cả quốc gia --</option>
-                        <option value="VN">Việt Nam (VN)</option>
-                        <option value="TQ">Trung Quốc (TQ)</option>
-                        <option value="JP">Nhật Bản (JP)</option>
-                        <option value="AU">Úc (AU)</option>
-                        <option value="DE">Đức (DE)</option>
-                        <option value="FR">Pháp (FR)</option>
+                        @foreach($countries as $country)
+                        <option value="{{ $country->ma_quoc_gia }}">
+                            {{ $country->ten_quoc_gia }} ({{ $country->ma_quoc_gia }})
+                        </option>
+                        @endforeach
                     </select>
                 </div>
 

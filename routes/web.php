@@ -226,8 +226,8 @@ Route::get('/dashboard', function () {
     Route::get('/nha-cung-cap', [App\Http\Controllers\SupplierController::class, 'index'])->name('supplier.index');
 
     // Thêm nhà cung cấp
-    Route::get('/nha-cung-cap/them', [App\Http\Controllers\SupplierController::class, 'create'])->name('supplier.create');
-    Route::post('/nha-cung-cap/them', [App\Http\Controllers\SupplierController::class, 'store'])->name('supplier.store')->middleware('throttle:5,1');;
+    // Route::get('/nha-cung-cap/them', [App\Http\Controllers\SupplierController::class, 'create'])->name('supplier.create');
+    // Route::post('/nha-cung-cap/them', [App\Http\Controllers\SupplierController::class, 'store'])->name('supplier.store')->middleware('throttle:5,1');;
 
 
     // Thông tin cá nhân

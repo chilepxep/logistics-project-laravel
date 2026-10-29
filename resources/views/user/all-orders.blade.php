@@ -103,7 +103,7 @@
                 <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
                     <span class="badge bg-success fs-6 me-2"
                         style="width: 40px;">{{ $summary['dang_giao_hang'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Đang giao hàng (Nội địa)</span>
+                    <span class="font-14 text-dark fw-semibold">Đến kho Việt Nam</span>
                 </div>
 
                 <!-- Khách đã nhận hàng -->
@@ -114,10 +114,16 @@
 
                 <!-- Yêu cầu trả hàng -->
                 <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
+                    <span class="badge bg-success fs-6 me-2"
+                        style="width: 40px;">{{ $summary['yeu_cau_tra_hang'] }}</span>
+                    <span class="font-14 text-dark fw-semibold">Ship hàng đến địa chỉ khách</span>
+                </div>
+
+                <!-- <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
                     <span class="badge bg-danger fs-6 me-2"
                         style="width: 40px;">{{ $summary['yeu_cau_tra_hang'] }}</span>
                     <span class="font-14 text-dark fw-semibold">Yêu cầu trả hàng</span>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

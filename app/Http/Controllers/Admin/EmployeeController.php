@@ -20,7 +20,8 @@ class EmployeeController extends Controller
     public function create()
     {
         $warehouses = Warehouse::all();
-        return view('admin.employees.create', compact('warehouses'));
+        $countries = \App\Models\Country::all();
+        return view('admin.employees.create', compact('warehouses','countries'));
     }
 
     public function store(Request $request)
@@ -52,7 +53,8 @@ class EmployeeController extends Controller
     {
         $employee = Employee::findOrFail($id);
         $warehouses = Warehouse::all();
-        return view('admin.employees.edit', compact('employee', 'warehouses'));
+        $countries = \App\Models\Country::all();
+        return view('admin.employees.edit', compact('employee', 'warehouses', 'countries'));
     }
 
     public function update(Request $request, $id)

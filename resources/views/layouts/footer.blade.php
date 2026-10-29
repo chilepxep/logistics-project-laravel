@@ -67,11 +67,9 @@
         <!-- Dòng Bản quyền cuối cùng -->
         <div class="row pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
             <div class="col-md-6 text-center text-md-start">
-                <small>&copy; 2026 HTKK 360 Logistics. All rights reserved.</small>
+                <small>&copy; {{ date('Y') }} HTKK 360 Logistics. All rights reserved.</small>
             </div>
             <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
-                <!-- Ảnh chứng nhận DMCA / Bộ Công Thương (nếu có) -->
-                <!-- <img src="bo-cong-thuong.png" height="30"> -->
             </div>
         </div>
     </div>
