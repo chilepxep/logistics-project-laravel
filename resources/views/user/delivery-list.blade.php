@@ -91,19 +91,82 @@
         </div>
     </div>
 
-    <!-- CẢNH BÁO QUY ĐỊNH LƯU KHO -->
-    <div class="alert alert-warning d-flex align-items-center mb-4 shadow-sm border-0 rounded-3"
-        style="background-color: #fff3cd;" role="alert">
-        <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-warning"></i>
-        <div class="font-14 text-dark">
-            <h6 class="alert-heading fw-bold mb-1">Quy định về thời gian nhận hàng!</h6>
-            <span class="text-muted">
-                Đối với các đơn giao hàng không thành công hoặc chờ khách đến lấy, nếu sau <strong>3 ngày</strong> kể từ
-                khi có yêu cầu xuất kho mà quý khách chưa nhận hàng, hệ thống sẽ tự động cộng thêm phụ phí lưu kho là
-                <strong class="text-danger">15.000 VNĐ/ngày</strong>.
-            </span>
+    <div class="row g-3 mb-3 align-items-stretch">
+
+        <!-- Thẻ: Khách đến kho lấy -->
+        <div class="col-12 col-md-6 col-lg-2">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                        style="width: 45px; height: 45px;">
+                        <i class="bi bi-shop fs-4"></i>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <span class="text-muted font-12 text-uppercase fw-semibold mb-1">
+                            Đến kho lấy
+                        </span>
+                        <div class="d-flex align-items-baseline">
+                            <span class="fw-bold text-dark fs-5 me-1">
+                                {{ $summary['nhan_tai_kho'] ?? 0 }}
+                            </span>
+                            <span class="text-muted font-13">kiện</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Thẻ: Ship hàng tận nơi -->
+        <div class="col-12 col-md-6 col-lg-2">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                        style="width: 45px; height: 45px;">
+                        <i class="bi bi-truck fs-4"></i>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <span class="text-muted font-12 text-uppercase fw-semibold mb-1">
+                            Ship tận nơi
+                        </span>
+                        <div class="d-flex align-items-baseline">
+                            <span class="fw-bold text-dark fs-5 me-1">
+                                {{ $summary['giao_tan_noi'] ?? 0 }}
+                            </span>
+                            <span class="text-muted font-13">kiện</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cảnh báo quy định lưu kho -->
+        <div class="col-12 col-lg-8">
+            <div class="alert alert-warning d-flex align-items-center h-100 mb-0 shadow-sm border-0 rounded-3"
+                style="background-color: #fff3cd;" role="alert">
+
+                <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-warning flex-shrink-0"></i>
+
+                <div class="font-14 text-dark">
+                    <h6 class="alert-heading fw-bold mb-1">
+                        Quy định về thời gian nhận hàng!
+                    </h6>
+
+                    <span class="text-muted">
+                        Đối với các đơn giao hàng không thành công hoặc chờ khách đến lấy,
+                        nếu sau <strong>3 ngày</strong> kể từ khi có yêu cầu xuất kho mà quý khách
+                        chưa nhận hàng, hệ thống sẽ tự động cộng thêm phụ phí lưu kho là
+                        <strong class="text-danger">15.000 VNĐ/ngày</strong>.
+                    </span>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+
+
 
     <!-- BẢNG DANH SÁCH -->
     <div class="bg-white shadow-sm rounded-3 overflow-hidden">
@@ -188,35 +251,156 @@
                             @endif
                         </td>
 
-                        <td class="text-center">
+                        <td class="text-center align-middle">
                             @php
-                            // Lấy tiền gốc của kiện hàng
-                            $baseAmount = $delivery->package->thanh_tien ?? 0;
+                            // 1. Tính toán tiền gốc và tiền phạt của riêng kiện hàng/giao hàng này
+                            $pkg = $delivery->package;
+                            $baseAmount = $pkg->thanh_tien ?? 0;
                             $penalty = 0;
 
-                            // Nếu đơn CHƯA thành công thì cộng thêm tiền phạt ảo hiển thị cho khách.
-                            // (Nếu đã thành công thì Backend đã tự cộng số này vào DB)
                             if ($delivery->trang_thai != 'thanh_cong') {
-                            $penalty = $delivery->phu_phi_tre_han;
+                            $penalty = $delivery->phu_phi_tre_han ?? 0;
                             }
 
                             $totalAmount = $baseAmount + $penalty;
                             @endphp
 
-                            <!-- Hiển thị tổng tiền cuối cùng khách phải trả -->
-                            <span class="fw-bold text-success" style="font-size: 15px;">
-                                {{ number_format($totalAmount) }}đ
-                            </span>
+                            <!-- 2. Hiển thị tổng tiền và Nút xem chi tiết -->
+                            <div class="d-flex justify-content-center align-items-center">
+                                <span class="fw-bold text-success" style="font-size: 15px;">
+                                    {{ number_format($totalAmount) }}đ
+                                </span>
 
-                            <!-- Nếu có phát sinh tiền phạt chưa thanh toán, hiển thị ghi chú nhỏ bên dưới -->
+                                <!-- Nút mở Modal Info -->
+                                <button type="button" class="btn btn-sm btn-link p-0 text-info ms-2"
+                                    data-bs-toggle="modal" data-bs-target="#feeDetailsModal{{ $delivery->id }}"
+                                    title="Xem chi tiết các loại phí">
+                                    <i class="bi bi-info-circle-fill fs-5"></i>
+                                </button>
+                            </div>
+
+                            <!-- 3. Ghi chú phạt (Nếu có) -->
                             @if($penalty > 0)
                             <div class="mt-1">
                                 <span
                                     class="d-inline-block bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-0 rounded font-11">
-                                    Gồm: {{ number_format($penalty) }}đ phạt
+                                    Gồm: {{ number_format($penalty) }}đ phạt trễ
                                 </span>
                             </div>
                             @endif
+
+                            <!-- 4. MODAL CHI TIẾT CHI PHÍ -->
+                            @php
+                            // XÁC ĐỊNH ĐƠN CHA VÀ TỔNG TIỀN ĐƠN CHA (Logic mới chuẩn xác)
+                            $tongTienDonCha = 0;
+                            $tenLoaiDon = 'Chưa xác định';
+                            $maDonCha = '';
+
+                            if ($pkg && $pkg->order_id && $pkg->order) {
+                            $tenLoaiDon = 'Đơn Mua Hộ';
+                            $maDonCha = $pkg->order->ma_don_hang;
+                            // Tổng tiền đơn cha = Tổng thanh_tien của TẤT CẢ kiện hàng thuộc đơn này
+                            $tongTienDonCha = $pkg->order->packages ? $pkg->order->packages->sum('thanh_tien') : 0;
+                            }
+                            elseif ($pkg && $pkg->consignment_order_id && $pkg->consignmentOrder) {
+                            $tenLoaiDon = 'Đơn Ký Gửi';
+                            $maDonCha = $pkg->consignmentOrder->ma_don_ky_gui;
+                            // Tổng tiền đơn cha = Tổng thanh_tien của TẤT CẢ kiện hàng thuộc đơn này
+                            $tongTienDonCha = $pkg->consignmentOrder->packages ?
+                            $pkg->consignmentOrder->packages->sum('thanh_tien') : 0;
+                            }
+                            @endphp
+
+                            <div class="modal fade text-start" id="feeDetailsModal{{ $delivery->id }}" tabindex="-1"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content shadow border-0">
+                                        <div class="modal-header bg-light border-bottom-0">
+                                            <h5 class="modal-title fw-bold text-dark font-15">
+                                                <i class="bi bi-receipt text-primary me-2"></i> Chi tiết cước kiện hàng
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body p-0 font-14">
+                                            <ul class="list-group list-group-flush">
+                                                <!-- Phí của kiện hàng hiện tại -->
+                                                <li
+                                                    class="list-group-item bg-light text-muted fw-bold font-13 text-uppercase">
+                                                    Mã kiện: {{ $pkg->ma_don_kien_hang ?? 'N/A' }}
+                                                </li>
+
+                                                <li class="list-group-item d-flex justify-content-between">
+                                                    <span class="text-muted">Phí vận chuyển nội địa:</span>
+                                                    <span
+                                                        class="fw-semibold text-dark">{{ number_format($pkg->phi_van_chuyen_noi_dia ?? 0) }}đ</span>
+                                                </li>
+
+                                                <!-- Ẩn dòng phí khác nếu bằng 0 (Giúp Đơn Mua Hộ gọn gàng hơn) -->
+                                                @if(($pkg->phi_khac ?? 0) > 0)
+                                                <li class="list-group-item d-flex justify-content-between">
+                                                    <span class="text-muted">Phí dịch vụ khác (Đóng gỗ, bốc
+                                                        xếp...):</span>
+                                                    <span
+                                                        class="fw-semibold text-dark">{{ number_format($pkg->phi_khac) }}đ</span>
+                                                </li>
+                                                @endif
+
+                                                <!-- Ẩn dòng chiết khấu nếu bằng 0 -->
+                                                @if(($pkg->chiet_khau ?? 0) > 0)
+                                                <li class="list-group-item d-flex justify-content-between text-success">
+                                                    <span>Chiết khấu / Giảm giá:</span>
+                                                    <span class="fw-bold">-
+                                                        {{ number_format($pkg->chiet_khau) }}đ</span>
+                                                </li>
+                                                @endif
+
+                                                <!-- Phụ phí lưu kho trễ hạn -->
+                                                @if($penalty > 0)
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between text-danger bg-danger bg-opacity-10 border-danger border-opacity-25">
+                                                    <span class="fw-semibold"><i
+                                                            class="bi bi-exclamation-circle-fill me-1"></i> Phụ phí lưu
+                                                        kho trễ hạn:</span>
+                                                    <span class="fw-bold">+ {{ number_format($penalty) }}đ</span>
+                                                </li>
+                                                @endif
+
+                                                <!-- Tổng tiền kiện hàng này -->
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between fw-bold border-bottom border-2 py-3 bg-white">
+                                                    <span class="text-dark fs-6">Tổng khách trả cho kiện này:</span>
+                                                    <span
+                                                        class="text-success fs-5">{{ number_format($totalAmount) }}đ</span>
+                                                </li>
+
+                                                <!-- Thông tin tổng quan Đơn hàng cha -->
+                                                <li
+                                                    class="list-group-item bg-light text-muted fw-bold font-13 mt-2 text-uppercase">
+                                                    Tổng quan {{ $tenLoaiDon }}: {{ $maDonCha }}
+                                                </li>
+                                                <li
+                                                    class="list-group-item d-flex flex-column bg-warning bg-opacity-10 py-3 border-bottom-0">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="fw-semibold text-dark">Tổng khách phải thanh
+                                                            toán:</span>
+                                                        <span
+                                                            class="text-danger fw-bold fs-5">{{ number_format($tongTienDonCha) }}đ</span>
+                                                    </div>
+                                                    <small class="text-muted font-11 mt-1">
+                                                        * Bao gồm tiền hàng và tất cả các kiện hàng thuộc đơn này.
+                                                    </small>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="modal-footer bg-light p-2 border-top-0">
+                                            <button type="button" class="btn btn-secondary btn-sm px-4"
+                                                data-bs-dismiss="modal">Đóng</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
 
                         <td class="text-center">

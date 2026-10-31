@@ -88,10 +88,28 @@ class PackageController extends Controller
         ]);
 
         $khoDichId = null;
+        
+        // NẾU LÀ ĐƠN MUA HỘ
         if ($package->order_id) {
-            $khoDichId = \App\Models\Order::find($package->order_id)->tru_so_nhan_hang_id ?? null;
-        } elseif ($package->consignment_order_id) {
-            $khoDichId = \App\Models\ConsignmentOrder::find($package->consignment_order_id)->kho_vn_id ?? null; 
+            $order = \App\Models\Order::find($package->order_id);
+            if ($order) {
+                $khoDichId = $order->tru_so_nhan_hang_id;
+            }
+        } 
+        
+        // NẾU LÀ ĐƠN KÝ GỬI
+        elseif ($package->consignment_order_id) {
+            $consignmentOrder = \App\Models\ConsignmentOrder::find($package->consignment_order_id);
+            if ($consignmentOrder) {
+                // Xác định đích đến dựa vào chiều vận chuyển
+                if ($consignmentOrder->chieu_van_chuyen === 'di_qt') {
+                    // Nếu gửi từ VN đi Quốc Tế -> Đích là Kho Quốc Tế (cột supplier_id)
+                    $khoDichId = $consignmentOrder->supplier_id; 
+                } else {
+                    // Nếu gửi từ Quốc Tế về VN ('ve_vn') -> Đích là Kho VN
+                    $khoDichId = $consignmentOrder->kho_vn_id;
+                }
+            }
         }
 
         $tinhTrangMoi = $request->tinh_trang;
@@ -131,7 +149,7 @@ class PackageController extends Controller
         if ($tinhTrangCu != $tinhTrangMoi) {
             switch ($tinhTrangMoi) {
                 case 'hoan_thanh':
-                    $trackingTitle = "Khách đã nhận hàng";
+                    $trackingTitle = "Kiện hàng đã được giao đến kho đích";
                     $trackingDesc = "Kiện hàng đã được giao thành công tới kho đích/khách hàng.";
                     break;
                 case 'tra_hang':
@@ -143,8 +161,8 @@ class PackageController extends Controller
                     $trackingDesc = "Kiện hàng bắt đầu di chuyển khỏi: " . $tenKhoMoi;
                     break;
                 case 'dang_giao_hang':
-                    $trackingTitle = "Đang giao hàng (Nội địa)";
-                    $trackingDesc = "Shipper đang trên đường giao kiện hàng cho khách tại Việt Nam.";
+                    $trackingTitle = "Đang vận chuyển (Nội địa)";
+                    $trackingDesc = "Đang về kho tại Việt Nam.";
                     break;
                 case 'da_nhap_kho':
                     $trackingTitle = "Đã nhập kho";

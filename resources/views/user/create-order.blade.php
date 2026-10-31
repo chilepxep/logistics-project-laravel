@@ -446,23 +446,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     //====XỬ LÝ TÍNH TIỀN
-    const TIGIA = {
-        'CNY': 3500, // 1 Tệ = 3500 VNĐ
-        'JPY': 170, // 1 Yên = 170 VNĐ
-        'AUD': 16500,
-        'EUR': 27000,
-        '¥': 3500 // Mặc định
-    };
-    const PHI_DAT_HANG_PERCENT = 0.01; // Phí mua hộ 1%
-    const PHI_KIEM_DEM_PER_ITEM = 1000; // 1000đ / 1 sản phẩm
-    const PHI_DONG_GO_PER_ITEM = 5000; // 5000đ / 1 sản phẩm
+    // 1. Lấy toàn bộ Tỉ giá từ Database 
+    const TIGIA_JSON = '{!! json_encode(\App\Models\ExchangeRate::pluck("rate", "currency_code")) !!}';
+
+    // 2. Ép kiểu chuỗi đó thành Object JS
+    const TIGIA = JSON.parse(TIGIA_JSON);
+    const FEES = JSON.parse('{!! json_encode(config("fees")) !!}');
+
+    // Gán thêm ký hiệu '¥' trỏ về Tỉ giá của CNY
+    if (TIGIA['CNY']) {
+        TIGIA['¥'] = TIGIA['CNY'];
+    }
+
 
     function calculateTotal() {
         let totalQty = 0;
         let totalAmountFC = 0; // FC = Foreign Currency (Tiền ngoại tệ)
 
         // 1. Tính tổng số lượng và tổng tiền hàng ngoại tệ từ bảng
-        const rows = tbody.querySelectorAll('tr');
+        const rows = document.getElementById('productTableBody').querySelectorAll('tr');
         rows.forEach(row => {
             const price = parseFloat(row.querySelector('input[name*="[don_gia]"]').value) || 0;
             const qty = parseInt(row.querySelector('input[name*="[so_luong]"]').value) || 0;
@@ -478,23 +480,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // 2. Lấy đơn vị tiền tệ và Tỉ giá hiện tại
-        const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-        const currencyCode = selectedOption ? selectedOption.getAttribute('data-currency') : '¥';
-        const currentExchangeRate = TIGIA[currencyCode] || 35000;
+        // Giả sử thẻ select chọn quốc gia của bạn có id là countrySelect
+        const countrySelect = document.getElementById('countrySelect');
+        const selectedOption = countrySelect ? countrySelect.options[countrySelect.selectedIndex] : null;
+        const currencyCode = selectedOption ? selectedOption.getAttribute('data-currency') : 'CNY';
+
+        // SỬA LỖI ĐỘN GIÁ: Ép kiểu parseFloat và đổi fallback từ 35000 thành 3520
+        const currentExchangeRate = parseFloat(TIGIA[currencyCode]) || 3520;
 
         // 3. Quy đổi tiền hàng ra VNĐ
         const totalAmountVND = totalAmountFC * currentExchangeRate;
 
         // 4. Tính phí dịch vụ (Dựa vào Checkbox)
-        const isKiemHang = document.getElementById('yc_kiem_hang').checked;
-        const isDongGo = document.getElementById('yc_dong_go').checked;
+        // Dùng optional chaining (?.) để tránh báo lỗi JS nếu không tìm thấy ID
+        const isKiemHang = document.getElementById('yc_kiem_hang')?.checked || false;
+        const isDongGo = document.getElementById('yc_dong_go')?.checked || false;
 
         let extraFeeVND = 0;
-        if (isKiemHang) extraFeeVND += totalQty * PHI_KIEM_DEM_PER_ITEM;
-        if (isDongGo) extraFeeVND += totalQty * PHI_DONG_GO_PER_ITEM;
+        if (isKiemHang) extraFeeVND += totalQty * FEES.phi_kiem_dem_per_item;
+        if (isDongGo) extraFeeVND += totalQty * FEES.phi_dong_go_per_item;
 
-        // 5. Tính phí mua hộ (Ví dụ 1% tiền hàng)
-        const orderFeeVND = totalAmountVND * PHI_DAT_HANG_PERCENT;
+        // 5. Tính phí mua hộ
+        const orderFeeVND = totalAmountVND * FEES.phi_dat_hang_percent;
 
         // 6. Tính Tổng thanh toán
         const grandTotal = totalAmountVND + extraFeeVND + orderFeeVND;

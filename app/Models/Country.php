@@ -12,4 +12,15 @@ class Country extends Model
 {
     return $this->hasMany(Supplier::class);
 }
+
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'country_id');
+    }
+
+    public function consignmentOrders()
+    {
+        return $this->hasMany(ConsignmentOrder::class, 'country_id');
+    }
 }

@@ -154,11 +154,7 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.recruitments.index') }}">
-                        <i class="bi bi-person-lines-fill"></i> Tuyển dụng
-                    </a>
-                </li>
+
 
                 <!-- MENU CHỈ DÀNH CHO ADMIN -->
                 @if(Auth::guard('employee')->user()->vai_tro === 'admin')
@@ -175,9 +171,22 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.recruitments.index') }}">
+                        <i class="bi bi-person-lines-fill"></i> Tuyển dụng
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.articles.*') ? 'active' : '' }}"
                         href="{{ route('admin.articles.index') }}">
                         <i class="bi bi-newspaper"></i> Quản lý Bài viết
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.loc_curr.*') ? 'active' : '' }}"
+                        href="{{ route('admin.loc_curr.index') }}">
+                        <i class="bi bi-cash-coin"></i> Quốc gia và Tỷ giá
                     </a>
                 </li>
 

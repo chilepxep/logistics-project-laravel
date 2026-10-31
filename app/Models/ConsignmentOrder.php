@@ -73,6 +73,35 @@ public function khoQuocTe()
         return $this->belongsTo(Warehouse::class, 'supplier_id');
     }
 
+
+    // 1. TỔNG TIỀN CƯỚC KHÁCH PHẢI TRẢ (Cộng dồn từ các kiện hàng)
+    public function getTongCuocVanChuyenAttribute()
+    {
+        return $this->packages()->sum('thanh_tien');
+    }
+
+    // 2. TỔNG GIÁ TRỊ HÀNG HÓA (Dùng để đền bù)
+    public function getTongGiaTriKhaiBaoAttribute()
+    {
+        // Giả sử bảng ConsignmentOrderItem có cột gia_tri_hang_hoa
+        return $this->items()->sum('gia_tri_hang_hoa');
+    }
+
+    // 3. TÍNH TOÁN BỒI THƯỜNG DỰ KIẾN
+    public function getMucBoiThuongAttribute()
+    {
+        $giaTri = $this->tong_gia_tri_khai_bao;
+        if ($this->co_bao_hiem) {
+            return $giaTri; // Đền 100% giá trị nếu có bảo hiểm
+        }
+        
+        // Nếu không bảo hiểm, đền gấp 2
+        $denBuTheoCuoc = $this->tong_cuoc_van_chuyen * 2;
+        
+        // Chọn mức đền bù thấp hơn giữa (2 lần cước) và (Giá trị thực)
+        return min($denBuTheoCuoc, $giaTri); 
+    }
+
     protected $casts = [
             'co_bao_hiem' => 'boolean',
             'co_khai_thue' => 'boolean',

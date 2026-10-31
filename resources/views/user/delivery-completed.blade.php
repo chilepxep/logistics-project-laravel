@@ -83,7 +83,7 @@
                         <th style="width: 20%;">Đơn Vị Vận Chuyển</th>
                         <th style="width: 15%;">Thanh Toán</th>
                         <th style="width: 15%;">Mã VĐ (Nội Địa)</th>
-                        <th style="width: 10%;">Xem</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -117,6 +117,7 @@
                             @switch($delivery->phuong_thuc_thanh_toan)
                             @case('vi_dien_tu') Ví Điện Tử @break
                             @case('cod') Thu hộ (COD) @break
+                            @case('nguoi_nhan_tra') Tiền Mặt @break
                             @case('chuyen_khoan') Chuyển Khoản @break
                             @case('tien_mat') Tiền Mặt @break
                             @default {{ $delivery->phuong_thuc_thanh_toan }}
@@ -127,12 +128,7 @@
                             {{ $delivery->ma_van_don ?? 'Đang cập nhật' }}
                         </td>
 
-                        <td class="text-center">
-                            <a href="#" class="btn btn-sm text-white" style="background-color: #198754;"
-                                title="Xem chi tiết">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
+
                     </tr>
                     @empty
                     <tr>

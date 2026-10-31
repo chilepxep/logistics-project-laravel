@@ -73,6 +73,7 @@ public function create()
                 ]);
 
                 $hasDongGo = false; 
+                $hasKiemHang = false;
                 $stt = 1;
 
                 // 3. Lưu chi tiết từng kiện hàng
@@ -103,6 +104,11 @@ public function create()
                     if (isset($pkg['dong_go'])) {
                         $hasDongGo = true;
                     }
+
+                    if(isset($pkg['kiem_hang'])) {
+                        $hasKiemHang = true;
+                    }
+
                 }
 
                 // 4. Lưu Dịch vụ gia tăng
@@ -110,6 +116,12 @@ public function create()
                     ConsignmentExtraRequirement::create([
                         'consignment_order_id' => $order->id,
                         'loai_yeu_cau'         => 'dong_go'
+                    ]);
+                }
+                if($hasKiemHang) {
+                    ConsignmentExtraRequirement::create([
+                        'consignment_order_id' => $order->id,
+                        'loai_yeu_cau'         => 'kiem_hang'
                     ]);
                 }
             });

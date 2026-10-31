@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Warehouse;
 use App\Models\Country;
+use Illuminate\Support\Facades\Auth;
 
 class WarehouseController extends Controller
 {
@@ -22,14 +23,23 @@ class WarehouseController extends Controller
         return view('admin.warehouses.index', compact('warehouses', 'countries'));
     }
 
+    public function show(Warehouse $warehouse)
+    {
+        $countries = Country::all();
+        return view('admin.warehouses.show', compact('warehouse', 'countries'));
+    }
+
     public function create()
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') abort(403, 'Bạn không có quyền thêm kho mới!');
         $countries = Country::all();
         return view('admin.warehouses.create', compact('countries'));
     }
 
     public function store(Request $request)
     {
+
+        if (Auth::user()->vai_tro === 'nhan_vien') abort(403, 'Bạn không có quyền thực hiện thao tác này!');
         $data = $request->validate([
             'loai_kho'      => 'required|string|max:10',
             'ma_kho'        => 'required|string|max:50|unique:warehouses,ma_kho',
@@ -53,12 +63,14 @@ class WarehouseController extends Controller
 
     public function edit(Warehouse $warehouse)
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') abort(403, 'Bạn không có quyền sửa thông tin kho!');
         $countries = Country::all();
         return view('admin.warehouses.edit', compact('warehouse','countries'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') abort(403, 'Bạn không có quyền thực hiện thao tác này!');
         $data = $request->validate([
             'loai_kho'      => 'required|string|max:10',
             'ma_kho'        => 'required|string|max:50|unique:warehouses,ma_kho,' . $warehouse->id,
@@ -82,6 +94,7 @@ class WarehouseController extends Controller
 
     public function destroy(Warehouse $warehouse)
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') abort(403, 'Bạn không có quyền xóa kho!');
         $warehouse->delete();
         return redirect()->route('admin.warehouses.index')->with('success', 'Đã xóa kho khỏi hệ thống!');
     }

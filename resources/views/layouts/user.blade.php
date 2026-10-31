@@ -16,7 +16,7 @@
         position: fixed;
         bottom: 20px;
         /* Cách mép dưới 20px */
-        right: 50px;
+        right: 30px;
         /* Cách mép phải 20px */
         width: 60px;
         height: 60px;
@@ -41,7 +41,7 @@
         position: fixed;
         bottom: 90px;
         /* Nằm cao hơn nút Zalo 70px để không bị đè */
-        right: 50px;
+        right: 30px;
         width: 60px;
         height: 60px;
         z-index: 9999;

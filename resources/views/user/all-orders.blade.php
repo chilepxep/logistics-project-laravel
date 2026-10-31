@@ -79,45 +79,67 @@
         <div class="card-body bg-light">
             <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-box-seam"></i> Tổng quan trạng thái lộ trình</h6>
 
-            <div class="row g-2">
+            <div class="row g-3">
                 <!-- Chờ xử lý -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2" style="width: 40px;">{{ $summary['cho_xu_ly'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Chờ xử lý</span>
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="d-flex align-items-center h-100">
+                        <span class="badge bg-success fs-6 me-2 flex-shrink-0" style="width: 40px;">
+                            {{ $summary['cho_xu_ly'] }}
+                        </span>
+                        <span class="font-14 text-dark fw-semibold">
+                            Chờ xử lý
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Đã nhập kho -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2" style="width: 40px;">{{ $summary['da_nhap_kho'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Đã nhập kho</span>
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="d-flex align-items-center h-100">
+                        <span class="badge bg-success fs-6 me-2 flex-shrink-0" style="width: 40px;">
+                            {{ $summary['da_nhap_kho'] }}
+                        </span>
+                        <span class="font-14 text-dark fw-semibold">
+                            Đã nhập kho
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Đang luân chuyển (Quốc tế) -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2"
-                        style="width: 40px;">{{ $summary['dang_luan_chuyen'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Đang luân chuyển (Quốc tế)</span>
+                <!-- Đang luân chuyển -->
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="d-flex align-items-center h-100">
+                        <span class="badge bg-success fs-6 me-2 flex-shrink-0" style="width: 40px;">
+                            {{ $summary['dang_luan_chuyen'] }}
+                        </span>
+                        <span class="font-14 text-dark fw-semibold">
+                            Đang luân chuyển (Quốc tế)
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Đang giao hàng (Nội địa) -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2"
-                        style="width: 40px;">{{ $summary['dang_giao_hang'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Đến kho Việt Nam</span>
+                <!-- Đến kho Việt Nam -->
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="d-flex align-items-center h-100">
+                        <span class="badge bg-success fs-6 me-2 flex-shrink-0" style="width: 40px;">
+                            {{ $summary['dang_giao_hang'] }}
+                        </span>
+                        <span class="font-14 text-dark fw-semibold">
+                            Đến kho Việt Nam
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Khách đã nhận hàng -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2" style="width: 40px;">{{ $summary['khach_da_nhan'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Khách đã nhận hàng</span>
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="d-flex align-items-center h-100">
+                        <span class="badge bg-success fs-6 me-2 flex-shrink-0" style="width: 40px;">
+                            {{ $summary['khach_da_nhan'] }}
+                        </span>
+                        <span class="font-14 text-dark fw-semibold">
+                            Khách đã nhận hàng
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Yêu cầu trả hàng -->
-                <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
-                    <span class="badge bg-success fs-6 me-2"
-                        style="width: 40px;">{{ $summary['yeu_cau_tra_hang'] }}</span>
-                    <span class="font-14 text-dark fw-semibold">Ship hàng đến địa chỉ khách</span>
-                </div>
 
                 <!-- <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center">
                     <span class="badge bg-danger fs-6 me-2"

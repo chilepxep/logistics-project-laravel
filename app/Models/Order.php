@@ -60,4 +60,17 @@ public function warehouse()
 {
     return $this->hasMany(Package::class, 'order_id'); 
 }
+
+    // 1. TỔNG TIỀN CƯỚC VẬN CHUYỂN
+    public function getTongCuocVanChuyenAttribute()
+    {
+        return $this->packages()->sum('thanh_tien');
+    }
+
+    // 2. TỔNG THANH TOÁN (Tiền hàng + Tiền cước)
+    public function getTongThanhToanAttribute()
+    {
+        // tong_tien là tiền mua sản phẩm, cộng thêm cước vận chuyển
+        return $this->tong_tien + $this->tong_cuoc_van_chuyen;
+    }
 }

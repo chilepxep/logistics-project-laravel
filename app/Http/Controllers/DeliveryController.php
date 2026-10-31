@@ -9,38 +9,53 @@ use App\Models\Package;
 
 class DeliveryController extends Controller
 {
-    public function index(Request $request)
-    {
-          $userId = Auth::id();
+   public function index(Request $request)
+{
+    $userId = Auth::id();
 
-        // Lấy danh sách giao hàng thuộc về các kiện hàng của user
-        $query = Delivery::with('package')
-            ->whereHas('package', function ($packageQuery) use ($userId) {
-                $packageQuery->whereHas('order', function ($orderQuery) use ($userId) {
-                    $orderQuery->where('user_id', $userId);
-                })->orWhereHas('consignmentOrder', function ($consignmentQuery) use ($userId) {
-                    $consignmentQuery->where('user_id', $userId);
-                });
+
+    $baseQuery = Delivery::whereHas('package', function ($packageQuery) use ($userId) {
+        $packageQuery->where(function($q) use ($userId) {
+            $q->whereHas('order', function ($orderQuery) use ($userId) {
+                $orderQuery->where('user_id', $userId);
+            })->orWhereHas('consignmentOrder', function ($consignmentQuery) use ($userId) {
+                $consignmentQuery->where('user_id', $userId);
             });
+        });
+    });
 
-        // 2. Áp dụng các bộ lọc nếu người dùng có chọn
-        if ($request->filled('phuong_thuc_van_chuyen')) {
-            $query->where('phuong_thuc_van_chuyen', $request->phuong_thuc_van_chuyen);
-        }
+    $summary = [];
+    
+    $summary['nhan_tai_kho'] = (clone $baseQuery)
+        ->where('phuong_thuc_van_chuyen', 'LIKE', '%Khách nhận tại kho%')
+        ->count();
 
-        if ($request->filled('phuong_thuc_thanh_toan')) {
-            $query->where('phuong_thuc_thanh_toan', $request->phuong_thuc_thanh_toan);
-        }
+    $summary['giao_tan_noi'] = (clone $baseQuery)
+        ->where(function($q) {
+            $q->where('phuong_thuc_van_chuyen', 'NOT LIKE', '%Khách nhận tại kho%')
+              ->orWhereNull('phuong_thuc_van_chuyen'); 
+        })->count();
 
-        if ($request->filled('trang_thai')) {
-            $query->where('trang_thai', $request->trang_thai);
-        }
+    $listQuery = (clone $baseQuery)->with(['package.order', 'package.consignmentOrder']);
 
-        // 3. Thực thi truy vấn và lấy kết quả
-        $deliveries = $query->orderBy('ngay_tao', 'desc')->get();
-
-        return view('user.delivery-list', compact('deliveries'));
+    if ($request->filled('phuong_thuc_van_chuyen')) {
+        $listQuery->where('phuong_thuc_van_chuyen', $request->phuong_thuc_van_chuyen);
     }
+
+    if ($request->filled('phuong_thuc_thanh_toan')) {
+        $listQuery->where('phuong_thuc_thanh_toan', $request->phuong_thuc_thanh_toan);
+    }
+
+    if ($request->filled('trang_thai')) {
+        $listQuery->where('trang_thai', $request->trang_thai);
+    }
+
+    $deliveries = $listQuery->orderBy('ngay_tao', 'desc')
+        ->paginate(15)
+        ->appends($request->all());
+
+    return view('user.delivery-list', compact('deliveries', 'summary'));
+}
 
     public function completed(\Illuminate\Http\Request $request)
 {
@@ -48,9 +63,8 @@ class DeliveryController extends Controller
 
     // Khởi tạo truy vấn, BẮT BUỘC lọc trạng thái 'thanh_cong'
     $query = Delivery::with('package')
-        ->where('trang_thai', 'thanh_cong') // Đã sửa thành thanh_cong
+        ->where('trang_thai', 'thanh_cong')
         ->whereHas('package', function ($packageQuery) use ($userId) {
-            // Gom nhóm điều kiện OR để đảm bảo SQL chạy đúng logic
             $packageQuery->where(function ($q) use ($userId) {
                 $q->whereHas('order', function ($orderQuery) use ($userId) {
                     $orderQuery->where('user_id', $userId);
@@ -60,7 +74,7 @@ class DeliveryController extends Controller
             });
         });
 
-    // Chỉ giữ lại 2 bộ lọc phụ (Bỏ lọc trạng thái vì mặc định là đã giao thành công)
+    // Chỉ giữ lại 2 bộ lọc phụ 
     if ($request->filled('phuong_thuc_van_chuyen')) {
         $query->where('phuong_thuc_van_chuyen', $request->phuong_thuc_van_chuyen);
     }

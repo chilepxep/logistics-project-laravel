@@ -140,11 +140,11 @@
                 </div>
             </div>
 
-            <!-- Nhóm 3: Khối Lộ trình & Nút theo dõi bọc trong 1 khung riêng biệt -->
+            <!-- Nhóm 3: Khối Lộ trình & Nút theo dõi bọc  -->
             <div class="p-3 bg-light rounded-3 border border-light-subtle">
                 <div class="row align-items-center g-3">
 
-                    <!-- Hiển thị lộ trình (Tích hợp luồng 2 chiều Về VN / Đi QT) -->
+                    <!-- Hiển thị lộ trình -->
                     <div class="col-md-8">
                         <span class="text-muted font-13 d-block mb-2">Lộ trình vận chuyển:</span>
                         <div class="d-flex align-items-center flex-wrap gap-2 font-14">
@@ -200,6 +200,8 @@
 
                 </div>
             </div>
+
+
         </div>
 
         <!-- Danh sách chi tiết kiện hàng -->
@@ -273,6 +275,106 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 border-0">
+            @php
+            $dichVuKyGui = [];
+
+            // Quét phí bảo hiểm & khai thuế
+            if ($order->co_bao_hiem) {
+            $dichVuKyGui[] = ['ten' => 'Bảo hiểm', 'phi_text' => number_format(config('fees.phi_bao_hiem', 50000)) . '
+            VNĐ/Đơn'];
+            }
+            if ($order->co_khai_thue) {
+            $dichVuKyGui[] = ['ten' => 'Khai thuế', 'phi_text' => number_format(config('fees.phi_khai_thue', 55000)) . '
+            VNĐ/Đơn'];
+            }
+
+            // Quét phí đóng gỗ & kiểm hàng
+            $cacYeuCauKyGui = \App\Models\ConsignmentExtraRequirement::where('consignment_order_id',
+            $order->id)->pluck('loai_yeu_cau')->toArray();
+
+            if (in_array('kiem_hang', $cacYeuCauKyGui)) {
+            $dichVuKyGui[] = ['ten' => 'Kiểm hàng', 'phi_text' => number_format(config('fees.phi_kiem_dem_per_item',
+            5000)) . ' VNĐ/SP'];
+            }
+            if (in_array('dong_go', $cacYeuCauKyGui)) {
+            $dichVuKyGui[] = ['ten' => 'Đóng gỗ', 'phi_text' => number_format(config('fees.phi_dong_go_per_item',
+            15000)) . ' VNĐ/SP'];
+            }
+
+            // TÍNH TOÁN LẠI TỪ BẢNG PACKAGE CHO ĐƠN KÝ GỬI
+            $tongPhiNoiDia = $order->packages ? $order->packages->sum('phi_van_chuyen_noi_dia') : 0;
+            $tongChietKhau = $order->packages ? $order->packages->sum('chiet_khau') : 0;
+            $tongThanhToanKienHang = $order->packages ? $order->packages->sum('thanh_tien') : 0;
+            @endphp
+
+            <div class="card bg-light border-0 shadow-sm">
+                <div class="card-header bg-secondary bg-opacity-10 fw-bold text-dark text-uppercase border-bottom-0">
+                    THÔNG TIN TÀI CHÍNH (ĐƠN KÝ GỬI)
+                </div>
+                <div class="card-body p-2">
+                    <ul class="list-group list-group-flush bg-transparent">
+
+                        <!-- Giá trị hàng hóa -->
+                        <li class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light">
+                            <span class="text-muted">Tổng giá trị hàng hóa (Khách khai báo):</span>
+                            <strong class="text-dark">{{ number_format($order->tong_gia_tri_khai_bao) }} VNĐ</strong>
+                        </li>
+
+                        <!-- Mức đền bù tối đa (Đã chuyển thành 1 dòng chữ đỏ bình thường) -->
+                        <li class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light">
+                            <span class="text-danger fw-semibold"><i class="bi bi-shield-exclamation"></i> Mức đền bù
+                                tối đa (nếu thất lạc):</span>
+                            <strong class="text-danger">{{ number_format($order->muc_boi_thuong) }} VNĐ</strong>
+                        </li>
+
+                        <!-- Khối hiển thị chi tiết các dịch vụ gia tăng -->
+                        <li class="list-group-item bg-transparent px-0 border-light pt-1">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold text-dark">Các dịch vụ gia tăng đã đăng ký:</span>
+                            </div>
+
+                            @if(count($dichVuKyGui) > 0)
+                            <ul class="list-unstyled mb-0 ps-3 mt-2 border-start border-2 border-warning font-13">
+                                @foreach($dichVuKyGui as $dv)
+                                <li class="d-flex justify-content-between text-muted mb-2">
+                                    <span>- Dịch vụ {{ $dv['ten'] }}:</span>
+                                    <span class="text-dark fw-semibold">{{ $dv['phi_text'] }}</span>
+                                </li>
+                                @endforeach
+                            </ul>
+                            @else
+                            <span class="text-muted font-13 ms-2">- Không phát sinh yêu cầu đặc biệt.</span>
+                            @endif
+                        </li>
+
+                        <!-- Phí vận chuyển nội địa (Từ các kiện hàng) -->
+                        <li
+                            class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light mt-2 pt-1 border-top">
+                            <span class="text-muted">Tổng phí nội địa TQ (Từ các kiện hàng):</span>
+                            <strong class="text-dark">{{ number_format($tongPhiNoiDia) }} VNĐ</strong>
+                        </li>
+
+                        <!-- Hiển thị Chiết khấu nếu có -->
+                        @if($tongChietKhau > 0)
+                        <li class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light">
+                            <span class="text-success fw-semibold">Chiết khấu / Giảm giá:</span>
+                            <strong class="text-success">-{{ number_format($tongChietKhau) }} VNĐ</strong>
+                        </li>
+                        @endif
+
+                    </ul>
+
+                    <!-- Khung Tổng khách phải thanh toán nổi bật (Đã thay thế cho Mức đền bù) -->
+                    <div
+                        class="border border-2 p-3 mt-2 bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                        <span class="fw-bold fs-5 text-dark mb-2 mb-md-0">TỔNG KHÁCH CẦN THANH TOÁN:</span>
+                        <strong class="text-danger fs-4">{{ number_format($tongThanhToanKienHang) }} VNĐ</strong>
+                    </div>
                 </div>
             </div>
         </div>

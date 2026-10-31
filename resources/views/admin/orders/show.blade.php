@@ -213,7 +213,99 @@
                     </table>
                 </div>
             </div>
+            <div class="card shadow-sm border-0 mt-4">
+                @php
+                $dichVuMuaHo = [];
+                $cacYeuCauMuaHo = \App\Models\OrderExtraRequirement::where('order_id',
+                $order->id)->pluck('loai_yeu_cau')->toArray();
+
+                // Đếm tổng số lượng sản phẩm để nhân với đơn giá phí dịch vụ
+                $tongSoLuong = \App\Models\OrderItem::where('order_id', $order->id)->sum('so_luong') ?? 1;
+
+                if (in_array('kiem_hang', $cacYeuCauMuaHo)) {
+                $dichVuMuaHo[] = ['ten' => 'Kiểm hàng', 'phi' => config('fees.phi_kiem_dem_per_item', 5000) *
+                $tongSoLuong];
+                }
+                if (in_array('dong_go', $cacYeuCauMuaHo)) {
+                $dichVuMuaHo[] = ['ten' => 'Đóng gỗ', 'phi' => config('fees.phi_dong_go_per_item', 15000) *
+                $tongSoLuong];
+                }
+                if (in_array('khai_thue_gtgt', $cacYeuCauMuaHo)) {
+                $dichVuMuaHo[] = ['ten' => 'Khai thuế', 'phi' => config('fees.phi_khai_thue', 55000)];
+                }
+
+                // TÍNH TOÁN LẠI TỪ BẢNG PACKAGE
+                // Lấy tổng phí nội địa từ tất cả các kiện hàng thuộc đơn này
+                $tongPhiNoiDia = $order->packages ? $order->packages->sum('phi_van_chuyen_noi_dia') : 0;
+
+                // Lấy tổng chiết khấu từ các kiện hàng
+                $tongChietKhau = $order->packages ? $order->packages->sum('chiet_khau') : 0;
+
+                // Lấy tổng số tiền cuối cùng khách phải trả (đã được Admin chốt ở kiện hàng)
+                $tongThanhToanKienHang = $order->packages ? $order->packages->sum('thanh_tien') : 0;
+                @endphp
+
+                <div class="card bg-light border-0 shadow-sm">
+                    <div
+                        class="card-header bg-secondary bg-opacity-10 fw-bold text-dark text-uppercase border-bottom-0">
+                        TỔNG HỢP CHI PHÍ (ĐƠN MUA HỘ)
+                    </div>
+                    <div class="card-body p-2">
+                        <ul class="list-group list-group-flush bg-transparent">
+
+                            <!-- 1. Tiền hàng và Phí dịch vụ (Thông tin gốc của đơn) -->
+                            <li class="list-group-item bg-transparent px-0 border-light">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Tổng tiền hàng (Gồm Sản phẩm & Phí dịch vụ):</span>
+                                    <strong class="text-dark">{{ number_format($order->tong_tien) }} VNĐ/SP</strong>
+                                </div>
+
+                                @if(count($dichVuMuaHo) > 0)
+                                <div
+                                    class="p-3 mt-1 bg-info bg-opacity-10 border border-info border-opacity-25 rounded font-13">
+                                    <span class="d-block fw-bold text-dark mb-2">Chi tiết phí dịch vụ đã tính:</span>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach($dichVuMuaHo as $dv)
+                                        <li class="d-flex justify-content-between text-muted mb-2">
+                                            <span>- Phí {{ $dv['ten'] }}:</span>
+                                            <span class="fw-semibold text-dark">{{ number_format($dv['phi']) }}
+                                                VNĐ/SP</span>
+                                        </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                @endif
+                            </li>
+
+                            <!-- 2. Cước vận chuyển từ bảng Package -->
+                            <li
+                                class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light py-1 mt-2">
+                                <span class="text-muted">Tổng cước vận chuyển (Từ các kiện hàng):</span>
+                                <strong class="text-dark">{{ number_format($tongPhiNoiDia) }} VNĐ</strong>
+                            </li>
+
+                            <!-- Hiển thị Chiết khấu nếu có -->
+                            @if($tongChietKhau > 0)
+                            <li
+                                class="list-group-item d-flex justify-content-between bg-transparent px-0 border-light py-1">
+                                <span class="text-success fw-semibold">Chiết khấu / Giảm giá:</span>
+                                <strong class="text-success">-{{ number_format($tongChietKhau) }} VNĐ</strong>
+                            </li>
+                            @endif
+                        </ul>
+
+                        <!-- 3. Hộp Tổng thanh toán chốt hạ (Giao diện khung viền như thiết kế) -->
+                        <div
+                            class="border border-2 p-3 mt-3 bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                            <span class="fw-bold fs-5 text-dark mb-2 mb-md-0">TỔNG KHÁCH PHẢI THANH TOÁN:</span>
+                            <strong class="text-danger fs-4">{{ number_format($tongThanhToanKienHang) }} VNĐ</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
     </div>
 </div>
 @endsection

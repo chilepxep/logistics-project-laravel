@@ -26,9 +26,13 @@
         </div>
     </div>
 
+
+    @if(Auth::user()->vai_tro !== 'nhan_vien')
     <a href="{{ route('admin.warehouses.create') }}" class="btn btn-sm btn-success">
         <i class="bi bi-plus-circle me-1"></i> Thêm kho mới
     </a>
+    @endif
+
 
 </div>
 
@@ -70,22 +74,32 @@
                             </div>
                         </td>
 
+
+                        @if(Auth::user()->vai_tro !== 'nhan_vien')
                         <td class="text-end pe-4 text-nowrap">
                             <a href="{{ route('admin.warehouses.edit', $kho->id) }}" class="btn btn-sm btn-warning"
                                 title="Sửa kho">
                                 <i class="bi bi-pencil"></i>
                             </a>
-
                             <form action="{{ route('admin.warehouses.destroy', $kho->id) }}" method="POST"
                                 class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa kho này?');">
                                 @csrf
                                 @method('DELETE')
-
                                 <button type="submit" class="btn btn-sm btn-danger" title="Xóa kho">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                         </td>
+                        @else
+                        <td class="text-end pe-4 text-nowrap">
+                            <a href="{{ route('admin.warehouses.show', $kho->id) }}"
+                                class="btn btn-sm btn-info text-white" title="Xem chi tiết">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                        @endif
+
+
                     </tr>
                     @empty
                     <tr>

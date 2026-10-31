@@ -335,13 +335,11 @@ Route::prefix('admin')->group(function () {
         Route::put('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'update'])->name('admin.deliveries.update');
         Route::delete('/deliveries/{id}', [App\Http\Controllers\Admin\DeliveryController::class, 'destroy'])->name('admin.deliveries.destroy');
 
-        //Quản lý tin tuyên dụng
-        Route::resource('recruitments', App\Http\Controllers\Admin\RecruitmentController::class)
-        ->names('admin.recruitments')
-        ->except(['show']);
+        
 
         //Quản lý kho
         Route::resource('warehouses', App\Http\Controllers\Admin\WarehouseController::class)->names('admin.warehouses')->except(['show']);
+        Route::get('/warehouses/{warehouse}', [App\Http\Controllers\Admin\WarehouseController::class, 'show'])->name('admin.warehouses.show');
         
 
         // ==========================================
@@ -372,6 +370,25 @@ Route::prefix('admin')->group(function () {
             //thông tin công ty
             Route::get('/settings', [App\Http\Controllers\Admin\CompanySettingController::class, 'edit'])->name('admin.settings.edit');
             Route::put('/settings', [App\Http\Controllers\Admin\CompanySettingController::class, 'update'])->name('admin.settings.update');
+
+                //Quản lý tin tuyên dụng
+            Route::resource('recruitments', App\Http\Controllers\Admin\RecruitmentController::class)
+            ->names('admin.recruitments')
+            ->except(['show']);
+
+
+            // Quản lý quốc gia và tiền tệ
+            Route::get('/location-currency', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'index'])->name('admin.loc_curr.index');
+
+            // Các route xử lý Quốc gia
+            Route::post('/countries', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'storeCountry'])->name('admin.countries.store');
+            Route::put('/countries/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'updateCountry'])->name('admin.countries.update');
+            Route::delete('/countries/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'destroyCountry'])->name('admin.countries.destroy');
+
+            // Các route xử lý Tiền tệ (ExchangeRate)
+            Route::post('/exchange-rates', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'storeRate'])->name('admin.rates.store');
+            Route::put('/exchange-rates/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'updateRate'])->name('admin.rates.update');
+            Route::delete('/exchange-rates/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'destroyRate'])->name('admin.rates.destroy');
 
         });
         

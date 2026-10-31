@@ -8,8 +8,7 @@ use App\Models\OrderExtraRequirement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ConsignmentOrder;
-use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class OrderController extends Controller
 {
@@ -54,31 +53,41 @@ public function store(Request $request)
                $tongSoLuong += $item['so_luong'];
             }
 
-            // 2.2 Lấy Tỉ giá của Quốc gia (Đảm bảo model Country đã use ở trên)
+            // 2.2 Lấy thông tin Quốc gia
             $country = \App\Models\Country::findOrFail($request->country_id);
+
+            // Lấy tỉ giá hiện tại từ bảng ExchangeRate dựa theo mã tiền tệ (VD: CNY, JPY)
+            $exchangeRate = \App\Models\ExchangeRate::where('currency_code', $country->tien_te)->first();
             
-            // Chuyển đổi mã tiền tệ sang Tỉ giá cố định (Bạn có thể kéo từ DB nếu sau này có bảng Tỉ Giá)
-            $tiGia = 35000; // Mặc định là Tệ (CNY)
-            if ($country->tien_te == 'JPY') $tiGia = 170;
-            if ($country->tien_te == 'AUD') $tiGia = 16500;
-            if ($country->tien_te == 'EUR') $tiGia = 27000;
+            if ($exchangeRate) {
+                $tiGia = (float) $exchangeRate->rate;
+            } else {
+                $defaultRate = \App\Models\ExchangeRate::where('is_default', 1)->first();
+                $tiGia = $defaultRate ? (float) $defaultRate->rate : 3520; 
+            }
 
             // 2.3 Tính các loại tiền (VNĐ)
             $tienHangVnd = $tongTienNgoaiTe * $tiGia;
+
+            // Tính phí mua hộ (Ví dụ: 1%)
+            $phiMuaHoVnd = $tienHangVnd * 0.01; 
+
+            // Tính phí mua hộ 
+            $tyLePhiMuaHo = config('fees.phi_dat_hang_percent');
+            $phiMuaHoVnd = $tienHangVnd * $tyLePhiMuaHo;
             
-            $phiMuaHoVnd = $tienHangVnd * 0.01; // Phí mua hộ 1%
-            
+            // Tính phí dịch vụ
             $phiDichVuVnd = 0;
             if ($request->has('extra_reqs')) {
                 if (in_array('kiem_hang', $request->extra_reqs)) {
-                    $phiDichVuVnd += ($tongSoLuong * 1000); // 1000đ/1 SP
+                    $phiDichVuVnd += ($tongSoLuong * config('fees.phi_kiem_dem_per_item')); 
                 }
                 if (in_array('dong_go', $request->extra_reqs)) {
-                    $phiDichVuVnd += ($tongSoLuong * 5000); // 5000đ/1 SP
+                    $phiDichVuVnd += ($tongSoLuong * config('fees.phi_dong_go_per_item')); 
                 }
             }
 
-            // 2.4 CỘNG DỒN TẤT CẢ TẠO THÀNH GRAND TOTAL
+            // 2.4 CỘNG DỒN ĐỂ TẠO TỔNG TIỀN (Khớp tuyệt đối với Javascript)
             $tongTienThanhToan = $tienHangVnd + $phiMuaHoVnd + $phiDichVuVnd;
 
 
@@ -90,8 +99,6 @@ public function store(Request $request)
                 'supplier_id'         => $request->supplier_id,
                 'tru_so_nhan_hang_id' => $request->tru_so_nhan_hang_id,
                 'yeu_cau_toc_do'      => $request->yeu_cau_toc_do,
-                
-                // Ở đây ta lưu TỔNG TIỀN VNĐ CUỐI CÙNG thay vì tiền Ngoại tệ
                 'tong_tien'           => $tongTienThanhToan, 
                 
                 'trang_thai'          => 'cho_xu_ly'
@@ -186,14 +193,14 @@ public function store(Request $request)
             'yeu_cau_tra_hang'=> $summaryData->where('tinh_trang', 'tra_hang')->count(),
         ];
 
-        $deliveryCount = \App\Models\Delivery::whereHas('package', function ($q) use ($userId) {
-            $q->whereHas('order', function ($sub) use ($userId) {
-                $sub->where('user_id', $userId);
-            })->orWhereHas('consignmentOrder', function ($sub) use ($userId) {
-                $sub->where('user_id', $userId);
-            });
-        })->count();
-
+        $deliveryCount = \App\Models\Delivery::where('trang_thai', '!=', 'thanh_cong')
+    ->whereHas('package', function ($q) use ($userId) {
+        $q->whereHas('order', function ($sub) use ($userId) {
+            $sub->where('user_id', $userId);
+        })->orWhereHas('consignmentOrder', function ($sub) use ($userId) {
+            $sub->where('user_id', $userId);
+        });
+    })->count();
         return view('user.all-orders', compact('allOrders', 'summary', 'deliveryCount'));
     }
 }
