@@ -102,19 +102,43 @@
                 $user->warehouse->loai_kho === 'VN';
                 $isNhanVienQT = $user && $user->vai_tro === 'nhan_vien' && $user->warehouse &&
                 $user->warehouse->loai_kho !== 'VN';
+
+                // TÌM ID KHO ĐÍCH
+                $khoDichId = null;
+
+                // NẾU LÀ ĐƠN MUA HỘ
+                if ($package->order_id) {
+                $order = \App\Models\Order::find($package->order_id);
+                if ($order) {
+                $khoDichId = $order->tru_so_nhan_hang_id;
+                }
+                }
+                // NẾU LÀ ĐƠN KÝ GỬI
+                elseif ($package->consignment_order_id) {
+                $consignmentOrder = \App\Models\ConsignmentOrder::find($package->consignment_order_id);
+                if ($consignmentOrder) {
+                // Xác định đích đến dựa vào chiều vận chuyển
+                if ($consignmentOrder->chieu_van_chuyen === 'di_qt') {
+                // Nếu gửi từ VN đi Quốc Tế -> Đích là Kho Quốc Tế (cột supplier_id)
+                $khoDichId = $consignmentOrder->supplier_id;
+                } else {
+                // Nếu gửi từ Quốc Tế về VN ('ve_vn') -> Đích là Kho VN
+                $khoDichId = $consignmentOrder->kho_vn_id;
+                }
+                }
+                }
+
+                // KIỂM TRA ĐÃ ĐẾN KHO ĐÍCH CHƯA
+                $daDenKhoDich = ($khoDichId && $package->tru_so_id == $khoDichId);
                 @endphp
 
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Vị trí kho hiện tại</label>
                     <select name="tru_so_id" class="form-select border-primary" required>
                         @foreach($warehouses as $kho)
-                        <!-- Phân quyền hiển thị danh sách Kho -->
-                        @if($isAdmin || ($isNhanVienVN && $kho->loai_kho === 'VN') || ($isNhanVienQT && $kho->loai_kho
-                        !== 'VN'))
                         <option value="{{ $kho->id }}" {{ $package->tru_so_id == $kho->id ? 'selected' : '' }}>
                             {{ $kho->ten_kho }}
                         </option>
-                        @endif
                         @endforeach
                     </select>
                 </div>
@@ -144,8 +168,12 @@
                         @endif
 
                         <!-- Các trạng thái chung ai cũng thấy -->
-                        <option value="hoan_thanh" {{ $package->tinh_trang == 'hoan_thanh' ? 'selected' : '' }}>Hoàn
-                            thành</option>
+                        <option value="hoan_thanh" {{ $package->tinh_trang == 'hoan_thanh' ? 'selected' : '' }}
+                            {{ !$daDenKhoDich && $package->tinh_trang != 'hoan_thanh' ? 'disabled' : '' }}
+                            class="{{ !$daDenKhoDich && $package->tinh_trang != 'hoan_thanh' ? 'text-muted bg-light' : '' }}">
+                            Hoàn thành
+                            {{ !$daDenKhoDich && $package->tinh_trang != 'hoan_thanh' ? '🔒 (Chỉ mở khi đến kho đích)' : '' }}
+                        </option>
                         <option value="tra_hang" {{ $package->tinh_trang == 'tra_hang' ? 'selected' : '' }}>Trả hàng
                         </option>
                     </select>

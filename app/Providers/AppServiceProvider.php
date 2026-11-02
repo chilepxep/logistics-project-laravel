@@ -9,6 +9,10 @@ use App\Models\ExchangeRate;
 use Illuminate\Support\Facades\Schema;
 use App\Models\CompanySetting;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
+use App\Models\SystemNotification;
+use Illuminate\Support\Facades\DB;
+
 
 
 class AppServiceProvider extends ServiceProvider
@@ -51,6 +55,30 @@ class AppServiceProvider extends ServiceProvider
         View::share('defaultExchangeRate', $defaultRate);
     }
 
+    View::composer('*', function ($view) {
+        if (Auth::check()) {
+            $userId = Auth::id();
+            
+            // Lấy 15 thông báo mới nhất
+            $globalNotifications = SystemNotification::orderBy('created_at', 'desc')->take(15)->get();
+            
+            // Lấy danh sách ID các thông báo user ĐÃ ĐỌC
+            $readNotiIds = DB::table('user_read_notifications')
+                ->where('user_id', $userId)
+                ->pluck('notification_id')->toArray();
+            
+            $unreadCount = 0;
+            foreach ($globalNotifications as $noti) {
+                // Kiểm tra xem ID của thông báo có nằm trong mảng đã đọc không
+                $noti->is_read = in_array($noti->id, $readNotiIds); 
+                if (!$noti->is_read) {
+                    $unreadCount++;
+                }
+            }
+
+            $view->with(compact('globalNotifications', 'unreadCount'));
+        }
+    });
         
     }
 }

@@ -177,6 +177,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
+                        href="{{ route('admin.notifications.index') }}">
+                        <i class="bi bi-bell"></i> Quản lý Thông báo
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.articles.*') ? 'active' : '' }}"
                         href="{{ route('admin.articles.index') }}">
                         <i class="bi bi-newspaper"></i> Quản lý Bài viết

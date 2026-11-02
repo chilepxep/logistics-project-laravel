@@ -1,243 +1,290 @@
-    <nav class="navbar navbar-expand-lg top-navbar px-3 shadow-sm" style="background-color: #0b3a68;">
-        <div class="container-fluid">
+   <style>
+/* Tùy chỉnh thanh cuộn cho khu vực thông báo */
+.notif-content::-webkit-scrollbar {
+    width: 5px;
+    /* Làm thanh cuộn mỏng lại */
+}
 
-            <!-- Logo -->
-            <a href="{{ route('homepage') }}" class="navbar-brand">
-                <img src="{{ asset('images/logo_3.png') }}" class="img-fluid logo" alt="HTKK 360">
-            </a>
+.notif-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
 
-            <!-- Button mobile -->
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
-                data-bs-target="#userNavbar" aria-controls="userNavbar" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <i class="bi bi-list text-white fs-2"></i>
-            </button>
+.notif-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
 
-            <!-- Menu -->
-            <div class="collapse navbar-collapse" id="userNavbar">
+.notif-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+   </style>
 
-                <div class="d-flex align-items-center text-white font-14 ms-auto user-menu">
+   <nav class="navbar navbar-expand-lg top-navbar px-3 shadow-sm" style="background-color: #0b3a68;">
+       <div class="container-fluid">
 
-                    <!-- Số dư -->
-                    <span class="me-4 balance">
-                        Số dư:
-                        <strong class="text-warning fs-6">
-                            {{ number_format(Auth::user()->so_du ?? 0, 0, ',', '.') }}đ
-                        </strong>
-                        <i class="bi bi-wallet2 text-warning ms-1"></i>
-                    </span>
+           <!-- Logo -->
+           <a href="{{ route('homepage') }}" class="navbar-brand">
+               <img src="{{ asset('images/logo_3.png') }}" class="img-fluid logo" alt="HTKK 360">
+           </a>
 
-                    <!-- Giỏ hàng -->
-                    <a href="{{ route('order.all') }}"
-                        class="text-white text-decoration-none me-3 position-relative nav-icon">
-                        <i class="bi bi-cart3 fs-5"></i>
+           <!-- Button mobile -->
+           <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+               data-bs-target="#userNavbar" aria-controls="userNavbar" aria-expanded="false"
+               aria-label="Toggle navigation">
+               <i class="bi bi-list text-white fs-2"></i>
+           </button>
 
-                        <!-- Chỉ hiển thị số lượng khi người dùng đã đăng nhập -->
-                        @auth
-                        @php
-                        $userId = Auth::id();
+           <!-- Menu -->
+           <div class="collapse navbar-collapse" id="userNavbar">
 
-                        // Đếm tổng số kiện hàng thuộc về Đơn mua hộ HOẶC Đơn ký gửi của user này
-                        $tongDon = \App\Models\Package::whereHas('order', function ($query) use ($userId) {
-                        $query->where('user_id', $userId);
-                        })->orWhereHas('consignmentOrder', function ($query) use ($userId) {
-                        $query->where('user_id', $userId);
-                        })->count();
-                        @endphp
+               <div class="d-flex align-items-center text-white font-14 ms-auto user-menu">
 
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ $tongDon > 99 ? '99+' : $tongDon }}
-                        </span>
-                        @else
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            0
-                        </span>
-                        @endauth
-                    </a>
-                    <!-- Email -->
-                    <a href="{{ route('feedback.index') }}" class="text-white text-decoration-none me-3 nav-icon">
-                        <i class="bi bi-envelope fs-5"></i>
-                    </a>
+                   <!-- Số dư -->
+                   <span class="me-4 balance">
+                       Số dư:
+                       <strong class="text-warning fs-6">
+                           {{ number_format(Auth::user()->so_du ?? 0, 0, ',', '.') }}đ
+                       </strong>
+                       <i class="bi bi-wallet2 text-warning ms-1"></i>
+                   </span>
 
-                    <!-- Nút chuông thông báo -->
-                    <div class="dropdown">
-                        <a href="#" class="text-white text-decoration-none me-3 position-relative nav-icon"
-                            id="bellDropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                            data-bs-auto-close="outside">
-                            <i class="bi bi-bell fs-5"></i>
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                7
-                            </span>
-                        </a>
+                   <!-- Giỏ hàng -->
+                   <a href="{{ route('order.all') }}"
+                       class="text-white text-decoration-none me-3 position-relative nav-icon">
+                       <i class="bi bi-cart3 fs-5"></i>
 
-                        <!-- Khối Dropdown Menu -->
-                        <div class="dropdown-menu dropdown-menu-end border-0 notif-dropdown"
-                            aria-labelledby="bellDropdown">
+                       <!-- Chỉ hiển thị số lượng khi người dùng đã đăng nhập -->
+                       @auth
+                       @php
+                       $userId = Auth::id();
 
-                            <!-- Header -->
-                            <div class="bg-white text-center fw-bold py-2 border-bottom font-14"
-                                style="color: #0b3a68;">
-                                THÔNG BÁO MỚI
-                            </div>
+                       // Đếm tổng số kiện hàng thuộc về Đơn mua hộ HOẶC Đơn ký gửi của user này
+                       $tongDon = \App\Models\Package::whereHas('order', function ($query) use ($userId) {
+                       $query->where('user_id', $userId);
+                       })->orWhereHas('consignmentOrder', function ($query) use ($userId) {
+                       $query->where('user_id', $userId);
+                       })->count();
+                       @endphp
 
-                            <!-- Body: Chia 2 cột -->
-                            <div class="d-flex">
+                       <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                           {{ $tongDon > 99 ? '99+' : $tongDon }}
+                       </span>
+                       @else
+                       <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                           0
+                       </span>
+                       @endauth
+                   </a>
+                   <!-- Email -->
+                   <a href="{{ route('feedback.index') }}" class="text-white text-decoration-none me-3 nav-icon">
+                       <i class="bi bi-envelope fs-5"></i>
+                   </a>
 
-                                <!-- Cột trái: Sidebar Tabs -->
-                                <div class="nav flex-column notif-sidebar" id="notif-tabs" role="tablist"
-                                    aria-orientation="vertical">
-                                    <!-- Tab 1: Hệ thống (Ngôi sao) -->
-                                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#notif-star"
-                                        type="button" role="tab">
-                                        <i class="bi bi-star"></i>
-                                        <span class="badge bg-danger rounded-pill badge-count text-white">8</span>
-                                    </button>
-                                    <!-- Tab 2: Tài chính ($) -->
-                                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notif-money"
-                                        type="button" role="tab">
-                                        <i class="bi bi-currency-dollar"></i>
-                                        <span class="badge bg-danger rounded-pill badge-count text-white">2</span>
-                                    </button>
-                                    <!-- Tab 3: Kiện hàng (Hộp) -->
-                                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notif-box"
-                                        type="button" role="tab">
-                                        <i class="bi bi-box-seam"></i>
-                                    </button>
-                                    <!-- Tab 4: Khiếu nại (Mặt buồn) -->
-                                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notif-sad"
-                                        type="button" role="tab">
-                                        <i class="bi bi-emoji-frown"></i>
-                                    </button>
-                                    <!-- Tab 5: Tin nhắn (Chat) -->
-                                    <button class="nav-link border-bottom-0" data-bs-toggle="pill"
-                                        data-bs-target="#notif-chat" type="button" role="tab">
-                                        <i class="bi bi-chat-dots"></i>
-                                    </button>
-                                </div>
+                   <!-- Nút chuông thông báo -->
+                   @php
+                   // 1. Tab Hệ thống
+                   $systemNotis = $globalNotifications->where('type', 'system');
+                   $unreadSystem = $systemNotis->where('is_read', false)->count();
 
-                                <!-- Cột phải: Nội dung Thông báo -->
-                                <div class="tab-content flex-grow-1 notif-content" id="notif-tabContent">
+                   // 2. Tab Khuyến mãi
+                   $promoNotis = $globalNotifications->where('type', 'promotion');
+                   $unreadPromo = $promoNotis->where('is_read', false)->count();
 
-                                    <!-- Nội dung Tab 1 (Ngôi sao) -->
-                                    <div class="tab-pane fade show active" id="notif-star" role="tabpanel">
-                                        <a href="#" class="text-decoration-none d-block notif-item unread">
-                                            <div class="notif-text">Chương trình tri ân khách hàng HTKK tháng 10.2023
-                                            </div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> 2 giờ trước</div>
-                                        </a>
-                                        <a href="#" class="text-decoration-none d-block notif-item unread">
-                                            <div class="notif-text">Cập nhật bảng giá dịch vụ mới nhất tại HTKK áp dụng
-                                                từ ngày 27/10/2023</div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> Hôm qua, 14:30
-                                            </div>
-                                        </a>
-                                        <a href="#" class="text-decoration-none d-block notif-item">
-                                            <div class="notif-text">Ưu đãi đặc biệt chào đón ngày lễ mua sắm lớn nhất
-                                                năm 11.11.2023</div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> 10/10/2023</div>
-                                        </a>
-                                        <a href="#" class="text-decoration-none d-block notif-item">
-                                            <div class="notif-text">Điều chỉnh tỷ giá tệ từ 8:00 PM ngày 23.11.2023
-                                            </div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> 09/10/2023</div>
-                                        </a>
-                                        <a href="#" class="text-decoration-none d-block notif-item">
-                                            <div class="notif-text">Hướng dẫn sử dụng hệ thống phiên bản mới</div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> 05/10/2023</div>
-                                        </a>
-                                    </div>
+                   // 3. Tab Tài chính
+                   $financeNotis = $globalNotifications->where('type', 'price');
+                   $unreadFinance = $financeNotis->where('is_read', false)->count();
+                   @endphp
 
-                                    <!-- Nội dung Tab 2 (Tài chính) -->
-                                    <div class="tab-pane fade" id="notif-money" role="tabpanel">
-                                        <a href="#" class="text-decoration-none d-block notif-item unread">
-                                            <div class="notif-text">Tài khoản của bạn vừa được cộng +1.000.000đ từ lệnh
-                                                nạp tiền.</div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> Vài giây trước
-                                            </div>
-                                        </a>
-                                        <a href="#" class="text-decoration-none d-block notif-item">
-                                            <div class="notif-text">Thanh toán thành công đơn hàng #DH123456. Số dư bị
-                                                trừ: -500.000đ.</div>
-                                            <div class="notif-time"><i class="bi bi-clock me-1"></i> 2 ngày trước</div>
-                                        </a>
-                                    </div>
+                   <!-- Nút chuông thông báo -->
+                   <div class="dropdown">
+                       <a href="#" class="text-white text-decoration-none me-3 position-relative nav-icon"
+                           id="bellDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                           data-bs-auto-close="outside">
+                           <i class="bi bi-bell fs-5"></i>
+                           <!-- Tổng số thông báo chưa đọc -->
+                           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                               id="global-noti-badge"
+                               style="display: '{{ $unreadCount > 0 ? 'inline-block' : 'none' }};'">
+                               {{ $unreadCount }}
+                           </span>
+                       </a>
 
-                                    <!-- Các Tab khác (Trống) -->
-                                    <div class="tab-pane fade" id="notif-box" role="tabpanel">
-                                        <div class="text-center p-4 text-muted mt-5">
-                                            <i class="bi bi-box-seam fs-1 d-block mb-2 opacity-50"></i>
-                                            Chưa có thông báo về kiện hàng.
-                                        </div>
-                                    </div>
+                       <!-- Khối Dropdown Menu -->
+                       <div class="dropdown-menu dropdown-menu-end border-0 notif-dropdown"
+                           aria-labelledby="bellDropdown">
+                           <!-- Header -->
+                           <div class="bg-white text-center fw-bold py-2 border-bottom font-14" style="color: #0b3a68;">
+                               THÔNG BÁO MỚI
+                           </div>
 
-                                    <div class="tab-pane fade" id="notif-sad" role="tabpanel">
-                                        <div class="text-center p-4 text-muted mt-5">
-                                            <i class="bi bi-check-circle fs-1 d-block mb-2 text-success opacity-50"></i>
-                                            Không có khiếu nại nào cần xử lý.
-                                        </div>
-                                    </div>
+                           <!-- Body: Chia 2 cột -->
+                           <div class="d-flex">
+                               <!-- Cột trái: Sidebar Tabs -->
+                               <div class="nav flex-column notif-sidebar" id="notif-tabs" role="tablist"
+                                   aria-orientation="vertical">
+                                   <!-- Tab 1: Hệ thống (Dùng icon cái loa hoặc chuông) -->
+                                   <button class="nav-link active position-relative" data-bs-toggle="pill"
+                                       data-bs-target="#notif-system" type="button" role="tab">
+                                       <i class="bi bi-megaphone"></i>
+                                       <span class="badge bg-danger rounded-pill badge-count text-white"
+                                           id="badge-system"
+                                           style="display: '@if($unreadSystem > 0) inline-block @else none @endif;'">
+                                           {{ $unreadSystem }}
+                                       </span>
+                                   </button>
 
-                                    <div class="tab-pane fade" id="notif-chat" role="tabpanel">
-                                        <div class="text-center p-4 text-muted mt-5">
-                                            <i class="bi bi-chat-dots fs-1 d-block mb-2 opacity-50"></i>
-                                            Chưa có tin nhắn mới.
-                                        </div>
-                                    </div>
+                                   <!-- Tab 2: Khuyến mãi (Ngôi sao) -->
+                                   <button class="nav-link position-relative" data-bs-toggle="pill"
+                                       data-bs-target="#notif-promo" type="button" role="tab">
+                                       <i class="bi bi-star"></i>
+                                       <span class="badge bg-danger rounded-pill badge-count text-white"
+                                           id="badge-promo"
+                                           style="display:' @if($unreadPromo > 0) inline-block @else none @endif;'">
+                                           {{ $unreadPromo }}
+                                       </span>
+                                   </button>
 
-                                </div>
-                            </div>
+                                   <!-- Tab 3: Tài chính ($) -->
+                                   <button class="nav-link position-relative" data-bs-toggle="pill"
+                                       data-bs-target="#notif-money" type="button" role="tab">
+                                       <i class="bi bi-currency-dollar"></i>
+                                       <span class="badge bg-danger rounded-pill badge-count text-white"
+                                           id="badge-money"
+                                           style='display: "@if($unreadFinance > 0) inline-block @else none @endif;"'>
+                                           {{ $unreadFinance }}
+                                       </span>
+                                   </button>
+                                   <!-- Tab 3, 4, 5 -->
+                                   <!-- <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notif-box"
+                                        type="button" role="tab"><i class="bi bi-box-seam"></i></button> -->
+                                   <!--<button class="nav-link" data-bs-toggle="pill" data-bs-target="#notif-sad"
+                                        type="button" role="tab"><i class="bi bi-emoji-frown"></i></button> -->
+                                   <button class="nav-link border-bottom-0" data-bs-toggle="pill"
+                                       data-bs-target="#notif-chat" type="button" role="tab"><i
+                                           class="bi bi-chat-dots"></i></button>
+                               </div>
 
-                            <!-- Footer -->
-                            <div class="bg-light text-center border-top p-2">
-                                <a href="#" class="text-decoration-none fw-bold"
-                                    style="color: #0b3a68; font-size: 14px;">Xem tất cả</a>
-                            </div>
+                               <!-- Cột phải: Nội dung Thông báo -->
+                               <div class="tab-content flex-grow-1 notif-content" id="notif-tabContent"
+                                   style="max-height: 400px; overflow-y: auto;">
 
-                        </div>
-                    </div>
+                                   <!-- NỘI DUNG TAB 1: HỆ THỐNG -->
+                                   <div class="tab-pane fade show active" id="notif-system" role="tabpanel">
+                                       @forelse($systemNotis as $noti)
+                                       <a href="javascript:void(0)"
+                                           class="text-decoration-none d-block notif-item {{ $noti->is_read ? '' : 'unread' }}"
+                                           onclick="window.openNotification(this, '{{ $noti->id }}', 'badge-system')">
+                                           <div class="notif-text">{{ $noti->title }}</div>
+                                           <div class="notif-time"><i class="bi bi-clock me-1"></i>
+                                               {{ $noti->created_at->diffForHumans() }}</div>
+                                           <div id="noti-content-{{ $noti->id }}" class="d-none">{!! $noti->content !!}
+                                           </div>
+                                       </a>
+                                       @empty
+                                       <div class="text-center p-4 text-muted mt-4"><i
+                                               class="bi bi-megaphone fs-1 opacity-50 d-block mb-2"></i>Chưa có thông
+                                           báo hệ thống.</div>
+                                       @endforelse
+                                   </div>
 
-                    <!-- Avatar -->
-                    <div class="dropdown">
+                                   <!-- NỘI DUNG TAB 2: KHUYẾN MÃI -->
+                                   <div class="tab-pane fade" id="notif-promo" role="tabpanel">
+                                       @forelse($promoNotis as $noti)
+                                       <a href="javascript:void(0)"
+                                           class="text-decoration-none d-block notif-item {{ $noti->is_read ? '' : 'unread' }}"
+                                           onclick="window.openNotification(this, '{{ $noti->id }}', 'badge-promo')">
+                                           <div class="notif-text">{{ $noti->title }}</div>
+                                           <div class="notif-time"><i class="bi bi-clock me-1"></i>
+                                               {{ $noti->created_at->diffForHumans() }}</div>
+                                           <div id="noti-content-{{ $noti->id }}" class="d-none">{!! $noti->content !!}
+                                           </div>
+                                       </a>
+                                       @empty
+                                       <div class="text-center p-4 text-muted mt-4"><i
+                                               class="bi bi-star fs-1 opacity-50 d-block mb-2"></i>Chưa có khuyến mãi.
+                                       </div>
+                                       @endforelse
+                                   </div>
 
-                        <a href="#" class="d-block link-light text-decoration-none dropdown-toggle"
-                            data-bs-toggle="dropdown" aria-expanded="false">
+                                   <!-- NỘI DUNG TAB 3: TÀI CHÍNH -->
+                                   <div class="tab-pane fade" id="notif-money" role="tabpanel">
+                                       @forelse($financeNotis as $noti)
+                                       <a href="javascript:void(0)"
+                                           class="text-decoration-none d-block notif-item {{ $noti->is_read ? '' : 'unread' }}"
+                                           onclick="window.openNotification(this, '{{ $noti->id }}', 'badge-money')">
+                                           <div class="notif-text">{{ $noti->title }}</div>
+                                           <div class="notif-time"><i class="bi bi-clock me-1"></i>
+                                               {{ $noti->created_at->diffForHumans() }}</div>
+                                           <div id="noti-content-{{ $noti->id }}" class="d-none">{!! $noti->content !!}
+                                           </div>
+                                       </a>
+                                       @empty
+                                       <div class="text-center p-4 text-muted mt-4"><i
+                                               class="bi bi-wallet2 fs-1 opacity-50 d-block mb-2"></i>Chưa có biến động
+                                           số dư.</div>
+                                       @endforelse
+                                   </div>
 
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten ?? 'User') }}&background=ff6a00&color=fff"
-                                alt="Avatar" width="36" height="36" class="rounded-circle">
-                        </a>
+                                   <!-- CÁC TAB CÒN LẠI (Trống) -->
+                                   <div class="tab-pane fade" id="notif-chat" role="tabpanel">
+                                       <div class="text-center p-4 text-muted mt-4"><i
+                                               class="bi bi-chat-dots fs-1 d-block mb-2 opacity-50"></i>Chưa có tin
+                                           nhắn mới.</div>
+                                   </div>
+                               </div>
+                           </div>
 
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                           <!-- Footer -->
+                           <div class="bg-light text-center border-top p-2">
+                               <a href="javascript:void(0)" onclick="window.markAllNotificationsRead()"
+                                   class="text-decoration-none fw-bold" style="color: #0b3a68; font-size: 14px;">
+                                   <i class="bi bi-check2-all me-1"></i> Đánh dấu đã đọc tất cả
+                               </a>
+                           </div>
+                       </div>
+                   </div>
 
-                            <li>
-                                <a href="{{ route('profile.edit') }}" class="dropdown-item" href="#">
-                                    <i class="bi bi-person me-2"></i>
-                                    Hồ sơ
-                                </a>
-                            </li>
+                   <!-- Avatar -->
+                   <div class="dropdown">
 
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
+                       <a href="#" class="d-block link-light text-decoration-none dropdown-toggle"
+                           data-bs-toggle="dropdown" aria-expanded="false">
 
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
+                           <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten ?? 'User') }}&background=ff6a00&color=fff"
+                               alt="Avatar" width="36" height="36" class="rounded-circle">
+                       </a>
 
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bi bi-box-arrow-right me-2"></i>
-                                        Đăng xuất
-                                    </button>
-                                </form>
-                            </li>
+                       <ul class="dropdown-menu dropdown-menu-end shadow">
 
-                        </ul>
+                           <li>
+                               <a href="{{ route('profile.edit') }}" class="dropdown-item" href="#">
+                                   <i class="bi bi-person me-2"></i>
+                                   Hồ sơ
+                               </a>
+                           </li>
 
-                    </div>
+                           <li>
+                               <hr class="dropdown-divider">
+                           </li>
 
-                </div>
+                           <li>
+                               <form action="{{ route('logout') }}" method="POST">
+                                   @csrf
 
-            </div>
+                                   <button type="submit" class="dropdown-item text-danger">
+                                       <i class="bi bi-box-arrow-right me-2"></i>
+                                       Đăng xuất
+                                   </button>
+                               </form>
+                           </li>
 
-        </div>
-    </nav>
+                       </ul>
+
+                   </div>
+
+               </div>
+
+           </div>
+
+       </div>
+   </nav>

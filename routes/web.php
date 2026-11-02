@@ -130,7 +130,7 @@ Route::post('/dang-xuat',[AuthController::class,'logout'])->name('logout')->midd
 //đăng nhập mới thực hiện được
 Route::middleware('auth')->group(function () {
 
-Route::get('/dashboard', function () {
+    Route::get('/dashboard', function () {
         return view('user.dashboard');
     })->name('dashboard');
 
@@ -252,6 +252,11 @@ Route::get('/dashboard', function () {
 
     // Tất cả đơn hàng (Gộp Mua hộ + Ký gửi)
     Route::get('/tat-ca-don-hang', [App\Http\Controllers\OrderController::class, 'allOrders'])->name('order.all');
+
+    //Thông báo
+    Route::post('/notifications/read/{id}', [\App\Http\Controllers\NotificationController::class, 'markRead']);
+    //đánh dấu đọc TẤT CẢ
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead']);
 });
 
 
@@ -389,6 +394,12 @@ Route::prefix('admin')->group(function () {
             Route::post('/exchange-rates', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'storeRate'])->name('admin.rates.store');
             Route::put('/exchange-rates/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'updateRate'])->name('admin.rates.update');
             Route::delete('/exchange-rates/{id}', [App\Http\Controllers\Admin\LocationCurrencyController::class, 'destroyRate'])->name('admin.rates.destroy');
+
+            //Quản lý thông báo
+            Route::post('notifications/upload-image', [\App\Http\Controllers\Admin\SystemNotificationController::class, 'uploadImage'])
+            ->name('admin.notifications.upload_image');
+            Route::resource('notifications', \App\Http\Controllers\Admin\SystemNotificationController::class)
+            ->names('admin.notifications');
 
         });
         

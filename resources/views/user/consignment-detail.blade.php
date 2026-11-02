@@ -39,6 +39,10 @@
             <span class="badge bg-warning text-dark px-3 py-2 fs-6">Chờ xử lý</span>
             @elseif($order->trang_thai == 'da_xu_ly')
             <span class="badge bg-info text-dark px-3 py-2 fs-6">Đã xử lý</span>
+            @elseif($order->trang_thai == 'xac_nhan_dat_hang')
+            <span class="badge bg-info text-dark px-2 py-1">Xác nhận đặt hàng</span>
+            @elseif($order->trang_thai == 'dang_giao_hang')
+            <span class="badge bg-info text-dark px-2 py-1">Đang giao hàng</span>
             @else
             <span class="badge bg-success px-3 py-2 fs-6">Hoàn thành</span>
             @endif
