@@ -183,10 +183,10 @@ Route::middleware('auth')->group(function () {
 
 
     // Giao diện Thêm kiện hàng
-    Route::get('/kien-hang/them', [App\Http\Controllers\PackageController::class, 'create'])->name('package.create');
+    // Route::get('/kien-hang/them', [App\Http\Controllers\PackageController::class, 'create'])->name('package.create');
 
-    // Xử lý lưu kiện hàng mới
-    Route::post('/kien-hang/them', [App\Http\Controllers\PackageController::class, 'store'])->name('package.store')->middleware('throttle:5,1');;
+    //  Xử lý lưu kiện hàng mới
+    // Route::post('/kien-hang/them', [App\Http\Controllers\PackageController::class, 'store'])->name('package.store')->middleware('throttle:5,1');;
 
     // Xem chi tiết kiện hàng
     Route::get('/kien-hang/chi-tiet/{id}', [App\Http\Controllers\PackageController::class, 'show'])->name('package.show');

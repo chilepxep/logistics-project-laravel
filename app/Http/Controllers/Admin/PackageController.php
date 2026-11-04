@@ -79,6 +79,14 @@ class PackageController extends Controller
         $tinhTrangCu = $package->tinh_trang;
         $danhSachKhoVN = \App\Models\Warehouse::where('loai_kho', 'VN')->pluck('id')->toArray();
 
+
+        $request->merge([
+        'phi_van_chuyen_noi_dia' => (int) str_replace('.', '', $request->phi_van_chuyen_noi_dia),
+        'phi_khac'               => (int) str_replace('.', '', $request->phi_khac),
+        'chiet_khau'             => (int) str_replace('.', '', $request->chiet_khau),
+        'thanh_tien'             => (int) str_replace('.', '', $request->thanh_tien),
+        ]);
+        
         $request->validate([
             'tinh_trang' => 'required|string',
             'tru_so_id'  => 'required|exists:warehouses,id',

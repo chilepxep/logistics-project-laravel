@@ -17,7 +17,7 @@ public function index(Request $request)
 {
     $user = Auth::user();
 
-    // 1. Lấy toàn bộ kiện hàng và các bảng liên quan (Chỉ lấy hàng của nhân viên để tối ưu)
+    // 1. Lấy toàn bộ kiện hàng và các bảng liên quan
     $query = Package::with(['order', 'consignmentOrder', 'delivery'])->orderByDesc('updated_at');
     
     if ($user->vai_tro === 'nhan_vien') {
@@ -26,23 +26,40 @@ public function index(Request $request)
     
     $allPackages = $query->get();
 
-    // 2. DÙNG CHÍNH XÁC LOGIC CỦA BẠN ĐỂ LỌC (Collection Filter)
+    // 2. LỌC: Bỏ chặn trạng thái, chỉ xét vị trí Kho đích
     $filteredPackages = $allPackages->filter(function ($package) {
-        if ($package->order_id && $package->tru_so_id == $package->order->tru_so_nhan_hang_id) {
-            return true;
-        } elseif ($package->consignment_order_id && $package->tru_so_id == $package->consignmentOrder->kho_vn_id) {
-            return true;
+        
+        // --- XÉT ĐƠN MUA HỘ ---
+        if ($package->order_id && $package->order) {
+            if ($package->tru_so_id == $package->order->tru_so_nhan_hang_id) {
+                return true;
+            }
+        } 
+        
+        // --- XÉT ĐƠN KÝ GỬI ---
+        elseif ($package->consignment_order_id && $package->consignmentOrder) {
+            $co = $package->consignmentOrder;
+
+            // Xác định kho đích linh hoạt theo chiều vận chuyển
+            $khoDichId = ($co->chieu_van_chuyen === 'di_qt') 
+                            ? $co->supplier_id // Chiều đi QT: Đích là Kho Quốc Tế
+                            : $co->kho_vn_id;  // Chiều về VN: Đích là Kho VN
+
+            if ($package->tru_so_id == $khoDichId) {
+                return true;
+            }
         }
+
         return false;
     });
 
-    // 3. Lọc theo trạng thái giao hàng nếu có chọn trên Form
-    if ($request->filled('trang_thai_giao')) {
+    // 3. Lọc theo trạng thái giao hàng 
+    if ($request->filled('trang_thai')) {
         $filteredPackages = $filteredPackages->filter(function ($package) use ($request) {
-            if ($request->trang_thai_giao === 'cho_giao') {
+            if ($request->trang_thai === 'cho_giao') {
                 return is_null($package->delivery);
             }
-            return $package->delivery && $package->delivery->trang_thai === $request->trang_thai_giao;
+            return $package->delivery && $package->delivery->trang_thai === $request->trang_thai;
         });
     }
 
@@ -62,6 +79,7 @@ public function index(Request $request)
 
     return view('admin.deliveries.index', compact('packagesReadyForDelivery'));
 }
+
 
     // 2. Tạo hoặc Cập nhật thông tin điều phối (Từ Modal)
     public function store(Request $request)
@@ -101,7 +119,7 @@ public function index(Request $request)
         return back()->with('success', 'Đã điều phối giao hàng thành công!');
     }
 
-// 3. Cập nhật trạng thái giao hàng 
+    // 3. Cập nhật trạng thái giao hàng 
     public function update(Request $request, $id)
     {
         $delivery = Delivery::findOrFail($id);
@@ -157,6 +175,25 @@ public function index(Request $request)
                 'title'        => 'Giao hàng thành công',
                 'description'  => $motaTracking,
             ]);
+
+            // 3. TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI THANH TOÁN CHO ĐƠN HÀNG CHA
+            if ($package->order_id) {
+                $order = $package->order;
+                if ($order && $order->trang_thai_thanh_toan !== 'da_thanh_toan') {
+                    $order->update([
+                        'trang_thai_thanh_toan' => 'da_thanh_toan',
+                        'ngay_thanh_toan'       => now(),
+                    ]);
+                }
+            } elseif ($package->consignment_order_id) {
+                $consignmentOrder = $package->consignmentOrder;
+                if ($consignmentOrder && $consignmentOrder->trang_thai_thanh_toan !== 'da_thanh_toan') {
+                    $consignmentOrder->update([
+                        'trang_thai_thanh_toan' => 'da_thanh_toan',
+                        'ngay_thanh_toan'       => now(),
+                    ]);
+                }
+            }
         }
 
         return back()->with('success', 'Cập nhật trạng thái giao hàng thành công!');

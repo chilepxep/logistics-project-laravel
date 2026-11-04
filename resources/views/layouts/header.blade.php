@@ -292,11 +292,6 @@
                             @if(isset($dynamicCategories['huong-dan']) &&
                             $dynamicCategories['huong-dan']->articles->count() > 0)
 
-                            <!-- Thêm một đường kẻ ngang nhạt để phân biệt web tĩnh và web động (Tuỳ chọn) -->
-                            <li>
-                                <hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.2);">
-                            </li>
-
                             <!-- Vòng lặp in ra bài viết -->
                             @foreach($dynamicCategories['huong-dan']->articles as $article)
                             <li>
@@ -339,17 +334,12 @@
                             @if(isset($dynamicCategories['chinh-sach']) &&
                             $dynamicCategories['chinh-sach']->articles->count() > 0)
 
-                            <!-- Thêm một đường kẻ ngang nhạt để phân biệt web tĩnh và web động (Tuỳ chọn) -->
-                            <li>
-                                <hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.2);">
-                            </li>
-
                             <!-- Vòng lặp in ra bài viết -->
                             @foreach($dynamicCategories['chinh-sach']->articles as $article)
                             <li>
                                 <a class="dropdown-item text-white" href="{{ url('chinh-sach/' . $article->slug) }}">
-                                    <!-- Thêm icon nhỏ cho đẹp -->
-                                    <i class="bi bi-caret-right text-warning"></i> {{ $article->title }}
+
+                                    {{ $article->title }}
                                 </a>
                             </li>
                             @endforeach

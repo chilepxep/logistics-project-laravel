@@ -23,24 +23,23 @@ class AdminController extends Controller
         $currentMonth = $now->month;
         $currentYear = $now->year;
 
-        // 1. TỔNG HỢP 4 THẺ BÀI (Có Fallback Dữ liệu mẫu)
         
-        $stats = [
-            // Doanh thu: Tổng tiền các đơn Order đã hoàn thành + Giao dịch nạp tiền 
-            'doanh_thu_thang' => Order::whereMonth('created_at', $currentMonth)
-                                      ->whereYear('created_at', $currentYear)
-                                      ->where('trang_thai', 'hoan_thanh')
-                                      ->sum('tong_tien') ?: 150500000,
-            
-            // Tổng đơn hàng = Đơn mua hộ + Đơn ký gửi
-            'tong_don_hang' => (Order::count() + ConsignmentOrder::count()) ?: 1285,
-            
-            // Tổng Khách hàng
-            'tong_khach_hang' => User::count() ?: 342,
-            
-            // Khiếu nại chờ xử lý
-            'tong_khieu_nai' => Complaint::where('trang_thai', 'cho_xu_ly')->count() ?: 12
-        ];
+$stats = [
+    // Doanh thu: Tính tổng cột 'thanh_tien' của các kiện hàng (Package) trong tháng
+    'doanh_thu_thang' => \App\Models\Package::whereMonth('created_at', $currentMonth)
+                                            ->whereYear('created_at', $currentYear)
+                                            // ->where('tinh_trang', 'hoan_thanh') 
+                                            ->sum('thanh_tien') ?: 150500000,
+    
+    // Tổng kiện hàng: Đếm toàn bộ số lượng record trong bảng packages
+    'tong_don_hang' => \App\Models\Package::count() ?: 1285,
+    
+    // Tổng Khách hàng (Giữ nguyên)
+    'tong_khach_hang' => \App\Models\User::count() ?: 342,
+    
+    // Khiếu nại chờ xử lý (Giữ nguyên)
+    'tong_khieu_nai' => \App\Models\Complaint::where('trang_thai', 'cho_xu_ly')->count() ?: 0
+];
 
         // 2. BIỂU ĐỒ TĂNG TRƯỞNG (6 THÁNG GẦN NHẤT)
         $chartLabels = [];

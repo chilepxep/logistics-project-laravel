@@ -82,7 +82,7 @@ class OrderListController extends Controller
         'items'               => 'required|array|min:1',
         'items.*.ten_san_pham'=> 'required|string',
         'items.*.so_luong'    => 'required|integer|min:1',
-        'items.*.don_gia'     => 'required|numeric|min:0', // Sửa don_gia_te thành don_gia
+        'items.*.don_gia'     => 'required|numeric|min:0',
     ], [
         'items.required' => 'Đơn hàng phải có ít nhất 1 sản phẩm.'
     ]);
@@ -131,17 +131,27 @@ class OrderListController extends Controller
                 'tong_tien'           => $tongTienThanhToan, // Lưu lại tổng tiền VNĐ mới
             ]);
 
-            // 4. Xử lý danh sách Items
+           // 4. Xử lý danh sách Items và dọn dẹp file
             $existingItemIds = $order->items->pluck('id')->toArray();
             $submittedItemIds = []; 
 
             foreach ($request->items as $index => $itemData) {
                 
                 $hinhAnhUrl = $itemData['hinh_anh_cu'] ?? null;
+                
+                // CÓ UPLOAD ẢNH MỚI
                 if ($request->hasFile("items.{$index}.hinh_anh_file")) {
                     $file = $request->file("items.{$index}.hinh_anh_file");
                     $path = $file->store('uploads/orders', 'public');
                     $hinhAnhUrl = '/storage/' . $path;
+
+                    // Xóa ảnh cũ trên server (nếu có) khi người dùng thay ảnh mới
+                    if (!empty($itemData['hinh_anh_cu'])) {
+                        $oldRelativePath = preg_replace('#^.*/storage/#', '', $itemData['hinh_anh_cu']);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldRelativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldRelativePath);
+                        }
+                    }
                 }
 
                 if (!empty($itemData['id'])) {
@@ -153,7 +163,7 @@ class OrderListController extends Controller
                             'ten_san_pham'       => $itemData['ten_san_pham'],
                             'mau_sac_kich_thuoc' => $itemData['thuoc_tinh'] ?? null,
                             'so_luong'           => $itemData['so_luong'],
-                            'don_gia'            => $itemData['don_gia'], // Đổi tên cột
+                            'don_gia'            => $itemData['don_gia'], 
                             'ghi_chu_khac'       => $itemData['ghi_chu'] ?? null,
                             'hinh_anh_url'       => $hinhAnhUrl,
                         ]);
@@ -168,7 +178,7 @@ class OrderListController extends Controller
                         'ten_san_pham'       => $itemData['ten_san_pham'],
                         'mau_sac_kich_thuoc' => $itemData['thuoc_tinh'] ?? null,
                         'so_luong'           => $itemData['so_luong'],
-                        'don_gia'            => $itemData['don_gia'], // Đổi tên cột
+                        'don_gia'            => $itemData['don_gia'], 
                         'ghi_chu_khac'       => $itemData['ghi_chu'] ?? null,
                         'hinh_anh_url'       => $hinhAnhUrl,
                     ]);
@@ -176,9 +186,23 @@ class OrderListController extends Controller
                 }
             }
 
-            // Xóa Item thừa
+            // Xóa Item thừa và Dọn rác file vật lý
             $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
+            
             if (count($itemsToDelete) > 0) {
+                // Lấy các item sắp bị xóa để quét đường dẫn ảnh
+                $deletedItems = OrderItem::whereIn('id', $itemsToDelete)->get();
+                
+                foreach ($deletedItems as $item) {
+                    if (!empty($item->hinh_anh_url)) {
+                        $relativePath = preg_replace('#^.*/storage/#', '', $item->hinh_anh_url);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                }
+                
+                // Xóa Database
                 OrderItem::whereIn('id', $itemsToDelete)->delete();
             }
         });
@@ -190,7 +214,7 @@ class OrderListController extends Controller
     }
 }
 
-    // 3. Hàm xử lý Xóa đơn hàng
+// 3. Hàm xử lý Xóa đơn hàng (Dành cho Người Dùng)
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
@@ -200,21 +224,46 @@ class OrderListController extends Controller
             abort(403, 'Bạn không có quyền xóa đơn hàng này!');
         }
 
-    
+        // Quy tắc: Chỉ cho phép xóa khi đơn hàng đang 'chờ xử lý'
         if ($order->trang_thai !== 'cho_xu_ly') {
             return back()->withErrors('Bạn chỉ có thể xóa đơn hàng đang ở trạng thái Chờ xử lý.');
         }
 
         try {
-            DB::transaction(function () use ($order) {
-                // Bước 1: Xóa toàn bộ sản phẩm (items) thuộc về đơn hàng này trước 
-                OrderItem::where('order_id', $order->id)->delete();
+            DB::transaction(function () use ($order, $id) {
+                // Bước 1: Xóa các khiếu nại liên quan
+                \App\Models\Complaint::where('order_id', $id)->delete();
 
-                // Bước 2: Xóa đơn hàng cha
+                // Bước 2: TÌM VÀ XÓA CÁC SẢN PHẨM CON CÙNG FILE ẢNH VẬT LÝ
+                $orderItems = \App\Models\OrderItem::where('order_id', $id)->get();
+                
+                foreach ($orderItems as $item) {
+                    // Kiểm tra xem sản phẩm có ảnh không
+                    if (!empty($item->hinh_anh_url) && str_starts_with($item->hinh_anh_url, '/storage/')) {
+                        // Cắt bỏ '/storage/' để lấy đường dẫn tương đối
+                        $relativePath = str_replace('/storage/', '', $item->hinh_anh_url);
+
+                        // Xóa file vật lý khỏi server nếu file đó thực sự tồn tại
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        } 
+                    }
+                    // Xóa dòng dữ liệu trong DB
+                    $item->delete();
+                }
+
+                // Bước 3: Tìm và xóa các Kiện hàng (Packages) + Lịch sử Tracking
+                $packages = \App\Models\Package::where('order_id', $id)->get();
+                foreach ($packages as $pkg) {
+                    \App\Models\PackageTracking::where('package_id', $pkg->id)->delete();
+                    $pkg->delete();
+                }
+
+                // Bước 4: Cuối cùng, xóa đơn hàng cha
                 $order->delete();
             });
 
-            return redirect()->route('list.order')->with('success', 'Đã xóa đơn hàng thành công!');
+            return redirect()->route('list.order')->with('success', 'Đã xóa đơn mua hộ và dọn sạch dữ liệu liên quan thành công!');
 
         } catch (\Exception $e) {
             return back()->withErrors('Lỗi hệ thống khi xóa: ' . $e->getMessage());

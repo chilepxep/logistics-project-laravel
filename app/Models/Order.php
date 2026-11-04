@@ -9,7 +9,8 @@ class Order extends Model
 {
    protected $fillable = [
         'ma_don_hang', 'user_id', 'supplier_id', 'tru_so_nhan_hang_id', 
-        'yeu_cau_toc_do', 'trang_thai', 'tong_tien','country_id', 'kho_hien_tai_id',
+        'yeu_cau_toc_do', 'trang_thai', 'tong_tien','country_id', 'kho_hien_tai_id','trang_thai_thanh_toan',
+        'ngay_thanh_toan'
     ];
 
     // Quan hệ 1-Nhiều với Chi tiết đơn hàng

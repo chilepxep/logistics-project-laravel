@@ -85,7 +85,7 @@ class ConsignmentOrderController extends Controller
             $request->validate([
                 'chieu_van_chuyen'      => 'required|in:ve_vn,di_qt',
                 'country_id'            => 'required|exists:countries,id',
-                'supplier_id'           => 'required|exists:suppliers,id',
+                'supplier_id'           => 'required|exists:warehouses,id',
                 'tru_so_nhan_hang_id'   => 'required|integer', 
                 'kho_hien_tai_id'       => 'nullable|exists:warehouses,id',
                 'trang_thai_thanh_toan' => 'required|in:chua_thanh_toan,da_thanh_toan',
@@ -131,7 +131,7 @@ class ConsignmentOrderController extends Controller
                         'ngay_nhan_hang'   => $request->ngay_nhan_hang, 
                     ]);
 
-                    // 4. CẬP NHẬT CÁC SẢN PHẨM 
+                   // 4. CẬP NHẬT CÁC SẢN PHẨM VÀ XỬ LÝ ẢNH
                     $existingItemIds = $order->items->pluck('id')->toArray();
                     $submittedItemIds = [];
                     $hasDongGo = false;
@@ -140,10 +140,20 @@ class ConsignmentOrderController extends Controller
                     $stt = 1;
                     foreach ($request->packages as $index => $pkg) {
                         $hinhAnhUrl = $pkg['hinh_anh_cu'] ?? null;
+                        
+                        // NẾU CÓ UPLOAD ẢNH MỚI ĐỂ THAY THẾ
                         if ($request->hasFile("packages.{$index}.hinh_anh_file")) {
                             $file = $request->file("packages.{$index}.hinh_anh_file");
                             $path = $file->store('uploads/consignments', 'public');
                             $hinhAnhUrl = '/storage/' . $path;
+
+                            // Dọn dẹp: Xóa file ảnh cũ (nếu có) trên server
+                            if (!empty($pkg['hinh_anh_cu'])) {
+                                $oldRelativePath = preg_replace('#^.*/storage/#', '', $pkg['hinh_anh_cu']);
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldRelativePath)) {
+                                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldRelativePath);
+                                }
+                            }
                         }
 
                         $dataItem = [
@@ -176,11 +186,26 @@ class ConsignmentOrderController extends Controller
                         if (isset($pkg['kiem_hang'])) $hasKiemHang = true;
                     }
 
+                    // 5. DỌN ẢNH VÀ XÓA CÁC KIỆN HÀNG BỊ LOẠI BỎ
                     $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
                     if (count($itemsToDelete) > 0) {
+                        // Lấy các item chuẩn bị xóa để quét lấy đường dẫn ảnh
+                        $deletedItems = ConsignmentOrderItem::whereIn('id', $itemsToDelete)->get();
+                        
+                        foreach ($deletedItems as $item) {
+                            if (!empty($item->hinh_anh_url)) {
+                                $relativePath = preg_replace('#^.*/storage/#', '', $item->hinh_anh_url);
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                                    \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                                }
+                            }
+                        }
+
+                        // Sau đó xóa dữ liệu khỏi Database
                         ConsignmentOrderItem::whereIn('id', $itemsToDelete)->delete();
                     }
 
+                    // 6. Cập nhật Dịch vụ gia tăng
                     ConsignmentExtraRequirement::where('consignment_order_id', $order->id)->delete();
                     if ($hasDongGo) ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'dong_go']);
                     if ($hasKiemHang) ConsignmentExtraRequirement::create(['consignment_order_id' => $order->id, 'loai_yeu_cau' => 'kiem_hang']);

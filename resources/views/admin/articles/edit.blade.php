@@ -68,6 +68,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Tính năng Upload Ảnh
         images_upload_url: "{{ route('admin.articles.upload_image')}}",
+        relative_urls: false,
+        remove_script_host: false,
         automatic_uploads: true,
 
         content_css: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',

@@ -16,16 +16,16 @@
             <form action="{{ route('admin.deliveries.index') }}" method="GET" class="row g-3 align-items-center">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Trạng thái điều phối</label>
-                    <select name="trang_thai_giao" class="form-select" onchange="this.form.submit()">
+                    <select name="trang_thai" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Tất cả kiện hàng tại kho đích --</option>
-                        <option value="cho_giao" {{ request('trang_thai_giao') == 'cho_giao' ? 'selected' : '' }}>Chưa
+                        <option value="cho_giao" {{ request('trang_thai') == 'cho_giao' ? 'selected' : '' }}>Chưa
                             tạo phiếu (Chờ điều phối)</option>
-                        <option value="dang_van_chuyen"
-                            {{ request('trang_thai_giao') == 'dang_van_chuyen' ? 'selected' : '' }}>Đang giao hàng
+                        <option value="dang_giao" {{ request('trang_thai') == 'dang_giao' ? 'selected' : '' }}>Đang
+                            giao hàng
                         </option>
-                        <option value="thanh_cong" {{ request('trang_thai_giao') == 'thanh_cong' ? 'selected' : '' }}>Đã
+                        <option value="thanh_cong" {{ request('trang_thai') == 'thanh_cong' ? 'selected' : '' }}>Đã
                             giao thành công</option>
-                        <option value="that_bai" {{ request('trang_thai_giao') == 'that_bai' ? 'selected' : '' }}>Giao
+                        <option value="that_bai" {{ request('trang_thai') == 'that_bai' ? 'selected' : '' }}>Giao
                             thất bại / Hoàn hàng</option>
                     </select>
                 </div>

@@ -221,9 +221,10 @@
                                 <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
                                 <option value="Mỹ phẩm">Mỹ phẩm</option>
                                 <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
-                                <option value="Đồ chơi/ Thể thao">Thịt/ Sữa</option>
-                                <option value="Đồ chơi/ Thể thao">Thực phẩm chức năng</option>
-                                <option value="Đồ chơi/ Thể thao">Thuỷ sản</option>
+                                <option value="Thịt/ Sữa">Thịt/ Sữa</option>
+                                <option value="Thực phẩm chức năng">Thực phẩm chức năng</option>
+                                <option value="Thuỷ sản">Thuỷ sản</option>
+                                <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
                             </select>
                             <input type="number" name="packages[0][so_luong]"
                                 class="form-control form-control-sm mb-2 rounded-0 font-13"
@@ -361,14 +362,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <td>
                 <select name="packages[${packageIndex}][loai_danh_muc]" class="form-select form-select-sm mb-2 rounded-0 font-13">
                     <option value="">- Chọn loại danh mục -</option>
-                    <option value="Quần áo">Quần áo</option>
-                    <option value="Dày dép">Dày dép</option>
-                    <option value="Điện tử/ Điện máy">Điện tử/ Điện máy</option>
-                    <option value="Nội thất/ Xây dựng">Nội thất/ Xây dựng</option>
-                    <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
-                    <option value="Mỹ phẩm">Mỹ phẩm</option>
-                    <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
-                    <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
+                                <option value="Quần áo">Quần áo</option>
+                                <option value="Dày dép">Dày dép</option>
+                                <option value="Điện tử/ Điện máy">Điện tử/ Điện máy</option>
+                                <option value="Nội thất/ Xây dựng">Nội thất/ Xây dựng</option>
+                                <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
+                                <option value="Mỹ phẩm">Mỹ phẩm</option>
+                                <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
+                                <option value="Thịt/ Sữa">Thịt/ Sữa</option>
+                                <option value="Thực phẩm chức năng">Thực phẩm chức năng</option>
+                                <option value="Thuỷ sản">Thuỷ sản</option>
+                                <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
                 </select>
                 <input type="number" name="packages[${packageIndex}][so_luong]" class="form-control form-control-sm mb-2 rounded-0 font-13" placeholder="Số lượng sản phẩm (*)" required>
                 <input type="number" name="packages[${packageIndex}][gia_tri_hang_hoa]" class="form-control form-control-sm rounded-0 font-13" placeholder="Giá trị hàng hóa * (VNĐ)" required>

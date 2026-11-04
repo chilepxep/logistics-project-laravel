@@ -34,24 +34,27 @@ class SystemNotificationController extends Controller
     }
 
     public function destroy($id)
-    {
-        $notification = SystemNotification::findOrFail($id);
+        {
+            $notification = SystemNotification::findOrFail($id);
 
-        $htmlContent = $notification->content;
+            $htmlContent = $notification->content;
 
-        preg_match_all('/<img[^>]+src="([^">]+)"/', $htmlContent, $matches);
-        
-        $imageUrls = $matches[1];
+            preg_match_all('/<img[^>]+src="([^">]+)"/', $htmlContent, $matches);
+            
+            $imageUrls = $matches[1];
 
-        foreach ($imageUrls as $url) {
-            $relativePath = str_replace(asset('storage') . '/', '', $url);
-            if (Storage::disk('public')->exists($relativePath)) {
-                Storage::disk('public')->delete($relativePath);
+            foreach ($imageUrls as $url) {
+                $relativePath = preg_replace('#^.*/storage/#', '', $url);
+
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                }
             }
+            
+            $notification->delete();
+            
+            return back()->with('success', 'Đã xoá thông báo và dọn dẹp ảnh thành công!');
         }
-        $notification->delete();
-        return back()->with('success', 'Đã xoá thông báo và dọn dẹp ảnh thành công!');
-    }
 
     public function show($id)
     {
@@ -76,9 +79,35 @@ class SystemNotificationController extends Controller
         ]);
 
         $notification = SystemNotification::findOrFail($id);
-        $notification->update($request->all());
 
-        return redirect()->route('admin.notifications.index')->with('success', 'Đã cập nhật thông báo thành công!');
+        // 1. Lấy nội dung HTML CŨ và MỚI
+        $oldContent = $notification->content;
+        $newContent = $request->input('content');
+
+        // 2. Tìm tất cả các link ảnh trong nội dung CŨ
+        preg_match_all('/<img[^>]+src="([^">]+)"/', $oldContent, $oldMatches);
+        $oldImages = $oldMatches[1];
+
+        // 3. Tìm tất cả các link ảnh trong nội dung MỚI
+        preg_match_all('/<img[^>]+src="([^">]+)"/', $newContent, $newMatches);
+        $newImages = $newMatches[1];
+
+        // 4. So sánh: Lấy ra những ảnh CÓ TRONG CŨ nhưng ĐÃ BỊ XÓA KHỎI MỚI
+        $deletedImages = array_diff($oldImages, $newImages);
+
+        // 5. Xóa vật lý các ảnh đã bị loại bỏ khỏi server
+        foreach ($deletedImages as $url) {
+            // Dùng Regex cắt lấy đường dẫn tương đối giống hệt hàm destroy
+            $relativePath = preg_replace('#^.*/storage/#', '', $url);
+
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+            }
+        }
+
+        // 6. Cập nhật dữ liệu mới vào Database
+        $notification->update($request->all());
+        return redirect()->route('admin.notifications.index')->with('success', 'Đã cập nhật thông báo và dọn dẹp ảnh thừa thành công!');
     }
 
     public function uploadImage(Request $request)

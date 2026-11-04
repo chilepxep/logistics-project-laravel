@@ -163,11 +163,45 @@
                                             class="form-select form-select-sm">
                                             <option value="">- Danh mục -</option>
                                             <option value="Quần áo"
-                                                {{ $item->loai_danh_muc == 'Quần áo' ? 'selected' : '' }}>Quần áo
+                                                {{ $item->loai_danh_muc == 'Quần áo' ? 'selected' : '' }}>
+                                                Quần áo
                                             </option>
-                                            <option value="Điện tử"
-                                                {{ $item->loai_danh_muc == 'Điện tử' ? 'selected' : '' }}>Điện tử
+
+                                            <option value="Dày dép"
+                                                {{ $item->loai_danh_muc == 'Dày dép' ? 'selected' : '' }}>
+                                                Dày dép
                                             </option>
+
+                                            <option value="Điện tử/ Điện máy"
+                                                {{ $item->loai_danh_muc == 'Điện tử/ Điện máy' ? 'selected' : '' }}>
+                                                Điện tử/ Điện máy
+                                            </option>
+
+                                            <option value="Nội thất/ Xây dựng"
+                                                {{ $item->loai_danh_muc == 'Nội thất/ Xây dựng' ? 'selected' : '' }}>
+                                                Nội thất/ Xây dựng
+                                            </option>
+
+                                            <option value="Máy móc/ Nông nghiệp"
+                                                {{ $item->loai_danh_muc == 'Máy móc/ Nông nghiệp' ? 'selected' : '' }}>
+                                                Máy móc/ Nông nghiệp
+                                            </option>
+
+                                            <option value="Mỹ phẩm"
+                                                {{ $item->loai_danh_muc == 'Mỹ phẩm' ? 'selected' : '' }}>
+                                                Mỹ phẩm
+                                            </option>
+
+                                            <option value="Phụ kiện/ thời trang"
+                                                {{ $item->loai_danh_muc == 'Phụ kiện/ thời trang' ? 'selected' : '' }}>
+                                                Phụ kiện/ thời trang
+                                            </option>
+
+                                            <option value="Đồ chơi/ Thể thao"
+                                                {{ $item->loai_danh_muc == 'Đồ chơi/ Thể thao' ? 'selected' : '' }}>
+                                                Đồ chơi/ Thể thao
+                                            </option>
+
                                         </select>
                                     </div>
                                     <input type="text" name="packages[{{ $index }}][link_san_pham]"
@@ -288,8 +322,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     </select>
                     <select name="packages[${pIndex}][loai_danh_muc]" class="form-select form-select-sm">
                         <option value="">- Danh mục -</option>
-                        <option value="Quần áo">Quần áo</option>
-                        <option value="Điện tử">Điện tử</option>
+                    <option value="Quần áo">Quần áo</option>
+                    <option value="Dày dép">Dày dép</option>
+                    <option value="Điện tử/ Điện máy">Điện tử/ Điện máy</option>
+                    <option value="Nội thất/ Xây dựng">Nội thất/ Xây dựng</option>
+                    <option value="Máy móc/ Nông nghiệp">Máy móc/ Nông nghiệp</option>
+                    <option value="Mỹ phẩm">Mỹ phẩm</option>
+                    <option value="Phụ kiện/ thời trang">Phụ kiện/ thời trang</option>
+                    <option value="Đồ chơi/ Thể thao">Đồ chơi/ Thể thao</option>
                     </select>
                 </div>
                 <input type="text" name="packages[${pIndex}][link_san_pham]" class="form-control form-control-sm" placeholder="Link SP">

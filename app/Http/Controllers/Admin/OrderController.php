@@ -84,6 +84,7 @@ public function update(Request $request, $id)
         'tru_so_nhan_hang_id' => 'required',
         'kho_hien_tai_id'     => 'nullable',
         //'trang_thai'          => 'required',
+        'trang_thai_thanh_toan' => 'required|in:chua_thanh_toan,da_thanh_toan',
         'items'               => 'required|array|min:1',
         'items.*.ten_san_pham'=> 'required|string',
         'items.*.don_gia'     => 'required|numeric|min:0',
@@ -94,7 +95,7 @@ public function update(Request $request, $id)
         'country_id.required'           => 'Vui lòng chọn Quốc gia.',
         'supplier_id.required'          => 'Vui lòng chọn Kho xuất phát.',
     ]);
-
+ 
     try {
         DB::transaction(function () use ($request, $order) {
             
@@ -102,6 +103,14 @@ public function update(Request $request, $id)
             $khoCuCuaDon = $order->kho_hien_tai_id; 
             $khoMoiCuaDon = $request->kho_hien_tai_id ?? $order->kho_hien_tai_id;
             $tenKhoMoi = \App\Models\Warehouse::find($khoMoiCuaDon)->ten_kho ?? 'Kho không xác định';
+
+            // 2. Logic xử lý Ngày thanh toán
+            $ngayThanhToan = $order->ngay_thanh_toan; 
+            if ($request->trang_thai_thanh_toan == 'da_thanh_toan' && $order->trang_thai_thanh_toan != 'da_thanh_toan') {
+                $ngayThanhToan = now(); // Lấy ngày giờ hiện tại nếu vừa chuyển sang Đã thanh toán
+            } elseif ($request->trang_thai_thanh_toan == 'chua_thanh_toan') {
+                $ngayThanhToan = null;  // Xóa ngày nếu quay xe về Chưa thanh toán
+            }
 
             // 2. Cập nhật thông tin chung của Đơn hàng 
             $order->update([
@@ -112,6 +121,8 @@ public function update(Request $request, $id)
                 'yeu_cau_toc_do'      => $request->yeu_cau_toc_do ?? 'thuong',
                // 'trang_thai'          => $request->trang_thai,
                 'tong_tien'           => $request->tong_tien ?? $order->tong_tien,
+                'trang_thai_thanh_toan' => $request->trang_thai_thanh_toan,
+                'ngay_thanh_toan'       => $ngayThanhToan,
             ]);
 
 
@@ -141,19 +152,27 @@ public function update(Request $request, $id)
             }
 
 
-            // 5. XỬ LÝ DANH SÁCH SẢN PHẨM
-
+            // 5. XỬ LÝ DANH SÁCH SẢN PHẨM VÀ DỌN ẢNH VẬT LÝ
             $existingItemIds = $order->items->pluck('id')->toArray();
             $submittedItemIds = []; 
 
             foreach ($request->items as $index => $itemData) {
                 
-                // Logic xử lý ảnh
                 $hinhAnhUrl = $itemData['hinh_anh_cu'] ?? null;
+                
+                // NẾU CÓ UPLOAD ẢNH MỚI
                 if ($request->hasFile("items.{$index}.hinh_anh_file")) {
                     $file = $request->file("items.{$index}.hinh_anh_file");
                     $path = $file->store('uploads/orders', 'public');
                     $hinhAnhUrl = '/storage/' . $path;
+
+                    // Dọn dẹp: Xóa ảnh cũ trên server khi bị thay thế
+                    if (!empty($itemData['hinh_anh_cu'])) {
+                        $oldRelativePath = preg_replace('#^.*/storage/#', '', $itemData['hinh_anh_cu']);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldRelativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldRelativePath);
+                        }
+                    }
                 }
 
                 if (!empty($itemData['id'])) {
@@ -186,9 +205,23 @@ public function update(Request $request, $id)
                 }
             }
 
-            // Xóa các Item không tồn tại trên form
+            // 6. DỌN DẸP ẢNH VÀ XÓA ITEM BỊ LOẠI BỎ
             $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
+            
             if (count($itemsToDelete) > 0) {
+                // Lấy các item chuẩn bị xóa để quét đường dẫn ảnh
+                $deletedItems = \App\Models\OrderItem::whereIn('id', $itemsToDelete)->get();
+                
+                foreach ($deletedItems as $item) {
+                    if (!empty($item->hinh_anh_url)) {
+                        $relativePath = preg_replace('#^.*/storage/#', '', $item->hinh_anh_url);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                }
+
+                // Tiến hành xóa record trong Database
                 \App\Models\OrderItem::whereIn('id', $itemsToDelete)->delete();
             }
         });
@@ -222,7 +255,7 @@ public function update(Request $request, $id)
                         // Xóa file vật lý khỏi server nếu file đó thực sự tồn tại
                         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
                             \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
-                        }
+                        } 
                     }
                     // Xóa dòng dữ liệu trong DB
                     $item->delete();

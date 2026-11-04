@@ -72,7 +72,7 @@
                             <tr>
                                 <td class="text-center fw-bold text-success">Vietcombank</td>
                                 <td>
-                                    <div>STK: <span class="fw-bold fs-5 text-danger">0123456789</span></div>
+                                    <div>STK: <span class="fw-bold fs-5 text-danger"></span></div>
                                     <div>CTK: HTKK LOGISTICS</div>
                                     <div>Chi nhánh: Sở giao dịch Hà Nội</div>
                                 </td>
@@ -81,7 +81,7 @@
                             <tr>
                                 <td class="text-center fw-bold text-primary">Techcombank</td>
                                 <td>
-                                    <div>STK: <span class="fw-bold fs-5 text-danger">9876543210</span></div>
+                                    <div>STK: <span class="fw-bold fs-5 text-danger"></span></div>
                                     <div>CTK: HTKK LOGISTICS</div>
                                     <div>Chi nhánh: Cầu Giấy</div>
                                 </td>
@@ -126,11 +126,12 @@
                     class="alert alert-success border-start border-success border-4 text-dark fs-5 py-3 my-3 shadow-sm">
                     <span class="text-danger fw-bold">HV [Tên ngân hàng] [Số điện thoại] [Số tiền đã nạp] [Họ và
                         tên]</span>
-                    gửi <span class="fw-bold text-primary">0834517229</span><br>
+                    gửi <span class="fw-bold text-primary">{{ $globalSetting->hotline ?? 'Đang cập nhật' }}</span><br>
                     <span class="fs-6 text-muted">(Ví dụ: HV Techcombank 09633516 1.000.000)</span>
                 </div>
                 <p>Hoặc liên hệ trực tiếp tới bộ phận chăm sóc khách hàng: <strong
-                        class="text-danger">024.66803049</strong> để được hỗ trợ nhanh nhất.</p>
+                        class="text-danger">{{ $globalSetting->hotline ?? 'Đang cập nhật' }}</strong> để được hỗ trợ
+                    nhanh nhất.</p>
 
                 <hr class="my-5">
 
@@ -139,23 +140,27 @@
                     tiếp các trụ sở chính của HTKK tại một trong 2 địa chỉ dưới đây để thực hiện nạp tiền vào tài khoản.
                 </p>
                 <ul class="list-group mb-4">
-                    <li class="list-group-item"><i class="bi bi-geo-alt-fill text-danger me-2"></i> <strong>Trụ Sở Hà
-                            Nội:</strong> Số 117 Trần Duy Hưng - Cầu Giấy - Hà Nội</li>
-                    <li class="list-group-item"><i class="bi bi-geo-alt-fill text-danger me-2"></i> <strong>Trụ Sở Hồ
-                            Chí Minh:</strong> Số 911 Nguyễn Trãi, Phường 14, Quận 5, Hồ Chí Minh</li>
+
+                    @if(!empty($globalSetting->addresses) && is_array($globalSetting->addresses))
+                    @foreach($globalSetting->addresses as $address)
+                    <p class="mb-2"><i class="bi bi-geo-alt-fill text-warning me-2"></i>{{ $address }}
+                        @endforeach
+                        @else
+                        <li>Đang cập nhật địa chỉ...</li>
+                        @endif
                 </ul>
 
                 <hr class="my-5">
 
                 <!-- PHẦN CHÈN ẢNH HƯỚNG DẪN -->
-                <h5 class="fw-bold text-uppercase text-center mb-4" style="color: #0b3a68;">QR chuyển khoản:</h5>
+                <!-- <h5 class="fw-bold text-uppercase text-center mb-4" style="color: #0b3a68;">QR chuyển khoản:</h5>
                 <div class="text-center mb-5">
-                    <!-- Sửa link 'src' dưới đây thành link ảnh thực tế của bạn -->
+                  
                     <img src="{{ asset('images/chuyen-khoan.jpg') }}" alt="Số dư tài khoản"
                         class="img-fluid shadow rounded border"
                         style="max-height: 400px; width: 100%; object-fit: contain; background: #f1f1f1;">
                     <div class="mt-2 text-muted font-13 fst-italic">Lưu ý nội dung chuyển khoản</div>
-                </div>
+                </div> -->
 
                 <!-- Kết luận -->
                 <div class="bg-light p-4 rounded text-center shadow-sm">

@@ -41,7 +41,7 @@ class CleanupOldNotifications extends Command
             $imageUrls = $matches[1];
 
             foreach ($imageUrls as $url) {
-                $relativePath = str_replace(asset('storage') . '/', '', $url);
+                $relativePath = preg_replace('#^.*/storage/#', '', $url);
                 if (Storage::disk('public')->exists($relativePath)) {
                     Storage::disk('public')->delete($relativePath);
                 }

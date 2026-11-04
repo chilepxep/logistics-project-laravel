@@ -23,7 +23,9 @@ class ConsignmentOrder extends Model
         'trang_thai',
         'kho_hien_tai_id',
         'co_bao_hiem',  
-        'co_khai_thue'  
+        'co_khai_thue' ,
+        'trang_thai_thanh_toan',
+        'ngay_thanh_toan'
     ];
 
     public function user()
@@ -52,10 +54,10 @@ class ConsignmentOrder extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
-    }
+    // public function supplier()
+    // {
+    //     return $this->belongsTo(Supplier::class, 'supplier_id');
+    // }
 
     public function khoHienTai()
     {

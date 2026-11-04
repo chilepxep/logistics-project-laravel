@@ -50,6 +50,7 @@ class ArticleController extends Controller
     }
 
     
+// Cập nhật bài viết
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -59,6 +60,44 @@ class ArticleController extends Controller
         ]);
 
         $article = Article::findOrFail($id);
+
+        $oldContent = stripslashes($article->content);
+        $newContent = stripslashes($request->input('content'));
+
+        // 1. Quét lấy mảng link thô
+        preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $oldContent, $oldMatches);
+        $oldImagesRaw = $oldMatches[1];
+
+        preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $newContent, $newMatches);
+        $newImagesRaw = $newMatches[1];
+
+        // 2. CHUẨN HÓA MẢNG CŨ (Chỉ lấy lõi đuôi, vd: 'uploads/articles/anh.png')
+        $oldImagesClean = [];
+        foreach ($oldImagesRaw as $url) {
+            $parts = explode('/storage/', $url);
+            $relativePath = end($parts); // Lấy phần sau chữ /storage/
+            $oldImagesClean[] = urldecode(ltrim($relativePath, '/'));
+        }
+
+        // 3. CHUẨN HÓA MẢNG MỚI
+        $newImagesClean = [];
+        foreach ($newImagesRaw as $url) {
+            $parts = explode('/storage/', $url);
+            $relativePath = end($parts);
+            $newImagesClean[] = urldecode(ltrim($relativePath, '/'));
+        }
+
+        // 4. SO SÁNH 2 MẢNG ĐÃ CHUẨN HÓA (Đảm bảo độ chính xác tuyệt đối)
+        $deletedImages = array_diff($oldImagesClean, $newImagesClean);
+
+        // 5. Xóa file vật lý
+        foreach ($deletedImages as $relativePath) {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+            }
+        }
+
+        // 6. Lưu Database
         $article->update([
             'title'       => $request->title,
             'category_id' => $request->category_id,
@@ -66,14 +105,37 @@ class ArticleController extends Controller
             'is_active'   => $request->has('is_active')
         ]);
 
-        return redirect()->route('admin.articles.index')->with('success', 'Cập nhật bài viết thành công!');
+        return redirect()->route('admin.articles.index')->with('success', 'Cập nhật bài viết và dọn dẹp ảnh thừa thành công!');
     }
 
     
-    public function destroy($id)
+    // Xóa bài viết
+public function destroy($id)
     {
-        Article::findOrFail($id)->delete();
-        return redirect()->route('admin.articles.index')->with('success', 'Đã xóa bài viết!');
+        $article = Article::findOrFail($id);
+
+        $htmlContent = stripslashes($article->content);
+
+        preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $htmlContent, $matches);
+        $imageUrls = $matches[1];
+
+        // Xóa vật lý toàn bộ ảnh đính kèm
+        foreach ($imageUrls as $url) {
+            // Tách chuỗi bằng chữ /storage/ và lấy phần đuôi cuối cùng
+            $parts = explode('/storage/', $url);
+            $relativePath = end($parts);
+            
+            $relativePath = urldecode(ltrim($relativePath, '/'));
+
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+            }
+        }
+
+        // Xóa khỏi DB
+        $article->delete();
+        
+        return redirect()->route('admin.articles.index')->with('success', 'Đã xóa bài viết và dọn sạch file vật lý!');
     }
 
     
@@ -84,20 +146,22 @@ class ArticleController extends Controller
         return redirect()->back()->with('success', 'Đã thay đổi trạng thái bài viết!');
     }
 
-    // Hàm xử lý khi TinyMCE tải ảnh lên
+// Xử lý upload ảnh từ TinyMCE cho Bài viết
     public function uploadImage(Request $request)
     {
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $filename = time() . '_' . $file->getClientOriginalName();
             
-            // Lưu trực tiếp vào public_html/uploads/articles
-            $file->move(public_path('storage/uploads/articles'), $filename);
-            
+            // Lưu vào đúng thư mục articles
+            $path = $file->storeAs('uploads/articles', $filename, 'public');
+
+            // Trả về link tương đối để không bị lỗi 403
             return response()->json([
-                'location' => asset('storage/uploads/articles/' . $filename)
+                'location' => '/storage/' . $path
             ]);
         }
-        return response()->json(['error' => 'No file uploaded.'], 400);
+
+        return response()->json(['error' => 'Không tìm thấy file ảnh'], 400);
     }
 }

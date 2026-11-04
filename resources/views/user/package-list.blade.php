@@ -69,10 +69,7 @@
     <h3 class="text-uppercase fw-bold m-0" style="color: #6f42c1;">
         <i class="bi bi-box2-fill me-2"></i> Danh sách kiện hàng
     </h3>
-    <!-- THÊM ĐOẠN NÀY VÀO -->
-    <a href="{{ route('package.create') }}" class="btn text-white fw-semibold" style="background-color: #6f42c1;">
-        <i class="bi bi-plus-lg me-1"></i> Thêm kiện hàng
-    </a>
+
 </div>
 
 <div class="bg-white shadow-sm rounded-2 p-3">

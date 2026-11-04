@@ -270,25 +270,26 @@
                 <!-- Phí nội địa TQ -->
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Phí nội địa TQ</label>
-                    <input type="number" id="input_phi_noi_dia" name="phi_van_chuyen_noi_dia"
-                        class="form-control price-calc {{ $lockedClass }}"
-                        value="{{ $package->phi_van_chuyen_noi_dia ?? 0 }}" {{ $readonlyAttr }}>
+                    <!-- Đổi type="text", thêm class format-currency -->
+                    <input type="text" id="input_phi_noi_dia" name="phi_van_chuyen_noi_dia"
+                        class="form-control price-calc format-currency {{ $lockedClass }}"
+                        value="{{ number_format($package->phi_van_chuyen_noi_dia ?? 0, 0, ',', '.') }}"
+                        {{ $readonlyAttr }}>
                 </div>
 
                 <!-- Phí khác (Đóng gỗ, Kiểm đếm...) -->
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Phí khác</label>
                     @if($isMuaHo)
-                    <!-- Đơn MUA HỘ: Khóa hoàn toàn ô này vì đã thu tiền từ lúc tạo đơn -->
-                    <input type="number" id="input_phi_khac" name="phi_khac" class="form-control bg-light price-calc"
+                    <input type="text" id="input_phi_khac" name="phi_khac" class="form-control bg-light price-calc"
                         value="0" readonly title="Phí dịch vụ đã được tính trong tổng đơn hàng">
-                    <small class="text-success font-11"><i class="bi bi-check-circle"></i> Đã tính trong Tổng Đơn Mua
-                        Hộ</small>
+                    <small class="text-success font-11"><i class="bi bi-check-circle"></i> Đã tính trong Tổng Đơn
+                        Mua Hộ</small>
                     @else
                     <!-- Đơn KÝ GỬI: Mở cho nhập, kèm theo cảnh báo/gợi ý nếu có dịch vụ -->
-                    <input type="number" id="input_phi_khac" name="phi_khac"
-                        class="form-control price-calc {{ $lockedClass }}" value="{{ $package->phi_khac ?? 0 }}"
-                        {{ $readonlyAttr }}>
+                    <input type="text" id="input_phi_khac" name="phi_khac"
+                        class="form-control price-calc format-currency {{ $lockedClass }}"
+                        value="{{ number_format($package->phi_khac ?? 0, 0, ',', '.') }}" {{ $readonlyAttr }}>
 
                     @if(count($dichVuKyGui) > 0)
                     <div
@@ -325,21 +326,21 @@
                 <!-- Chiết khấu -->
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Chiết khấu</label>
-                    <input type="number" id="input_chiet_khau" name="chiet_khau"
-                        class="form-control price-calc text-success {{ $lockedClass }}"
-                        value="{{ $package->chiet_khau ?? 0 }}" {{ $readonlyAttr }}>
+                    <input type="text" id="input_chiet_khau" name="chiet_khau"
+                        class="form-control price-calc text-success format-currency {{ $lockedClass }}"
+                        value="{{ number_format($package->chiet_khau ?? 0, 0, ',', '.') }}" {{ $readonlyAttr }}>
                 </div>
 
                 <!-- Thành tiền Cước VC -->
                 <div class="col-md-3">
                     <label class="form-label fw-bold text-danger">Thành tiền Cước VC</label>
-                    <input type="number" id="input_thanh_tien" name="thanh_tien"
-                        class="form-control fw-bold bg-white {{ $canEditMetrics ? 'text-danger' : $lockedClass }}"
-                        value="{{ $package->thanh_tien ?? 0 }}" readonly> <!-- Readonly vì sẽ dùng JS tự động tính -->
+                    <input type="text" id="input_thanh_tien" name="thanh_tien"
+                        class="form-control fw-bold bg-white format-currency {{ $canEditMetrics ? 'text-danger' : $lockedClass }}"
+                        value="{{ number_format($package->thanh_tien ?? 0, 0, ',', '.') }}" readonly>
 
                     @if($isMuaHo)
-                    <small class="text-muted font-11">Tối thiểu: {{ number_format($tongTienDonMuaHo) }}đ (Tổng đơn mua
-                        hộ)</small>
+                    <small class="text-muted font-11">Tối thiểu: {{ number_format($tongTienDonMuaHo, 0, ',', '.') }}đ
+                        (Tổng đơn mua hộ)</small>
                     @endif
                 </div>
             </div>
@@ -354,7 +355,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Nhận diện loại đơn và giá trị tối thiểu từ PHP
     const isMuaHo = '{{ $isMuaHo ? "true" : "false" }}' === 'true';
     const tongTienDonMuaHo = parseFloat('{{ $tongTienDonMuaHo ?? 0 }}') || 0;
 
@@ -364,40 +364,66 @@ document.addEventListener("DOMContentLoaded", function() {
     const inputChietKhau = document.getElementById('input_chiet_khau');
     const inputThanhTien = document.getElementById('input_thanh_tien');
     const calcInputs = document.querySelectorAll('.price-calc');
+    const currencyInputs = document.querySelectorAll('.format-currency');
+
+
+    function parseVNCurrency(val) {
+        if (!val) return 0;
+
+        let cleaned = val.toString().replace(/\./g, '');
+        return parseInt(cleaned, 10) || 0;
+    }
 
     // Hàm tính toán tổng tiền
     function calculateThanhTien() {
-        let phiNoiDia = parseFloat(inputNoiDia.value) || 0;
-        let phiKhac = parseFloat(inputPhiKhac.value) || 0;
-        let chietKhau = parseFloat(inputChietKhau.value) || 0;
+        // ĐỔI SANG DÙNG HÀM parseVNCurrency THAY VÌ parseFloat
+        let phiNoiDia = parseVNCurrency(inputNoiDia.value);
+        let phiKhac = parseVNCurrency(inputPhiKhac.value);
+        let chietKhau = parseVNCurrency(inputChietKhau.value);
 
         let thanhTien = 0;
 
         if (isMuaHo) {
-            // QUY TẮC MUA HỘ: Tổng đơn hàng + Phí nội địa - Chiết khấu. 
-            // Không được thấp hơn Tổng tiền đơn hàng.
             thanhTien = tongTienDonMuaHo + phiNoiDia - chietKhau;
             if (thanhTien < tongTienDonMuaHo) {
                 thanhTien = tongTienDonMuaHo;
             }
         } else {
-            // QUY TẮC KÝ GỬI: Phí nội địa + Phí khác - Chiết khấu
-            // Không được thấp hơn (Phí nội địa + Phí khác - Chiết khấu) => Chặn nhập số âm
             thanhTien = phiNoiDia + phiKhac - chietKhau;
             if (thanhTien < 0) thanhTien = 0;
         }
 
-        // Đổ dữ liệu vào ô Thành tiền
-        inputThanhTien.value = thanhTien;
+        // MỚI: Định dạng lại kết quả có dấu chấm trước khi gán vào ô Thành tiền
+        inputThanhTien.value = new Intl.NumberFormat('vi-VN').format(thanhTien);
     }
 
-    // Gắn sự kiện: Bất cứ khi nào nhân viên gõ phím vào 3 ô phí/chiết khấu thì hàm sẽ tự chạy
+    // Gắn sự kiện: Tính toán khi gõ phím
     calcInputs.forEach(input => {
         input.addEventListener('input', calculateThanhTien);
     });
 
-    // Chạy lần đầu lúc vừa load trang để đảm bảo dữ liệu chuẩn
+    // Chạy lần đầu lúc load trang
     calculateThanhTien();
+
+    // Logic định dạng số tiền khi nhập liệu
+    currencyInputs.forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            let cursorPosition = this.selectionStart;
+            let originalLength = this.value.length;
+
+            let value = this.value.replace(/[^0-9]/g, '');
+
+            if (value !== '') {
+                this.value = new Intl.NumberFormat('vi-VN').format(parseInt(value, 10));
+            } else {
+                this.value = '';
+            }
+
+            let newLength = this.value.length;
+            cursorPosition = cursorPosition + (newLength - originalLength);
+            this.setSelectionRange(cursorPosition, cursorPosition);
+        });
+    });
 });
 </script>
 @endsection

@@ -28,7 +28,7 @@ public function create()
         $request->validate([
             'chieu_van_chuyen'           => 'required|in:ve_vn,di_qt',
             'country_id'                 => 'required|exists:countries,id',
-            'supplier_id'                => 'required|exists:suppliers,id',
+            'supplier_id' => 'required|exists:warehouses,id',
             'tru_so_nhan_hang_id'        => 'required|integer', 
             'packages'                   => 'required|array|min:1',
             'packages.*.ma_van_don'      => 'required|string',
@@ -197,7 +197,7 @@ public function update(Request $request, $id)
     $request->validate([
         'chieu_van_chuyen'          => 'required|in:ve_vn,di_qt',
         'country_id'                => 'required|exists:countries,id',
-        'supplier_id'               => 'required|exists:suppliers,id',
+        'supplier_id' => 'required|exists:warehouses,id',
         'tru_so_nhan_hang_id'       => 'required|integer',
         'packages'                  => 'required|array|min:1',
         'packages.*.ma_van_don'     => 'required|string',
@@ -242,6 +242,14 @@ public function update(Request $request, $id)
                     $file = $request->file("packages.{$index}.hinh_anh_file");
                     $path = $file->store('uploads/consignments', 'public');
                     $hinhAnhUrl = '/storage/' . $path;
+
+                    // Nếu có ảnh cũ và người dùng vừa upload ảnh mới thay thế -> Xóa ảnh cũ trên ổ cứng
+                    if (!empty($pkg['hinh_anh_cu'])) {
+                        $oldRelativePath = preg_replace('#^.*/storage/#', '', $pkg['hinh_anh_cu']);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldRelativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldRelativePath);
+                        }
+                    }
                 }
 
                 
@@ -278,9 +286,23 @@ public function update(Request $request, $id)
                 if (isset($pkg['kiem_hang'])) $hasKiemHang = true;
             }
 
-            // Xóa các kiện hàng bị loại bỏ khỏi giao diện
+            // 4. XỬ LÝ DỌN DẸP ẢNH VÀ XÓA KIỆN HÀNG BỊ LOẠI BỎ
             $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
+            
             if (count($itemsToDelete) > 0) {
+                // Lấy danh sách các kiện hàng chuẩn bị xóa để quét đường dẫn ảnh
+                $deletedItems = ConsignmentOrderItem::whereIn('id', $itemsToDelete)->get();
+                
+                foreach ($deletedItems as $item) {
+                    if (!empty($item->hinh_anh_url)) {
+                        $relativePath = preg_replace('#^.*/storage/#', '', $item->hinh_anh_url);
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                }
+                
+                // Xóa record trong DB
                 ConsignmentOrderItem::whereIn('id', $itemsToDelete)->delete();
             }
             
@@ -302,33 +324,53 @@ public function update(Request $request, $id)
     }
 }
 
-    public function destroy($id)
+public function destroy($id)
     {
         $order = ConsignmentOrder::findOrFail($id);
 
         // Bảo mật: Kiểm tra xem user có phải là chủ đơn hàng không
         if ((int) $order->user_id !== (int) Auth::id()) {
-    abort(403, 'Bạn không có quyền xem đơn hàng này!');
-}
+            abort(403, 'Bạn không có quyền xóa đơn hàng này!');
+        }
 
-        //cho phép xóa khi đơn đang ở trạng thái 'Chờ xử lý'
+        // Quy tắc: Chỉ cho phép xóa khi đơn đang ở trạng thái 'Chờ xử lý'
         if ($order->trang_thai !== 'cho_xu_ly') {
             return back()->withErrors('Bạn chỉ có thể xóa đơn hàng đang ở trạng thái Chờ xử lý.');
         }
 
         try {
-            DB::transaction(function () use ($order) {
-                // Bước 1: Xóa chi tiết các kiện hàng
-                ConsignmentOrderItem::where('consignment_order_id', $order->id)->delete();
+            DB::transaction(function () use ($order, $id) {
+                // Bước 1: TÌM VÀ XÓA SẢN PHẨM KÝ GỬI CÙNG FILE ẢNH VẬT LÝ
+                $consignmentItems = ConsignmentOrderItem::where('consignment_order_id', $id)->get();
+                
+                foreach ($consignmentItems as $item) {
+                    // Kiểm tra và xóa file ảnh
+                    if (!empty($item->hinh_anh_url) && str_starts_with($item->hinh_anh_url, '/storage/')) {
+                        $relativePath = str_replace('/storage/', '', $item->hinh_anh_url);
 
-                // Bước 2: Xóa các yêu cầu dịch vụ gia tăng (đóng gỗ, kiểm hàng...)
-                ConsignmentExtraRequirement::where('consignment_order_id', $order->id)->delete();
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                    // Xóa dòng dữ liệu sau khi đã dọn dẹp file
+                    $item->delete();
+                }
 
-                // Bước 3: Xóa đơn hàng cha
+                // Bước 2: Xóa các dịch vụ gia tăng (đóng gỗ, kiểm đếm...)
+                ConsignmentExtraRequirement::where('consignment_order_id', $id)->delete();
+
+                // Bước 3: Tìm và xóa các Kiện hàng vật lý (Packages) + Lịch sử Tracking
+                $packages = \App\Models\Package::where('consignment_order_id', $id)->get();
+                foreach ($packages as $pkg) {
+                    \App\Models\PackageTracking::where('package_id', $pkg->id)->delete();
+                    $pkg->delete();
+                }
+
+                // Bước 4: Xóa đơn hàng gốc
                 $order->delete();
             });
 
-            return redirect()->route('consignment.index')->with('success', 'Đã xóa đơn ký gửi thành công!');
+            return redirect()->route('consignment.index')->with('success', 'Đã xóa vĩnh viễn đơn ký gửi và dọn sạch file ảnh thành công!');
 
         } catch (\Exception $e) {
             return back()->withErrors('Lỗi hệ thống khi xóa: ' . $e->getMessage());
