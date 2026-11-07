@@ -9,48 +9,121 @@
         @php
         $user = Auth::user();
 
-        // Truy vấn lấy mảng tất cả các ID kho thuộc Việt Nam
-        $danhSachKhoVN = \App\Models\Warehouse::where('loai_kho', 'VN')->pluck('id')->toArray();
+        // --- KHỞI TẠO CÁC BIẾN DÙNG CHUNG ---
+        $isMuaHo = $package->order_id && $package->order ? true : false;
+        $isKyGui = $package->consignment_order_id && $package->consignmentOrder ? true : false;
 
-        // Cấp quyền nếu là Admin HOẶC là nhân viên đang làm việc tại BẤT KỲ kho VN nào
-        $canEditMetrics = ($user->vai_tro === 'admin' || ($user->vai_tro === 'nhan_vien' &&
-        in_array($user->warehouse_id, $danhSachKhoVN)));
-
-        $readonlyAttr = $canEditMetrics ? '' : 'readonly';
-        $lockedClass = $canEditMetrics ? '' : 'bg-light text-muted';
-        @endphp
-
-        @php
-        // 1. Khởi tạo các biến dùng chung mặc định
         $chieuVanChuyen = 've_vn';
         $tenKhoQuocTe = 'Kho Quốc Tế';
         $tenKhoVn = 'Kho Việt Nam';
         $tenQuocGia = '';
 
-        // 2. Lấy dữ liệu nếu kiện hàng thuộc ĐƠN KÝ GỬI
-        if ($package->consignment_order_id && $package->consignmentOrder) {
+        // BIẾN QUAN TRỌNG: Lưu ID của Kho Xuất Phát
+        $khoXuatPhatId = null;
+
+        // --- LẤY DỮ LIỆU ĐƠN KÝ GỬI ---
+        if ($isKyGui) {
         $co = $package->consignmentOrder;
         $chieuVanChuyen = $co->chieu_van_chuyen;
         $tenKhoQuocTe = $co->khoQuocTe->ten_kho ?? 'Kho Quốc Tế';
         $tenKhoVn = $co->khoVn->ten_kho ?? 'Kho Việt Nam';
         $tenQuocGia = $co->country->ten_quoc_gia ?? '';
+
+        // Xác định Kho Xuất Phát theo chiều vận chuyển
+        if ($chieuVanChuyen === 've_vn') {
+        // Chiều Về VN: Xuất phát từ Kho Quốc Tế
+        $khoXuatPhatId = $co->supplier_id;
+        } else {
+        // Chiều Đi QT: Xuất phát từ Kho Việt Nam
+        $khoXuatPhatId = $co->kho_vn_id;
         }
-        // 3. Lấy dữ liệu nếu kiện hàng thuộc ĐƠN MUA HỘ
-        elseif ($package->order_id && $package->order) {
+        }
+
+        // --- LẤY DỮ LIỆU ĐƠN MUA HỘ ---
+        elseif ($isMuaHo) {
         $od = $package->order;
-        // Đơn mua hộ thường mặc định là từ Quốc Tế về VN
         $chieuVanChuyen = $od->chieu_van_chuyen ?? 've_vn';
-
-        // Mua hộ thì gốc xuất phát thường là từ Nhà cung cấp
         $tenKhoQuocTe = $od->supplier->ten_ncc ?? 'Kho Quốc Tế';
-
-        // Đích đến là trụ sở nhận hàng ở VN (Sử dụng hàm quan hệ khoNhan)
         $tenKhoVn = $od->khoNhan->ten_kho ?? 'Kho Việt Nam';
         $tenQuocGia = $od->country->ten_quoc_gia ?? '';
+
+        // Đơn mua hộ: Admin đã gán kho xuất phát vào `kho_hien_tai_id` của Order lúc xác nhận
+        // VÀ nó cũng chính là `tru_so_id` hiện tại của Package này ở thời điểm mới tạo.
+        // Lấy ID kho đầu tiên trong lịch sử Tracking, hoặc lấy chính tru_so_id hiện tại nếu chưa có lịch sử đổi kho.
+        $trackingDauTien = \App\Models\PackageTracking::where('package_id', $package->id)->orderBy('created_at',
+        'asc')->first();
+
+        if ($trackingDauTien && $trackingDauTien->warehouse_id) {
+        $khoXuatPhatId = $package->warehouse_id;
+        } else {
+        $khoXuatPhatId = $package->tru_so_id;
+        }
         }
 
-        // Gộp tên kho quốc tế và quốc gia cho gọn
         $hienThiKhoQuocTe = $tenKhoQuocTe . ($tenQuocGia ? " ($tenQuocGia)" : '');
+
+        // --- LOGIC TÍNH PHÍ DỊCH VỤ BỔ SUNG (Giữ nguyên của bạn) ---
+        $tongTienDonMuaHo = 0;
+        $dichVuKyGui = [];
+        $goiYPhiKhac = 0;
+
+        if ($isMuaHo) {
+        $tongTienDonMuaHo = $package->order->tong_tien;
+        } elseif ($isKyGui) {
+        // ... (Đoạn tính phí bảo hiểm, khai thuế, đóng gỗ, kiểm hàng giữ nguyên) ...
+        $co = $package->consignmentOrder;
+        if ($co->co_bao_hiem) {
+        $phiBaoHiem = config('fees.phi_bao_hiem', 50000);
+        $dichVuKyGui[] = ['ten' => 'Bảo hiểm', 'phi' => $phiBaoHiem];
+        $goiYPhiKhac += $phiBaoHiem;
+        }
+        if ($co->co_khai_thue) {
+        $phiKhaiThue = config('fees.phi_khai_thue', 55000);
+        $dichVuKyGui[] = ['ten' => 'Khai thuế', 'phi' => $phiKhaiThue];
+        $goiYPhiKhac += $phiKhaiThue;
+        }
+        $cacYeuCauThem = \App\Models\ConsignmentExtraRequirement::where('consignment_order_id', $co->id)
+        ->pluck('loai_yeu_cau')->toArray();
+        $soLuongNhanVoiPhi = $package->tong_kg ?? 1;
+
+        if (in_array('kiem_hang', $cacYeuCauThem)) {
+        $phiKiemHang = config('fees.phi_kiem_dem_per_item', 5000) * $soLuongNhanVoiPhi;
+        $dichVuKyGui[] = ['ten' => 'Kiểm hàng', 'phi' => $phiKiemHang];
+        $goiYPhiKhac += $phiKiemHang;
+        }
+        if (in_array('dong_go', $cacYeuCauThem)) {
+        $phiDongGo = config('fees.phi_dong_go_per_item', 15000) * $soLuongNhanVoiPhi;
+        $dichVuKyGui[] = ['ten' => 'Đóng gỗ', 'phi' => $phiDongGo];
+        $goiYPhiKhac += $phiDongGo;
+        }
+        }
+
+        // --- BƯỚC 2: LOGIC PHÂN QUYỀN SỬA CHỮA ($canEditMetrics) ---
+        // Kiểm tra xem dữ liệu (KG, M3, Phí nội địa,...) ĐÃ CÓ HAY CHƯA?
+        // Giả định: Nếu tổng KG lớn hơn 0 HOẶC Phí nội địa lớn hơn 0, nghĩa là đã được nhập.
+        $daNhapDuLieu = ($package->tong_kg > 0 || $package->phi_van_chuyen_noi_dia > 0);
+
+        // Mặc định không được sửa
+        $canEditMetrics = false;
+
+        if ($user->vai_tro === 'admin') {
+        // Admin: Luôn được sửa tự do
+        $canEditMetrics = true;
+        } elseif ($user->vai_tro === 'nhan_vien') {
+        // Nhân viên: Kiểm tra điều kiện
+        // 1. Phải đang làm việc tại KHO XUẤT PHÁT
+        $isTaiKhoXuatPhat = ($user->warehouse_id == $khoXuatPhatId);
+
+        // 2. CHƯA NHẬP DỮ LIỆU (nếu đã nhập thì bị khóa)
+        if ($isTaiKhoXuatPhat && !$daNhapDuLieu) {
+        $canEditMetrics = true;
+        }
+        }
+
+        // --- CẤU HÌNH CLASS VÀ ATTRIBUTE HTML ---
+        $readonlyAttr = $canEditMetrics ? '' : 'readonly';
+        $lockedClass = $canEditMetrics ? '' : 'bg-light text-muted pointer-events-none';
+        // Mẹo: Thêm 'pointer-events-none' vào $lockedClass sẽ ngăn luôn việc click/tab vào ô
         @endphp
 
         <form action="{{ route('admin.packages.update', $package->id) }}" method="POST">
@@ -163,7 +236,7 @@
                         <!-- Trạng thái dành riêng cho Kho VN và Admin -->
                         @if($isAdmin || $isNhanVienVN)
                         <option value="dang_giao_hang" {{ $package->tinh_trang == 'dang_giao_hang' ? 'selected' : '' }}>
-                            Đang về kho Việt Nam
+                            Đến kho Việt Nam
                         </option>
                         @endif
 
@@ -174,17 +247,23 @@
                             Hoàn thành
                             {{ !$daDenKhoDich && $package->tinh_trang != 'hoan_thanh' ? '🔒 (Chỉ mở khi đến kho đích)' : '' }}
                         </option>
-                        <option value="tra_hang" {{ $package->tinh_trang == 'tra_hang' ? 'selected' : '' }}>Trả hàng
-                        </option>
+                        <!-- <option value="tra_hang" {{ $package->tinh_trang == 'tra_hang' ? 'selected' : '' }}>Trả hàng
+                        </option> -->
                     </select>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                 <h6 class="fw-bold text-primary mb-0">2. Thông số Kiện hàng</h6>
+
                 @if(!$canEditMetrics)
-                <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill"></i> Chỉ kho VN được sửa thông
-                    số</span>
+                <div
+                    class="d-flex align-items-center bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-pill px-3 py-1 shadow-sm">
+                    <i class="bi bi-shield-lock-fill text-danger me-2"></i>
+                    <span class="text-danger fw-semibold" style="font-size: 0.85rem;">
+                        Chỉ nhân viên kho xuất phát được nhập thông số (1 lần duy nhất)
+                    </span>
+                </div>
                 @endif
             </div>
 
@@ -215,55 +294,6 @@
                     <input type="text" name="ghi_chu" class="form-control" value="{{ $package->ghi_chu }}">
                 </div>
             </div>
-
-            @php
-            // --- BƯỚC 1: XÁC ĐỊNH LOẠI ĐƠN VÀ CHUẨN BỊ LOGIC ---
-            $isMuaHo = $package->order_id && $package->order ? true : false;
-            $isKyGui = $package->consignment_order_id && $package->consignmentOrder ? true : false;
-
-            $tongTienDonMuaHo = 0;
-            $dichVuKyGui = []; // Sẽ lưu dạng: [['ten' => 'Bảo hiểm', 'phi' => 50000], ...]
-            $goiYPhiKhac = 0;
-
-            if ($isMuaHo) {
-            $tongTienDonMuaHo = $package->order->tong_tien;
-            }
-            elseif ($isKyGui) {
-            $co = $package->consignmentOrder;
-
-            // 1. Phí Bảo hiểm & Khai thuế
-            if ($co->co_bao_hiem) {
-            $phiBaoHiem = config('fees.phi_bao_hiem', 50000);
-            $dichVuKyGui[] = ['ten' => 'Bảo hiểm', 'phi' => $phiBaoHiem];
-            $goiYPhiKhac += $phiBaoHiem;
-            }
-
-            if ($co->co_khai_thue) {
-            $phiKhaiThue = config('fees.phi_khai_thue', 55000);
-            $dichVuKyGui[] = ['ten' => 'Khai thuế', 'phi' => $phiKhaiThue];
-            $goiYPhiKhac += $phiKhaiThue;
-            }
-
-            // 2. Phí Kiểm hàng & Đóng gỗ
-            $cacYeuCauThem = \App\Models\ConsignmentExtraRequirement::where('consignment_order_id', $co->id)
-            ->pluck('loai_yeu_cau')
-            ->toArray();
-
-            $soLuongNhanVoiPhi = $package->tong_kg ?? 1;
-
-            if (in_array('kiem_hang', $cacYeuCauThem)) {
-            $phiKiemHang = config('fees.phi_kiem_dem_per_item', 5000) * $soLuongNhanVoiPhi;
-            $dichVuKyGui[] = ['ten' => 'Kiểm hàng', 'phi' => $phiKiemHang];
-            $goiYPhiKhac += $phiKiemHang;
-            }
-
-            if (in_array('dong_go', $cacYeuCauThem)) {
-            $phiDongGo = config('fees.phi_dong_go_per_item', 15000) * $soLuongNhanVoiPhi;
-            $dichVuKyGui[] = ['ten' => 'Đóng gỗ', 'phi' => $phiDongGo];
-            $goiYPhiKhac += $phiDongGo;
-            }
-            }
-            @endphp
 
             <h6 class="fw-bold text-primary mt-4 mb-3">3. Phí dịch vụ (VNĐ)</h6>
             <div class="row g-3">

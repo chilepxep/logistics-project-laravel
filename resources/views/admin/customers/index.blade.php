@@ -39,8 +39,11 @@
                         <td>
                             <a href="{{ route('admin.customers.show', $cus->id) }}"
                                 class="btn btn-sm btn-outline-info"><i class="bi bi-person-vcard"></i> Hồ sơ</a>
+
+                            @if(Auth::user()->vai_tro !== 'nhan_vien')
                             <a href="{{ route('admin.customers.edit', $cus->id) }}"
                                 class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                            @endif
                         </td>
                     </tr>
                     @empty

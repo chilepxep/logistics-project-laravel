@@ -27,10 +27,10 @@
 
                 <div class="d-flex gap-2 mt-2">
                     <!-- Nút Sửa -->
-                    <a href="{{ route('admin.customers.edit', $customer->id) }}"
-                        class="btn btn-sm btn-warning flex-grow-1 fw-bold">
-                        <i class="bi bi-pencil"></i> Sửa
-                    </a>
+                    @if(Auth::user()->vai_tro !== 'nhan_vien')
+                    <a href="{{ route('admin.customers.edit', $cus->id) }}" class="btn btn-sm btn-outline-warning"><i
+                            class="bi bi-pencil"></i></a>
+
 
                     <!-- Nút Khoá / Mở Khoá -->
                     <form action="{{ route('admin.customers.lock', $customer->id) }}" method="POST" class="flex-grow-1"
@@ -46,6 +46,7 @@
                         </button>
                         @endif
                     </form>
+                    @endif
                 </div>
 
             </div>

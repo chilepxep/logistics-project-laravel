@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
@@ -42,6 +43,9 @@ class CustomerController extends Controller
     // 3. Form sửa thông tin
     public function edit($id)
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') {
+        abort(403, 'Bạn không có quyền sửa thông tin khách hàng!');
+    }
         $customer = User::findOrFail($id);
         return view('admin.customers.edit', compact('customer'));
     }
@@ -49,6 +53,9 @@ class CustomerController extends Controller
     // 4. Lưu cập nhật
    public function update(Request $request, $id)
     {
+        if (Auth::user()->vai_tro === 'nhan_vien') {
+        abort(403, 'Bạn không có quyền sửa thông tin khách hàng!');
+    }
         $customer = User::findOrFail($id);
 
         $request->validate([

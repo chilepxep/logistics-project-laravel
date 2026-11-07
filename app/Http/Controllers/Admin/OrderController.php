@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\Auth;
 

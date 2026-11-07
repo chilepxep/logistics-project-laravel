@@ -80,6 +80,49 @@ class PackageController extends Controller
         $danhSachKhoVN = \App\Models\Warehouse::where('loai_kho', 'VN')->pluck('id')->toArray();
 
 
+        
+
+        $khoXuatPhatId = null;
+        $khoDichId = null;
+        
+        if ($package->order_id) {
+            $order = \App\Models\Order::find($package->order_id);
+            if ($order) {
+                // Kho đích luôn là nơi khách muốn nhận
+                $khoDichId = $order->tru_so_nhan_hang_id;
+                
+                // Kho xuất phát: Lấy từ lịch sử khởi tạo/nhập kho đầu tiên
+                $trackingDauTien = \App\Models\PackageTracking::where('package_id', $package->id)->orderBy('created_at', 'asc')->first();
+                if ($trackingDauTien && $trackingDauTien->warehouse_id) {
+                    $khoXuatPhatId = $trackingDauTien->warehouse_id;
+                } else {
+                    $khoXuatPhatId = $package->tru_so_id; // Fallback
+                }
+            }
+        }
+        
+        // NẾU LÀ ĐƠN KÝ GỬI
+        elseif ($package->consignment_order_id) {
+            $consignmentOrder = \App\Models\ConsignmentOrder::find($package->consignment_order_id);
+            if ($consignmentOrder) {
+                // Xác định đích đến dựa vào chiều vận chuyển
+                if ($consignmentOrder->chieu_van_chuyen === 'di_qt') {
+                    // Nếu gửi từ VN đi Quốc Tế -> Đích là Kho Quốc Tế (cột supplier_id)
+                    $khoXuatPhatId = $consignmentOrder->kho_vn_id;
+                    $khoDichId = $consignmentOrder->supplier_id; 
+                } else {
+                    // Nếu gửi từ Quốc Tế về VN ('ve_vn') -> Đích là Kho VN
+                    $khoXuatPhatId = $consignmentOrder->supplier_id;
+                    $khoDichId = $consignmentOrder->kho_vn_id;
+                }
+            }
+        }
+
+            // 2. Chặn nhân viên không thuộc kho hiện tại thao tác (Ngoại trừ Admin)
+        if ($user->vai_tro === 'nhan_vien' && $package->tru_so_id != $user->warehouse_id) {
+            abort(403, 'Hành vi bị chặn: Bạn không có quyền cập nhật kiện hàng này do không ở đúng kho lưu trữ!');
+        }
+
         $request->merge([
         'phi_van_chuyen_noi_dia' => (int) str_replace('.', '', $request->phi_van_chuyen_noi_dia),
         'phi_khac'               => (int) str_replace('.', '', $request->phi_khac),
@@ -95,35 +138,13 @@ class PackageController extends Controller
             'tong_m3'    => 'nullable|numeric|min:0',
         ]);
 
-        $khoDichId = null;
-        
-        // NẾU LÀ ĐƠN MUA HỘ
-        if ($package->order_id) {
-            $order = \App\Models\Order::find($package->order_id);
-            if ($order) {
-                $khoDichId = $order->tru_so_nhan_hang_id;
-            }
-        } 
-        
-        // NẾU LÀ ĐƠN KÝ GỬI
-        elseif ($package->consignment_order_id) {
-            $consignmentOrder = \App\Models\ConsignmentOrder::find($package->consignment_order_id);
-            if ($consignmentOrder) {
-                // Xác định đích đến dựa vào chiều vận chuyển
-                if ($consignmentOrder->chieu_van_chuyen === 'di_qt') {
-                    // Nếu gửi từ VN đi Quốc Tế -> Đích là Kho Quốc Tế (cột supplier_id)
-                    $khoDichId = $consignmentOrder->supplier_id; 
-                } else {
-                    // Nếu gửi từ Quốc Tế về VN ('ve_vn') -> Đích là Kho VN
-                    $khoDichId = $consignmentOrder->kho_vn_id;
-                }
-            }
-        }
 
         $tinhTrangMoi = $request->tinh_trang;
         if ($request->tru_so_id == $khoDichId && $tinhTrangMoi == 'da_nhap_kho') {
             $tinhTrangMoi = 'hoan_thanh';
         }
+
+        
 
         
         // 1. Dữ liệu cơ bản
@@ -135,8 +156,12 @@ class PackageController extends Controller
             'ghi_chu'    => $request->ghi_chu,
         ];
 
-        // 2. Admin hoặc Nhân viên kho VN mới được phép lưu
-        if ($user->vai_tro === 'admin' || ($user->vai_tro === 'nhan_vien' && in_array($user->warehouse_id, $danhSachKhoVN))) {
+        // 7. KIỂM SOÁT NHẬP THÔNG SỐ (Quyền Cập Nhật Tiền & Cân Nặng)
+        // - Admin: Luôn được sửa
+        // - Nhân viên: Chỉ được sửa khi ĐANG Ở KHO XUẤT PHÁT và CHƯA NHẬP DỮ LIỆU
+        $daNhapDuLieu = ($package->tong_kg > 0 || $package->phi_van_chuyen_noi_dia > 0);
+
+        if ($user->vai_tro === 'admin' || ($user->vai_tro === 'nhan_vien' && $user->warehouse_id == $khoXuatPhatId && !$daNhapDuLieu)) {
             $updateData['tong_kg']                = $request->tong_kg;
             $updateData['tong_m3']                = $request->tong_m3;
             $updateData['phi_van_chuyen_noi_dia'] = $request->phi_van_chuyen_noi_dia ?? 0;
@@ -169,8 +194,8 @@ class PackageController extends Controller
                     $trackingDesc = "Kiện hàng bắt đầu di chuyển khỏi: " . $tenKhoMoi;
                     break;
                 case 'dang_giao_hang':
-                    $trackingTitle = "Đang vận chuyển (Nội địa)";
-                    $trackingDesc = "Đang về kho tại Việt Nam.";
+                    $trackingTitle = "Đang vận chuyển ";
+                    $trackingDesc = "Đang đến kho tại";
                     break;
                 case 'da_nhap_kho':
                     $trackingTitle = "Đã nhập kho";
